@@ -273,3 +273,128 @@ just ruff-check
 just ruff-format
 pytest -v
 ```
+
+---
+
+## answer-service: Domain Model
+
+### Service Purpose
+RAG-сервис для образовательной платформы. Принимает вопросы пользователей, находит релевантные фрагменты урока через векторный поиск, генерирует ответ через LLM.
+
+**Входящие данные:** user_id, lesson_id (UUID из другого сервиса), вопрос пользователя.
+**Других данных извне не приходит** — весь контент хранится и индексируется внутри сервиса.
+
+### Infrastructure Stack
+- **Vector store:** ChromaDB (`langchain-chroma`) — хранит embeddings чанков уроков
+- **Relational DB:** PostgreSQL + SQLAlchemy asyncio + asyncpg — диалоги и сообщения
+- **LLM:** через `langchain-openai`
+- **HTTP:** FastAPI
+- **IoC:** Dishka
+- **Message broker:** FastStream + RabbitMQ (для событий)
+
+### Domain Structure
+```
+domain/
+├── common/
+│   ├── aggregate.py         # Aggregate[EntityId]
+│   ├── entity.py            # Entity[EntityId]
+│   ├── events.py            # Event (base)
+│   ├── events_collection.py # EventsCollection
+│   ├── value_object.py      # ValueObject(ABC) — _validate() + __str__() abstract
+│   ├── errors.py            # DomainError, DomainFieldError
+│   └── event_id.py          # EventId = NewType(UUID)
+│
+├── user/                    # Aggregate: User
+│   ├── entities/
+│   │   └── user.py          # Aggregate root (identity from auth service)
+│   ├── value_objects/
+│   │   └── user_id.py       # UserId = NewType(UUID)
+│   ├── events.py            # UserRegistered
+│   └── errors.py
+│
+├── conversation/            # Aggregate: Conversation, Entity: Message
+│   ├── entities/
+│   │   ├── conversation.py  # Aggregate root
+│   │   └── message.py       # Entity (question + answer + status)
+│   ├── value_objects/
+│   │   ├── conversation_id.py
+│   │   ├── message_id.py
+│   │   ├── question.py      # max 4096 chars
+│   │   ├── answer.py        # content + TokenUsage + ModelName
+│   │   ├── token_usage.py
+│   │   ├── model_name.py
+│   │   └── statuses.py      # ConversationStatus, MessageStatus (StrEnum)
+│   ├── factories/
+│   │   └── conversation_factory.py  # получает EventsCollection через DI
+│   ├── ports/
+│   │   └── id_generator.py  # ConversationIdGenerator, MessageIdGenerator (Protocol)
+│   ├── events.py            # ConversationStarted, QuestionAsked, AnswerGenerated,
+│   │                        # AnswerGenerationFailed, ConversationClosed
+│   └── errors.py
+│
+└── lesson_index/            # Aggregate: LessonIndex, Entity: DocumentChunk
+    ├── entities/
+    │   ├── lesson_index.py  # Aggregate root (id = LessonId, 1:1 с уроком)
+    │   └── document_chunk.py # Entity (content + embedding + position)
+    ├── value_objects/
+    │   ├── lesson_id.py     # LessonId = NewType(UUID)  ← внешний ID урока
+    │   ├── chunk_id.py
+    │   ├── chunk_content.py # max 8192 chars
+    │   ├── embedding.py     # vector: tuple[float, ...] (immutable)
+    │   └── index_status.py  # IndexStatus: PENDING|INDEXING|READY|FAILED
+    ├── factories/
+    │   └── lesson_index_factory.py  # получает EventsCollection через DI
+    ├── ports/
+    │   └── id_generator.py  # ChunkIdGenerator (Protocol)
+    ├── events.py            # LessonIndexingRequested, LessonIndexed,
+    │                        # LessonIndexingFailed, LessonReindexRequested
+    └── errors.py
+```
+
+### ValueObject contract
+```python
+@dataclass(frozen=True, eq=True, unsafe_hash=True)
+class ValueObject(ABC):
+    def __post_init__(self) -> None:
+        if not fields(self):   # гарантия: у VO есть хотя бы одно поле
+            raise DomainFieldError(...)
+        self._validate()
+
+    @abstractmethod
+    def _validate(self) -> None: ...   # вся валидация здесь
+
+    @abstractmethod
+    def __str__(self) -> str: ...      # строковое представление обязательно
+```
+Конкретные VO НЕ переопределяют `__post_init__`, только `_validate()` и `__str__`.
+
+### Key Design Decisions
+
+**EventsCollection через DI (Dishka, request scope):**
+Агрегаты НЕ создают EventsCollection самостоятельно. Она инджектится через фабрику.
+Один EventsCollection на весь request — все события публикуются атомарно в конце.
+
+```python
+# Агрегат получает events_collection явно:
+Conversation.create(conversation_id, user_id, lesson_id, events_collection)
+LessonIndex.create(lesson_id, title, events_collection)
+
+# Фабрика получает EventsCollection из Dishka:
+class ConversationFactory:
+    def __init__(self, events_collection: EventsCollection, ...): ...
+```
+
+**Indexing flow (LessonIndex):**
+```
+create() → PENDING → start_indexing() → INDEXING
+→ add_chunk() × N → mark_indexed() → READY
+                  → mark_failed()  → FAILED
+reindex() → INDEXING (повторно, если контент изменился)
+```
+
+**Conversation history для LLM:**
+`conversation.get_history(limit=10)` — последние N сообщений.
+Хранится в PostgreSQL, передаётся в контекстное окно LLM при генерации.
+
+**Embedding immutability:**
+`Embedding.vector: tuple[float, ...]` — tuple вместо list для гарантии неизменности VO.
