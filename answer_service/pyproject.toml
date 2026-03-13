@@ -41,7 +41,19 @@ classifiers = [
 
 requires-python = ">=3.12"
 
-dependencies = []
+dependencies = [
+    "adaptix==3.0.0b11",
+    "bazario==0.4.2",
+    "dishka==1.9.1",
+    "fastapi==0.135.1",
+    "langchain==1.2.12",
+    "langchain-chroma==1.1.0",
+    "langchain-openai==1.1.11",
+    "python-multipart==0.0.22",
+    "structlog==25.5.0",
+    "uvicorn==0.41.0",
+    "uvloop==0.21.0; sys_platform != 'win32'",
+]
 
 [project.urls]
 Source = "https://github.com/morrs1/EducationPlatform"
