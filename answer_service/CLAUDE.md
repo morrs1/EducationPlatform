@@ -274,6 +274,32 @@ just ruff-format
 pytest -v
 ```
 
+## Code Quality Rules (Mandatory)
+
+**After writing ANY code**, run in this order:
+
+```sh
+# 1. Format + lint (ruff format + ruff check + codespell)
+just lint
+
+# 2. Type checking + security
+just mypy
+just bandit
+
+# 3. Full static analysis (CI-level, before commit)
+just static-analysis   # mypy + bandit + semgrep
+```
+
+`just lint` = `just linter` (alias) = ruff-format → ruff-check → codespell
+`just static-analysis` = mypy → bandit → semgrep
+
+**Rules:**
+- Fix ALL ruff and mypy errors before moving on — never leave type errors unresolved
+- `just lint` is the minimum bar after every code change
+- `just static-analysis` before any commit
+- When tests exist: `pytest -v` must pass before marking work done
+- Never use `# type: ignore` without a comment explaining why
+
 ---
 
 ## answer-service: Domain Model
@@ -350,6 +376,18 @@ domain/
     │                        # LessonIndexingFailed, LessonReindexRequested
     └── errors.py
 ```
+
+### Domain Services
+
+`BaseDomainService` → `domain/common/service.py` — маркерный базовый класс.
+Все доменные сервисы **stateless**: данные приходят через параметры методов.
+
+| Сервис | Путь | Зачем |
+|---|---|---|
+| `TextSplitterService` | `lesson_index/services/` | Нарезает текст урока на `ChunkContent[]` со smart-разбиением по границам предложений. Логика чанкования (размер, перекрытие) — бизнес-решение, влияющее на качество RAG. |
+| `ContextWindowService` | `conversation/services/` | Выбирает сообщения из истории диалога для контекстного окна LLM. Три метода: `select_for_context` (последние N), `select_within_token_budget` (по бюджету токенов), `estimate_tokens` (chars/4 heuristic). |
+
+Домен `user/` — доменный сервис не нужен, агрегат достаточно тонкий.
 
 ### ValueObject contract
 ```python
