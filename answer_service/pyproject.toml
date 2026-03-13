@@ -8,6 +8,9 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.version.raw-options]
+search_parent_directories = true
+
 [tool.hatch.build.hooks.vcs]
 version-file = "src/answer_service/_version.py"
 

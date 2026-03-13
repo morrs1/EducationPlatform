@@ -164,3 +164,4 @@ cython_debug/
 .idea
 
 repomix-output.md
+src/answer_service/_version.py
