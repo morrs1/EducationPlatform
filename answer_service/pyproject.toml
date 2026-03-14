@@ -43,6 +43,7 @@ requires-python = ">=3.12"
 
 dependencies = [
     "adaptix==3.0.0b11",
+    "asyncpg==0.31.0",
     "bazario==0.4.2",
     "dishka==1.9.1",
     "dishka-faststream==0.6.0",
@@ -52,6 +53,7 @@ dependencies = [
     "langchain-chroma==1.1.0",
     "langchain-openai==1.1.11",
     "python-multipart==0.0.22",
+    "sqlalchemy[asyncio]==2.0.48",
     "structlog==25.5.0",
     "uvicorn==0.41.0",
     "uvloop==0.21.0; sys_platform != 'win32'",
