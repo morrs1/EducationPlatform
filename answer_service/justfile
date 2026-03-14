@@ -73,3 +73,28 @@ pre-commit:
 [group("pre-commit")]
 pre-commit-all:
   uv run --active --frozen prek run --all-files
+
+# Dev environment
+[doc("Start dev infrastructure (PostgreSQL, RabbitMQ, Redis, ChromaDB)")]
+[group("dev")]
+infra-up:
+  docker compose -f docker-compose.dev.yaml --env-file .env.dev up -d
+
+[doc("Stop dev infrastructure")]
+[group("dev")]
+infra-down:
+  docker compose -f docker-compose.dev.yaml --env-file .env.dev down
+
+[doc("Show dev infrastructure logs")]
+[group("dev")]
+infra-logs:
+  docker compose -f docker-compose.dev.yaml --env-file .env.dev logs -f
+
+[doc("Start FastAPI application (loads .env.dev)")]
+[group("dev")]
+app:
+  uv run --active dotenv -f .env.dev run -- python -m answer_service.fastapi_app
+
+[doc("Start full dev environment: infra then app")]
+[group("dev")]
+dev: infra-up app

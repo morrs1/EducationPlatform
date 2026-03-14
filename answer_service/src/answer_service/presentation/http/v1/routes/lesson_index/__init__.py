@@ -6,7 +6,7 @@ from answer_service.presentation.http.v1.routes.lesson_index.get_lesson_index_st
 from answer_service.presentation.http.v1.routes.lesson_index.reindex_lesson.handlers import reindex_lesson_router
 
 lesson_router: Final[APIRouter] = APIRouter(
-    tags=["Lesson"],
+    tags=["Lesson Index"],
     prefix="/lesson",
     route_class=DishkaRoute,
 )

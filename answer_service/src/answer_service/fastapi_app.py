@@ -19,6 +19,7 @@ from answer_service.setup.bootstrap import (
     setup_map_tables,
 )
 from answer_service.setup.configs.asgi_config import ASGIConfig
+from answer_service.setup.configs.broker_config import RabbitConfig
 from answer_service.setup.configs.database_config import PostgresConfig, SQLAlchemyConfig
 from answer_service.setup.ioc import setup_providers
 

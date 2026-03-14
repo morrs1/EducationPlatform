@@ -34,15 +34,15 @@ from answer_service.domain.conversation.services.context_window_service import C
 from answer_service.domain.lesson_index.factories.lesson_index_factory import LessonIndexFactory
 from answer_service.domain.lesson_index.ports.id_generator import ChunkIdGenerator
 from answer_service.domain.lesson_index.services.text_splitter_service import TextSplitterService
-from answer_service.infrastructure.adapters.common.langchain_embedding import LangChainEmbeddingPort
-from answer_service.infrastructure.adapters.common.langchain_openai_llm import LangChainOpenAILLMPort
 from answer_service.infrastructure.adapters.common.stub_event_bus import StubEventBus
-from answer_service.infrastructure.adapters.common.uuid4_generators import (
-    UUID4ChunkIdGenerator,
-    UUID4ConversationIdGenerator,
-    UUID4MessageIdGenerator,
-)
+from answer_service.infrastructure.adapters.common.uuid4_chunk_id_generator import UUID4ChunkIdGenerator
+from answer_service.infrastructure.adapters.common.uuid4_conversation_id_generator import UUID4ConversationIdGenerator
+from answer_service.infrastructure.adapters.common.uuid4_message_id_generator import UUID4MessageIdGenerator
+from answer_service.infrastructure.adapters.langchain.embedding import LangChainEmbeddingPort
+from answer_service.infrastructure.adapters.langchain.openai_llm import LangChainOpenAILLMPort
 from answer_service.infrastructure.adapters.persistence.chroma_vector_search import ChromaVectorSearchPort
+from answer_service.infrastructure.mappers.llm_mapper import LLMRequestMapper, LLMResponseMapper
+from answer_service.infrastructure.mappers.vector_search_mapper import VectorSearchResultMapper
 from answer_service.infrastructure.adapters.persistence.sqlalchemy_conversation_repository import (
     SqlAlchemyConversationRepository,
 )
@@ -115,6 +115,15 @@ def domain_ports_provider() -> Provider:
     return provider
 
 
+def mappers_provider() -> Provider:
+    """Infrastructure mappers for LangChain adapters (APP-scoped, stateless)."""
+    provider: Final[Provider] = Provider(scope=Scope.APP)
+    provider.provide(source=VectorSearchResultMapper)
+    provider.provide(source=LLMRequestMapper)
+    provider.provide(source=LLMResponseMapper)
+    return provider
+
+
 def gateways_provider() -> Provider:
     """Repositories, transaction manager, and external service adapters."""
     provider: Final[Provider] = Provider(scope=Scope.REQUEST)
@@ -149,6 +158,7 @@ def setup_providers() -> Iterable[Provider]:
         configs_provider(),
         db_provider(),
         vector_store_provider(),
+        mappers_provider(),
         domain_ports_provider(),
         gateways_provider(),
         interactors_provider(),

@@ -1,10 +1,7 @@
 import asyncio
-from dataclasses import dataclass
-from typing import override
+from typing import Final, override
 from uuid import UUID
 
-from adaptix import coercer
-from adaptix.conversion import get_converter
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
@@ -13,31 +10,15 @@ from answer_service.application.common.ports.vector_search_port import (
     VectorSearchPort,
     VectorSearchResult,
 )
-
-
-@dataclass(frozen=True, slots=True)
-class _RawSearchResult:
-    """Intermediate dataclass holding raw Chroma search result fields before conversion."""
-
-    chunk_id: str  # raw string from document metadata
-    content: str
-    score: float
-
-
-_to_domain = get_converter(
-    _RawSearchResult,
-    VectorSearchResult,
-    recipe=[
-        coercer(str, UUID, UUID),  # chunk_id: str → UUID
-    ],
-)
+from answer_service.infrastructure.mappers.vector_search_mapper import VectorSearchResultMapper
 
 
 class ChromaVectorSearchPort(VectorSearchPort):
     """VectorSearchPort backed by a LangChain-Chroma vectorstore."""
 
-    def __init__(self, vectorstore: Chroma) -> None:
-        self._vectorstore = vectorstore
+    def __init__(self, vectorstore: Chroma, mapper: VectorSearchResultMapper) -> None:
+        self._vectorstore: Final[Chroma] = vectorstore
+        self._mapper: Final[VectorSearchResultMapper] = mapper
 
     @override
     async def upsert_chunks(self, chunks: list[ChunkVector]) -> None:
@@ -68,16 +49,7 @@ class ChromaVectorSearchPort(VectorSearchPort):
             k=top_k,
             filter={"lesson_id": str(lesson_id)},
         )
-        return [
-            _to_domain(
-                _RawSearchResult(
-                    chunk_id=doc.metadata["chunk_id"],
-                    content=doc.page_content,
-                    score=score,
-                )
-            )
-            for doc, score in raw
-        ]
+        return self._mapper.map_many(raw)
 
     @override
     async def delete_by_lesson(self, lesson_id: UUID) -> None:
