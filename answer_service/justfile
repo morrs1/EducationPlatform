@@ -98,3 +98,24 @@ app:
 [doc("Start full dev environment: infra then app")]
 [group("dev")]
 dev: infra-up app
+
+# Migrations
+[doc("Generate a new Alembic migration (usage: just migration 'add users table')")]
+[group("migrations")]
+migration msg:
+  uv run --active dotenv -f .env.dev run -- alembic revision --autogenerate -m "{{msg}}"
+
+[doc("Apply all pending Alembic migrations")]
+[group("migrations")]
+migrate:
+  uv run --active dotenv -f .env.dev run -- alembic upgrade head
+
+[doc("Roll back the last Alembic migration")]
+[group("migrations")]
+migrate-down:
+  uv run --active dotenv -f .env.dev run -- alembic downgrade -1
+
+[doc("Show current migration revision")]
+[group("migrations")]
+migrate-current:
+  uv run --active dotenv -f .env.dev run -- alembic current
