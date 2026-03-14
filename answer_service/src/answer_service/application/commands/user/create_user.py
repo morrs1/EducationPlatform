@@ -1,4 +1,4 @@
-import structlog
+import logging
 from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
@@ -10,16 +10,16 @@ from answer_service.domain.common.events_collection import EventsCollection
 from answer_service.domain.user.entities.user import User
 from answer_service.domain.user.value_objects.user_id import UserId
 
-logger: Final[structlog.BoundLogger] = structlog.get_logger()
+logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class RegisterUserCommand:
+class CreateUserCommand:
     user_id: UUID
 
 
 @final
-class RegisterUserCommandHandler:
+class CreateUserCommandHandler:
     def __init__(
         self,
         transaction_manager: TransactionManager,
@@ -32,13 +32,12 @@ class RegisterUserCommandHandler:
         self._events_collection: Final[EventsCollection] = events_collection
         self._event_bus: Final[EventBus] = event_bus
 
-    async def __call__(self, data: RegisterUserCommand) -> None:
-        log = logger.bind(user_id=str(data.user_id))
-        log.info("register_user: started")
+    async def __call__(self, data: CreateUserCommand) -> None:
+        logger.info("create_user: started. user_id='%s'.", data.user_id)
 
         existing = await self._user_repository.get_by_id(data.user_id)
         if existing is not None:
-            log.info("register_user: user already registered, skipping")
+            logger.info("create_user: user already exists, skipping. user_id='%s'.", data.user_id)
             return
 
         user = User.create(
@@ -51,4 +50,4 @@ class RegisterUserCommandHandler:
         await self._event_bus.publish(self._events_collection.pull_events())
         await self._transaction_manager.commit()
 
-        log.info("register_user: done")
+        logger.info("create_user: done. user_id='%s'.", data.user_id)

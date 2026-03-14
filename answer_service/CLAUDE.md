@@ -436,3 +436,71 @@ reindex() → INDEXING (повторно, если контент изменил
 
 **Embedding immutability:**
 `Embedding.vector: tuple[float, ...]` — tuple вместо list для гарантии неизменности VO.
+
+---
+
+## Presentation layer
+
+### HTTP routes structure
+
+```
+presentation/http/v1/
+├── common/
+│   ├── routes/
+│   │   ├── healthcheck.py   # GET /healthcheck/
+│   │   └── index.py         # GET /
+│   └── exception_handler.py # ExceptionSchema + setup_exception_handlers(app)
+├── middlewares/
+│   └── logging.py           # LoggingMiddleware
+└── routes/
+    ├── user/
+    │   └── create_user/       # POST /users/
+    │       ├── handlers.py    # create_user_router
+    │       └── schemas.py     # CreateUserRequest
+    ├── conversation/
+    │   ├── ask_question/      # POST /conversations/ask
+    │   │   ├── handlers.py    # ask_question_router
+    │   │   └── schemas.py     # AskQuestionRequest, AnswerResponse
+    │   ├── get_conversation/  # GET /conversations/{conversation_id}
+    │   │   ├── handlers.py    # get_conversation_router
+    │   │   └── schemas.py     # ConversationResponse, MessageResponse
+    │   └── close_conversation/ # PATCH /conversations/{conversation_id}/close
+    │       ├── handlers.py    # close_conversation_router
+    │       └── schemas.py     # (empty — no body/response)
+    └── lesson_index/
+        ├── index_lesson/      # POST /lessons/{lesson_id}/index
+        │   ├── handlers.py    # index_lesson_router
+        │   └── schemas.py     # IndexLessonRequest
+        ├── reindex_lesson/    # PUT /lessons/{lesson_id}/index
+        │   ├── handlers.py    # reindex_lesson_router
+        │   └── schemas.py     # ReindexLessonRequest
+        └── get_lesson_index_status/ # GET /lessons/{lesson_id}/index
+            ├── handlers.py    # get_lesson_index_status_router
+            └── schemas.py     # LessonIndexStatusResponse
+```
+
+### Route conventions
+
+- Each operation lives in its own directory (named after the operation, e.g. `ask_question/`)
+- `handlers.py` — defines the `APIRouter` (named `<operation>_router`) and the endpoint function
+- `schemas.py` — Pydantic `BaseModel` request/response schemas for that endpoint only
+- `__init__.py` — always empty
+- Router is named after the operation: `ask_question_router`, `create_user_router`, etc.
+- Use `DishkaRoute` as `route_class` on every router
+- Inject interactors via `FromDishka[HandlerType]`
+- Map dataclass views from application layer to Pydantic response models explicitly (no `model_validate`)
+- Document all non-2xx responses with `{"model": ExceptionSchema}` in `responses=`
+
+### Exception handling
+
+`presentation/http/v1/common/exception_handler.py` maps application/domain errors to HTTP codes:
+
+| Exception | HTTP Status |
+|---|---|
+| `ConversationNotFoundError` | 404 |
+| `LessonIndexNotFoundError` | 404 |
+| `LessonAlreadyIndexedError` | 409 |
+| `ApplicationError` (base) | 400 |
+| `DomainError` | 422 |
+
+Call `setup_exception_handlers(app)` in the app factory.

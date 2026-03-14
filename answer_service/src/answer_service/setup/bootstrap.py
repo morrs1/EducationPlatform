@@ -2,7 +2,7 @@ import logging
 import sys
 from types import TracebackType
 from functools import lru_cache
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 
 from answer_service.infrastructure.persistence.models import (
     map_users_table,
@@ -12,6 +12,14 @@ from answer_service.infrastructure.persistence.models import (
 from answer_service.setup.configs.app_config import AppConfig
 from answer_service.setup.configs.asgi_config import ASGIConfig
 from answer_service.setup.configs.logging_config import LoggingConfig, configure_logging
+from answer_service.presentation.http.v1.middlewares.logging import LoggingMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+from answer_service.presentation.http.v1.common.exception_handler import setup_exception_handlers
+from answer_service.presentation.http.v1.common.routes.healthcheck import healthcheck_router
+from answer_service.presentation.http.v1.common.routes.index import index_router
+from answer_service.presentation.http.v1.routes.conversation import conversation_router
+from answer_service.presentation.http.v1.routes.lesson_index import lesson_router
+from answer_service.presentation.http.v1.routes.user import user_router
 
 @lru_cache(maxsize=1)
 def setup_configs() -> AppConfig:
@@ -45,11 +53,28 @@ def setup_map_tables() -> None:
     map_conversations_tables()
     map_lesson_index_tables()
 
-def setup_http_routes(app: FastAPI) -> None:
-    ...
+def setup_http_routes(app: FastAPI, /) -> None:
+    """
+    Registers all routers for FastAPI application
+
+    Args:
+        app: FastAPI application
+
+    Returns:
+        None
+    """
+    app.include_router(index_router)
+    app.include_router(healthcheck_router)
+
+    router_v1: APIRouter = APIRouter(prefix="/v1")
+    router_v1.include_router(user_router)
+    router_v1.include_router(conversation_router)
+    router_v1.include_router(lesson_router)
+    app.include_router(router_v1)
+
 
 def setup_http_exc_handlers(app: FastAPI) -> None:
-    ...
+    setup_exception_handlers(app)
 
 def setup_http_middlewares(app: FastAPI, /, api_config: ASGIConfig) -> None:
     """

@@ -1,4 +1,4 @@
-import structlog
+import logging
 from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
@@ -22,7 +22,7 @@ from answer_service.domain.conversation.value_objects.token_usage import TokenUs
 from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 from answer_service.domain.user.value_objects.user_id import UserId
 
-logger: Final[structlog.BoundLogger] = structlog.get_logger()
+logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = (
     "You are a helpful educational assistant. "
@@ -68,17 +68,17 @@ class AskQuestionCommandHandler:
         self._event_bus: Final[EventBus] = event_bus
 
     async def __call__(self, data: AskQuestionCommand) -> AnswerView:
-        log = logger.bind(
-            user_id=str(data.user_id),
-            lesson_id=str(data.lesson_id),
-            conversation_id=str(data.conversation_id),
+        logger.info(
+            "ask_question: started. user_id='%s', lesson_id='%s', conversation_id='%s'.",
+            data.user_id,
+            data.lesson_id,
+            data.conversation_id,
         )
-        log.info("ask_question: started")
 
         question = Question(content=data.question)
 
         # 1. Load or create conversation
-        conversation = await self._get_or_create_conversation(data, log)
+        conversation = await self._get_or_create_conversation(data)
 
         # 2. Add the question — creates Message with PENDING status
         message = self._conversation_factory.create_message(conversation, question)
@@ -91,7 +91,7 @@ class AskQuestionCommandHandler:
             top_k=_TOP_K_CHUNKS,
         )
         context_chunks = [r.content for r in search_results]
-        log.debug("ask_question: retrieved chunks", chunks_count=len(context_chunks))
+        logger.debug("ask_question: retrieved chunks. chunks_count=%d.", len(context_chunks))
 
         # 4. Build conversation history for context window
         history_messages = self._context_window_service.select_within_token_budget(
@@ -122,7 +122,7 @@ class AskQuestionCommandHandler:
                 message_id=MessageId(message.id),
                 reason=str(exc),
             )
-            log.error("ask_question: llm generation failed", error=str(exc))
+            logger.error("ask_question: llm generation failed. error='%s'.", exc)
             await self._conversation_repository.save(conversation)
             await self._transaction_manager.flush()
             await self._event_bus.publish(self._events_collection.pull_events())
@@ -146,7 +146,7 @@ class AskQuestionCommandHandler:
         await self._event_bus.publish(self._events_collection.pull_events())
         await self._transaction_manager.commit()
 
-        log.info("ask_question: done", model=llm_response.model_name)
+        logger.info("ask_question: done. model='%s'.", llm_response.model_name)
 
         return AnswerView(
             conversation_id=conversation.id,
@@ -157,20 +157,19 @@ class AskQuestionCommandHandler:
             output_tokens=llm_response.output_tokens,
         )
 
-    async def _get_or_create_conversation(
-        self,
-        data: AskQuestionCommand,
-        log: structlog.BoundLogger,
-    ) -> Conversation:
+    async def _get_or_create_conversation(self, data: AskQuestionCommand) -> Conversation:
         if data.conversation_id is not None:
             conversation = await self._conversation_repository.get_by_id(data.conversation_id)
             if conversation is not None:
                 return conversation
-            log.warning("ask_question: provided conversation_id not found, creating new one")
+            logger.warning(
+                "ask_question: provided conversation_id not found, creating new one. conversation_id='%s'.",
+                data.conversation_id,
+            )
 
         conversation = self._conversation_factory.create_conversation(
             user_id=UserId(data.user_id),
             lesson_id=LessonId(data.lesson_id),
         )
-        log.info("ask_question: new conversation created", new_conversation_id=str(conversation.id))
+        logger.info("ask_question: new conversation created. new_conversation_id='%s'.", conversation.id)
         return conversation

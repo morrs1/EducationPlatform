@@ -87,6 +87,7 @@ test = [
 
 [tool.mypy]
 files = ["src", "tests"]
+plugins = "pydantic.mypy"
 strict = true
 python_version = "3.12"
 strict_bytes = true

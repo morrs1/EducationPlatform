@@ -1,4 +1,4 @@
-import structlog
+import logging
 from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
@@ -6,13 +6,10 @@ from uuid import UUID
 from answer_service.application.common.ports.conversation_repository import ConversationRepository
 from answer_service.application.common.ports.event_bus import EventBus
 from answer_service.application.common.ports.transaction_manager import TransactionManager
+from answer_service.application.errors import ConversationNotFoundError
 from answer_service.domain.common.events_collection import EventsCollection
 
-logger: Final[structlog.BoundLogger] = structlog.get_logger()
-
-
-class ConversationNotFoundError(Exception):
-    pass
+logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -35,8 +32,7 @@ class CloseConversationCommandHandler:
         self._event_bus: Final[EventBus] = event_bus
 
     async def __call__(self, data: CloseConversationCommand) -> None:
-        log = logger.bind(conversation_id=str(data.conversation_id))
-        log.info("close_conversation: started")
+        logger.info("close_conversation: started. conversation_id='%s'.", data.conversation_id)
 
         conversation = await self._conversation_repository.get_by_id(data.conversation_id)
         if conversation is None:
@@ -50,4 +46,4 @@ class CloseConversationCommandHandler:
         await self._event_bus.publish(self._events_collection.pull_events())
         await self._transaction_manager.commit()
 
-        log.info("close_conversation: done")
+        logger.info("close_conversation: done. conversation_id='%s'.", data.conversation_id)

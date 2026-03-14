@@ -11,7 +11,20 @@ class VectorSearchResult:
     score: float    # cosine similarity [0, 1]
 
 
+@dataclass(frozen=True, slots=True)
+class ChunkVector:
+    chunk_id: UUID
+    lesson_id: UUID
+    content: str
+    vector: list[float]
+
+
 class VectorSearchPort(Protocol):
+    @abstractmethod
+    async def upsert_chunks(self, chunks: list[ChunkVector]) -> None:
+        """Store or replace embedding vectors for a list of chunks."""
+        raise NotImplementedError
+
     @abstractmethod
     async def search(
         self,

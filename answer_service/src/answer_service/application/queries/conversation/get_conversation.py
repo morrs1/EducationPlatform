@@ -1,16 +1,13 @@
-import structlog
+import logging
 from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
 
 from answer_service.application.common.ports.conversation_repository import ConversationRepository
 from answer_service.application.common.views.conversation_views import ConversationView, MessageView
+from answer_service.application.errors import ConversationNotFoundError
 
-logger: Final[structlog.BoundLogger] = structlog.get_logger()
-
-
-class ConversationNotFoundError(Exception):
-    pass
+logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -24,7 +21,7 @@ class GetConversationQueryHandler:
         self._conversation_repository: Final[ConversationRepository] = conversation_repository
 
     async def __call__(self, data: GetConversationQuery) -> ConversationView:
-        logger.info("get_conversation: started", conversation_id=str(data.conversation_id))
+        logger.info("get_conversation: started. conversation_id='%s'.", data.conversation_id)
 
         conversation = await self._conversation_repository.get_by_id(data.conversation_id)
         if conversation is None:
