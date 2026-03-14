@@ -23,7 +23,7 @@ def test_rabbit_config_valid_creates_correctly() -> None:
     assert config.host == "localhost"
     assert config.port == 5672
     assert config.user == "guest"
-    assert config.password == "guest"
+    assert config.password == "guest"  # pragma: allowlist secret
 
 
 def test_rabbit_config_uri_contains_host_port_user() -> None:

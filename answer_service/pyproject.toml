@@ -92,3 +92,6 @@ test = [
 
 [tool.bandit]
 skips = ["B101"]
+
+[tool.typos.default.extend-words]
+selectin = "selectin"

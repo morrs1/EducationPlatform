@@ -27,7 +27,7 @@ def test_openai_config_defaults() -> None:
 def test_openai_config_custom_values() -> None:
     # Arrange & Act
     config = OpenAIConfig(
-        OPENAI_API_KEY="sk-custom-key",
+        OPENAI_API_KEY="sk-custom-key",  # pragma: allowlist secret
         OPENAI_BASE_URL="https://openrouter.ai/api/v1",
         OPENAI_EMBEDDING_MODEL="text-embedding-ada-002",
         OPENAI_CHAT_MODEL="gpt-3.5-turbo",

@@ -72,7 +72,7 @@ class PostgresConfig(BaseModel):
 
         Returns:
             str: Connection string in format:
-                postgresql+psycopg://user:password@host:port/db_name
+                postgresql+driver://host:port/db_name
 
         Note:
             - Uses psycopg driver for async operations

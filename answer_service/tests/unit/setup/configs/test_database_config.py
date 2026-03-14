@@ -21,7 +21,7 @@ class TestPostgresConfig:
         # Arrange & Act
         config = PostgresConfig(
             POSTGRES_USER="test_user",
-            POSTGRES_PASSWORD="test_password",
+            POSTGRES_PASSWORD="test_password",  # pragma: allowlist secret
             POSTGRES_HOST="localhost",
             POSTGRES_PORT=5432,
             POSTGRES_DB="test_db",
@@ -30,7 +30,7 @@ class TestPostgresConfig:
 
         # Assert
         assert config.user == "test_user"
-        assert config.password == "test_password"
+        assert config.password == "test_password"  # pragma: allowlist secret
         assert config.host == "localhost"
         assert config.port == 5432
         assert config.db_name == "test_db"
@@ -41,7 +41,7 @@ class TestPostgresConfig:
         # Arrange
         config = PostgresConfig(
             POSTGRES_USER="user",
-            POSTGRES_PASSWORD="pass",
+            POSTGRES_PASSWORD="pass",  # pragma: allowlist secret
             POSTGRES_HOST="localhost",
             POSTGRES_PORT=5432,
             POSTGRES_DB="mydb",
@@ -61,7 +61,7 @@ class TestPostgresConfig:
         # Arrange & Act
         config = PostgresConfig(
             POSTGRES_USER="user",
-            POSTGRES_PASSWORD="pass",
+            POSTGRES_PASSWORD="pass",  # pragma: allowlist secret
             POSTGRES_HOST="localhost",  # This should be overridden
             POSTGRES_PORT=5432,
             POSTGRES_DB="db",
@@ -76,7 +76,7 @@ class TestPostgresConfig:
         # Arrange & Act
         config = PostgresConfig(
             POSTGRES_USER="user",
-            POSTGRES_PASSWORD="pass",
+            POSTGRES_PASSWORD="pass",  # pragma: allowlist secret
             POSTGRES_HOST="localhost",
             POSTGRES_PORT=5432,  # Valid port
             POSTGRES_DB="db",
@@ -104,7 +104,7 @@ class TestPostgresConfig:
         with pytest.raises(ValidationError):
             PostgresConfig(
                 POSTGRES_USER="user",
-                POSTGRES_PASSWORD="pass",
+                POSTGRES_PASSWORD="pass",  # pragma: allowlist secret
                 POSTGRES_HOST="localhost",
                 POSTGRES_PORT=invalid_port,
                 POSTGRES_DB="db",
