@@ -48,7 +48,9 @@ class TestSetupHttpRoutes:
         setup_http_routes(fake_app)
 
         # Assert
-        assert fake_app.include_router.call_count >= 2  # index_router and healthcheck_router at minimum
+        assert (
+            fake_app.include_router.call_count >= 2
+        )  # index_router and healthcheck_router at minimum
 
     def test_setup_http_routes_creates_v1_router(self) -> None:
         """Test that setup_http_routes creates a v1 API router."""

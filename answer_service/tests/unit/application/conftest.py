@@ -20,6 +20,10 @@ from answer_service.domain.conversation.value_objects.conversation_id import (
     ConversationId,
 )
 from answer_service.domain.conversation.value_objects.message_id import MessageId
+from answer_service.domain.lesson_index.factories.lesson_index_factory import (
+    LessonIndexFactory,
+)
+from answer_service.domain.lesson_index.value_objects.chunk_id import ChunkId
 
 if TYPE_CHECKING:
     from answer_service.application.common.ports.conversation_repository import (
@@ -27,6 +31,9 @@ if TYPE_CHECKING:
     )
     from answer_service.application.common.ports.embedding_port import EmbeddingPort
     from answer_service.application.common.ports.event_bus import EventBus
+    from answer_service.application.common.ports.lesson_index_repository import (
+        LessonIndexRepository,
+    )
     from answer_service.application.common.ports.llm_port import LLMPort
     from answer_service.application.common.ports.transaction_manager import (
         TransactionManager,
@@ -39,6 +46,7 @@ if TYPE_CHECKING:
         ConversationIdGenerator,
         MessageIdGenerator,
     )
+    from answer_service.domain.lesson_index.ports.id_generator import ChunkIdGenerator
 
 
 @pytest.fixture()
@@ -108,4 +116,22 @@ def conversation_factory(events_collection: EventsCollection) -> ConversationFac
         events_collection=events_collection,
         conversation_id_generator=conversation_id_generator,
         message_id_generator=message_id_generator,
+    )
+
+
+@pytest.fixture()
+def lesson_index_repository() -> LessonIndexRepository:
+    """Create a mock lesson index repository for tests."""
+    return cast("LessonIndexRepository", AsyncMock())
+
+
+@pytest.fixture()
+def lesson_index_factory(events_collection: EventsCollection) -> LessonIndexFactory:
+    """Create a lesson index factory for tests."""
+    chunk_id_generator = cast(
+        "ChunkIdGenerator", MagicMock(return_value=ChunkId(uuid4()))
+    )
+    return LessonIndexFactory(
+        events_collection=events_collection,
+        chunk_id_generator=chunk_id_generator,
     )

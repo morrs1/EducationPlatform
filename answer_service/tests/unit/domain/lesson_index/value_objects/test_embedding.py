@@ -1,6 +1,5 @@
 """Tests for Embedding value object."""
 
-
 import pytest
 
 from answer_service.domain.common.errors import DomainFieldError

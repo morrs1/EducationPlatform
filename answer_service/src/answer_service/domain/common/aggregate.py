@@ -8,4 +8,3 @@ from answer_service.domain.common.events_collection import EventsCollection
 @dataclass(eq=False, kw_only=True)
 class Aggregate[EntityId: Hashable](Entity[EntityId]):
     events_collection: EventsCollection
-

@@ -1,7 +1,7 @@
 """add_users_table
 
 Revision ID: d15f6bc208de
-Revises: 
+Revises:
 Create Date: 2026-03-14 19:57:52.897193
 
 """

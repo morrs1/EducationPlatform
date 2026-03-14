@@ -40,8 +40,12 @@ class TestDocumentChunkCreation:
         embedding = Embedding(vector=(0.1, 0.2, 0.3))
 
         # Act
-        chunk1 = DocumentChunk(id=chunk_id1, content=content, embedding=embedding, position=0)
-        chunk2 = DocumentChunk(id=chunk_id2, content=content, embedding=embedding, position=0)
+        chunk1 = DocumentChunk(
+            id=chunk_id1, content=content, embedding=embedding, position=0
+        )
+        chunk2 = DocumentChunk(
+            id=chunk_id2, content=content, embedding=embedding, position=0
+        )
 
         # Assert
         assert chunk1.id != chunk2.id
@@ -91,7 +95,9 @@ class TestDocumentChunkCreation:
         position = 999
 
         # Act
-        sut = DocumentChunk(id=chunk_id, content=content, embedding=embedding, position=position)
+        sut = DocumentChunk(
+            id=chunk_id, content=content, embedding=embedding, position=position
+        )
 
         # Assert
         assert sut.position == 999
@@ -108,8 +114,12 @@ class TestDocumentChunkEquality:
         embedding = Embedding(vector=(0.1, 0.2, 0.3))
 
         # Note: DocumentChunk uses eq=False in dataclass
-        chunk1 = DocumentChunk(id=chunk_id, content=content1, embedding=embedding, position=0)
-        chunk2 = DocumentChunk(id=chunk_id, content=content2, embedding=embedding, position=1)
+        chunk1 = DocumentChunk(
+            id=chunk_id, content=content1, embedding=embedding, position=0
+        )
+        chunk2 = DocumentChunk(
+            id=chunk_id, content=content2, embedding=embedding, position=1
+        )
 
         # Assert
         assert chunk1.id == chunk2.id

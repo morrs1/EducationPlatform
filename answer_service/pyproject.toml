@@ -75,17 +75,19 @@ lint = [
     "bandit>=1.8.6",
     "codespell>=2.4.1",
     "mypy>=1.18.2",
-    "pytest-mypy>=1.0.0",
     "ruff>=0.14.0",
     "semgrep>=1.139.0",
     "zizmor>=1.14.2",
+    "import-linter>=2.10",
 ]
 test = [
+    "httpx>=0.28.0",
     "nox>=2025.5.1",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
     "pytest-mypy>=1.0.0",
+    "testcontainers[postgres]>=4.10.0",
 ]
 
 [tool.bandit]

@@ -20,7 +20,10 @@ class TestChunkContentValidation:
         "content",
         [
             pytest.param("Simple chunk content", id="simple_content"),
-            pytest.param("Chunk with technical content about Python programming", id="technical_content"),
+            pytest.param(
+                "Chunk with technical content about Python programming",
+                id="technical_content",
+            ),
             pytest.param("a" * MAX_CHUNK_LENGTH, id="max_length_content"),
             pytest.param("Content with spaces   ", id="trailing_spaces"),
             pytest.param("  Content with leading spaces", id="leading_spaces"),
@@ -50,8 +53,16 @@ class TestChunkContentValidation:
             pytest.param("   ", EmptyChunkContentError, id="whitespace_only"),
             pytest.param("\n", EmptyChunkContentError, id="newline_only"),
             pytest.param("\t", EmptyChunkContentError, id="tab_only"),
-            pytest.param("a" * (MAX_CHUNK_LENGTH + 1), ChunkContentTooLongError, id="exceeds_max_by_one"),
-            pytest.param("a" * (MAX_CHUNK_LENGTH * 2), ChunkContentTooLongError, id="exceeds_max_greatly"),
+            pytest.param(
+                "a" * (MAX_CHUNK_LENGTH + 1),
+                ChunkContentTooLongError,
+                id="exceeds_max_by_one",
+            ),
+            pytest.param(
+                "a" * (MAX_CHUNK_LENGTH * 2),
+                ChunkContentTooLongError,
+                id="exceeds_max_greatly",
+            ),
         ],
     )
     def test_rejects_invalid_chunk_content(

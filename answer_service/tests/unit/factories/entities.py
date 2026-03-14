@@ -8,6 +8,7 @@ from answer_service.domain.conversation.entities.conversation import Conversatio
 from answer_service.domain.conversation.value_objects.conversation_id import (
     ConversationId,
 )
+from answer_service.domain.lesson_index.entities.lesson_index import LessonIndex
 from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 from answer_service.domain.user.entities.user import User
 from answer_service.domain.user.value_objects.user_id import UserId
@@ -37,5 +38,17 @@ def make_conversation(
         conversation_id=conversation_id or ConversationId(uuid4()),
         user_id=user_id or UserId(uuid4()),
         lesson_id=lesson_id or LessonId(uuid4()),
+        events_collection=events_collection or make_events_collection(),
+    )
+
+
+def make_lesson_index(
+    lesson_id: LessonId | None = None,
+    title: str = "Test Lesson",
+    events_collection: EventsCollection | None = None,
+) -> LessonIndex:
+    return LessonIndex.create(
+        lesson_id=lesson_id or LessonId(uuid4()),
+        title=title,
         events_collection=events_collection or make_events_collection(),
     )

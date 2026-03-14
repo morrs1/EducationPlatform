@@ -24,8 +24,12 @@ class TestAnswerValidation:
                 id="technical_answer",
             ),
             pytest.param("a" * 1000, 500, 100, "gemini-pro", id="long_answer"),
-            pytest.param("Answer with\nnewlines", 10, 5, "llama-2", id="answer_with_newlines"),
-            pytest.param("Answer with\ttabs", 10, 5, "gpt-4-turbo", id="answer_with_tabs"),
+            pytest.param(
+                "Answer with\nnewlines", 10, 5, "llama-2", id="answer_with_newlines"
+            ),
+            pytest.param(
+                "Answer with\ttabs", 10, 5, "gpt-4-turbo", id="answer_with_tabs"
+            ),
             pytest.param("Ответ на русском", 20, 10, "gpt-4", id="cyrillic_answer"),
             pytest.param("中文回答", 15, 8, "gemini-pro", id="chinese_answer"),
         ],
@@ -40,7 +44,9 @@ class TestAnswerValidation:
         # Arrange & Act
         sut = Answer(
             content=content,
-            token_usage=TokenUsage(input_tokens=input_tokens, output_tokens=output_tokens),
+            token_usage=TokenUsage(
+                input_tokens=input_tokens, output_tokens=output_tokens
+            ),
             model_name=ModelName(value=model_name),
         )
 

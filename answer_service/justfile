@@ -67,12 +67,18 @@ pytest *params:
 
 [doc("Run pytest with coverage")]
 [group("tests")]
-test: pytest --cov=src/answer_service --cov-report=term-missing
+test:
+  pytest --cov=src/answer_service --cov-report=term-missing
 
 [doc("Run pytest without mypy (faster)")]
 [group("tests")]
-test-fast:
+test-fast *params:
   uv run --active --frozen pytest --ignore-glob='**/mypy_cache' -p no:mypy {{params}}
+
+[doc("Architecture checks with import-linter")]
+[group("static analysis")]
+import-linter *params:
+  uv run --active --frozen lint-imports {{params}}
 
 [doc("Install pre-commit hooks")]
 [group("pre-commit")]

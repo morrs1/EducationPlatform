@@ -215,7 +215,7 @@ domain/
         event.py
 ```
 
-In domain layer we have domain entities, aggregates. All entities and aggregates must inherit from `BaseEntity` and `BaseAggregateRoot`. 
+In domain layer we have domain entities, aggregates. All entities and aggregates must inherit from `BaseEntity` and `BaseAggregateRoot`.
 All Value objects must inherit from `BaseValueObject`.
 All domain services must inherit from `BaseDomainService`.
 

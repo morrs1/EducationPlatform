@@ -24,7 +24,9 @@ class TestModelNameValidation:
             pytest.param("GPT-4", id="uppercase"),
             pytest.param("MixedCase-Model", id="mixed_case"),
             pytest.param("a", id="single_char"),
-            pytest.param("very-long-model-name-with-many-parts-and-versions", id="long_name"),
+            pytest.param(
+                "very-long-model-name-with-many-parts-and-versions", id="long_name"
+            ),
         ],
     )
     def test_accepts_valid_model_name(self, value: str) -> None:

@@ -20,8 +20,12 @@ class TestQuestionValidation:
         "content",
         [
             pytest.param("What is Python?", id="simple_question"),
-            pytest.param("How do I use FastAPI with dependency injection?", id="technical_question"),
-            pytest.param("Explain the difference between list and tuple", id="comparison_question"),
+            pytest.param(
+                "How do I use FastAPI with dependency injection?", id="technical_question"
+            ),
+            pytest.param(
+                "Explain the difference between list and tuple", id="comparison_question"
+            ),
             pytest.param("a" * MAX_QUESTION_LENGTH, id="max_length_question"),
             pytest.param("Question with spaces   ", id="trailing_spaces"),
             pytest.param("  Question with leading spaces", id="leading_spaces"),
@@ -51,11 +55,21 @@ class TestQuestionValidation:
             pytest.param("   ", EmptyQuestionError, id="whitespace_only"),
             pytest.param("\n", EmptyQuestionError, id="newline_only"),
             pytest.param("\t", EmptyQuestionError, id="tab_only"),
-            pytest.param("a" * (MAX_QUESTION_LENGTH + 1), QuestionTooLongError, id="exceeds_max_by_one"),
-            pytest.param("a" * (MAX_QUESTION_LENGTH * 2), QuestionTooLongError, id="exceeds_max_greatly"),
+            pytest.param(
+                "a" * (MAX_QUESTION_LENGTH + 1),
+                QuestionTooLongError,
+                id="exceeds_max_by_one",
+            ),
+            pytest.param(
+                "a" * (MAX_QUESTION_LENGTH * 2),
+                QuestionTooLongError,
+                id="exceeds_max_greatly",
+            ),
         ],
     )
-    def test_rejects_invalid_question(self, content: str, expected_error: type[DomainFieldError]) -> None:
+    def test_rejects_invalid_question(
+        self, content: str, expected_error: type[DomainFieldError]
+    ) -> None:
         # Arrange & Act & Assert
         with pytest.raises(expected_error):
             Question(content=content)

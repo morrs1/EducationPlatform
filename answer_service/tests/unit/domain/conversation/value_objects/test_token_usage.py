@@ -21,7 +21,9 @@ class TestTokenUsageValidation:
             pytest.param(100, 0, id="zero_output"),
         ],
     )
-    def test_accepts_valid_token_usage(self, input_tokens: int, output_tokens: int) -> None:
+    def test_accepts_valid_token_usage(
+        self, input_tokens: int, output_tokens: int
+    ) -> None:
         # Arrange & Act
         sut = TokenUsage(input_tokens=input_tokens, output_tokens=output_tokens)
 
@@ -35,8 +37,12 @@ class TestTokenUsageValidation:
         [
             pytest.param(-1, 0, NegativeTokenCountError, id="negative_input"),
             pytest.param(0, -1, NegativeTokenCountError, id="negative_output"),
-            pytest.param(-100, 50, NegativeTokenCountError, id="negative_input_positive_output"),
-            pytest.param(50, -100, NegativeTokenCountError, id="positive_input_negative_output"),
+            pytest.param(
+                -100, 50, NegativeTokenCountError, id="negative_input_positive_output"
+            ),
+            pytest.param(
+                50, -100, NegativeTokenCountError, id="positive_input_negative_output"
+            ),
             pytest.param(-1, -1, NegativeTokenCountError, id="both_negative"),
         ],
     )

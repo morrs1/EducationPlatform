@@ -229,10 +229,10 @@ Always structure tests with these three phases:
 async def test_example() -> None:
     # Arrange
     # Set up test data, mocks, fixtures
-    
+
     # Act
     # Execute the code being tested
-    
+
     # Assert
     # Verify results, assertions
 ```

@@ -66,3 +66,12 @@ repos:
         require_serial: true
         verbose: true
         pass_filenames: false
+
+    - id: import-linter
+      name: import-linter
+      entry: just import-linter
+      language: python
+      types: [ python ]
+      require_serial: true
+      verbose: true
+      pass_filenames: false
