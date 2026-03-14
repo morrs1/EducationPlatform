@@ -4,6 +4,11 @@ from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ConversationCreatedView:
+    conversation_id: UUID
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class MessageView:
     message_id: UUID
     question: str
@@ -29,4 +34,16 @@ class ConversationView:
     lesson_id: UUID
     status: str
     messages: list[MessageView]
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ConversationListItemView:
+    """Lightweight view for conversation list endpoints (no messages payload)."""
+
+    conversation_id: UUID
+    user_id: UUID
+    lesson_id: UUID
+    status: str
+    messages_count: int
     created_at: datetime

@@ -9,6 +9,8 @@ from answer_service.application.errors import (
     ConversationNotFoundError,
     LessonAlreadyIndexedError,
     LessonIndexNotFoundError,
+    PaginationError,
+    UserNotFoundError,
 )
 from answer_service.domain.common.errors import DomainError
 
@@ -21,7 +23,9 @@ def setup_exception_handlers(app: FastAPI) -> None:
     _HTTP_STATUS: Final[dict[type[Exception], int]] = {
         ConversationNotFoundError: status.HTTP_404_NOT_FOUND,
         LessonIndexNotFoundError: status.HTTP_404_NOT_FOUND,
+        UserNotFoundError: status.HTTP_404_NOT_FOUND,
         LessonAlreadyIndexedError: status.HTTP_409_CONFLICT,
+        PaginationError: status.HTTP_400_BAD_REQUEST,
     }
 
     @app.exception_handler(ApplicationError)

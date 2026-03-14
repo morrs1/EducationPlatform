@@ -15,3 +15,11 @@ class LessonIndexNotFoundError(ApplicationError):
 
 class LessonAlreadyIndexedError(ApplicationError):
     """Raised when attempting to index a lesson that is already indexed."""
+
+
+class UserNotFoundError(ApplicationError):
+    """Raised when a requested user does not exist."""
+
+
+class PaginationError(ApplicationError):
+    """Raised when pagination parameters are invalid."""

@@ -10,8 +10,8 @@ from answer_service.application.common.ports.llm_port import LLMMessage, LLMPort
 from answer_service.application.common.ports.transaction_manager import TransactionManager
 from answer_service.application.common.ports.vector_search_port import VectorSearchPort
 from answer_service.application.common.views.conversation_views import AnswerView
+from answer_service.application.errors import ConversationNotFoundError
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.conversation.entities.conversation import Conversation
 from answer_service.domain.conversation.factories.conversation_factory import ConversationFactory
 from answer_service.domain.conversation.services.context_window_service import ContextWindowService
 from answer_service.domain.conversation.value_objects.answer import Answer
@@ -19,8 +19,6 @@ from answer_service.domain.conversation.value_objects.message_id import MessageI
 from answer_service.domain.conversation.value_objects.model_name import ModelName
 from answer_service.domain.conversation.value_objects.question import Question
 from answer_service.domain.conversation.value_objects.token_usage import TokenUsage
-from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
-from answer_service.domain.user.value_objects.user_id import UserId
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -36,11 +34,8 @@ _TOKEN_BUDGET = 3000
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AskQuestionCommand:
-    user_id: UUID
-    lesson_id: UUID
+    conversation_id: UUID
     question: str
-    # If None — a new conversation is started; otherwise the existing one is continued.
-    conversation_id: UUID | None = None
 
 
 @final
@@ -69,16 +64,17 @@ class AskQuestionCommandHandler:
 
     async def __call__(self, data: AskQuestionCommand) -> AnswerView:
         logger.info(
-            "ask_question: started. user_id='%s', lesson_id='%s', conversation_id='%s'.",
-            data.user_id,
-            data.lesson_id,
+            "ask_question: started. conversation_id='%s'.",
             data.conversation_id,
         )
 
         question = Question(content=data.question)
 
-        # 1. Load or create conversation
-        conversation = await self._get_or_create_conversation(data)
+        # 1. Load conversation — must already exist
+        conversation = await self._conversation_repository.get_by_id(data.conversation_id)
+        if conversation is None:
+            msg = f"Conversation '{data.conversation_id}' not found."
+            raise ConversationNotFoundError(msg)
 
         # 2. Add the question — creates Message with PENDING status
         message = self._conversation_factory.create_message(conversation, question)
@@ -87,7 +83,7 @@ class AskQuestionCommandHandler:
         query_vector = await self._embedding_port.embed(data.question)
         search_results = await self._vector_search_port.search(
             query_vector=query_vector,
-            lesson_id=data.lesson_id,
+            lesson_id=conversation.lesson_id,
             top_k=_TOP_K_CHUNKS,
         )
         context_chunks = [r.content for r in search_results]
@@ -156,20 +152,3 @@ class AskQuestionCommandHandler:
             input_tokens=llm_response.input_tokens,
             output_tokens=llm_response.output_tokens,
         )
-
-    async def _get_or_create_conversation(self, data: AskQuestionCommand) -> Conversation:
-        if data.conversation_id is not None:
-            conversation = await self._conversation_repository.get_by_id(data.conversation_id)
-            if conversation is not None:
-                return conversation
-            logger.warning(
-                "ask_question: provided conversation_id not found, creating new one. conversation_id='%s'.",
-                data.conversation_id,
-            )
-
-        conversation = self._conversation_factory.create_conversation(
-            user_id=UserId(data.user_id),
-            lesson_id=LessonId(data.lesson_id),
-        )
-        logger.info("ask_question: new conversation created. new_conversation_id='%s'.", conversation.id)
-        return conversation

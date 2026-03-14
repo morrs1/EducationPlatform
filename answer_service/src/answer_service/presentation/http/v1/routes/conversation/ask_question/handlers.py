@@ -1,8 +1,9 @@
 from typing import Annotated, Final
+from uuid import UUID
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Body, status
+from fastapi import APIRouter, Body, Path, status
 
 from answer_service.application.commands.conversation.ask_question import AskQuestionCommand, AskQuestionCommandHandler
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
@@ -16,11 +17,17 @@ ask_question_router: Final[APIRouter] = APIRouter(
     route_class=DishkaRoute,
 )
 
+ConversationIdPath = Path(
+    title="Conversation ID",
+    description="UUID of the conversation to send a question to",
+    examples=["3fa85f64-5717-4562-b3fc-2c963f66afa6"],
+)
+
 
 @ask_question_router.post(
-    "/ask",
+    "/{conversation_id}/ask",
     status_code=status.HTTP_201_CREATED,
-    summary="Ask a question within a lesson context (creates or continues a conversation)",
+    summary="Ask a question within an existing conversation",
     responses={
         status.HTTP_404_NOT_FOUND: {"model": ExceptionSchema},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ExceptionSchema},
@@ -28,15 +35,14 @@ ask_question_router: Final[APIRouter] = APIRouter(
     },
 )
 async def ask_question_handler(
+    conversation_id: Annotated[UUID, ConversationIdPath],
     body: Annotated[AskQuestionRequest, Body()],
     interactor: FromDishka[AskQuestionCommandHandler],
 ) -> AnswerResponse:
     view = await interactor(
         AskQuestionCommand(
-            user_id=body.user_id,
-            lesson_id=body.lesson_id,
+            conversation_id=conversation_id,
             question=body.question,
-            conversation_id=body.conversation_id,
         )
     )
     return AnswerResponse(

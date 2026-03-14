@@ -11,9 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from answer_service.application.commands.conversation.ask_question import AskQuestionCommandHandler
 from answer_service.application.commands.conversation.close_conversation import CloseConversationCommandHandler
+from answer_service.application.commands.conversation.create_conversation import CreateConversationCommandHandler
 from answer_service.application.commands.lesson_index.index_lesson import IndexLessonCommandHandler
 from answer_service.application.commands.lesson_index.reindex_lesson import ReindexLessonCommandHandler
 from answer_service.application.commands.user.create_user import CreateUserCommandHandler
+from answer_service.application.commands.user.delete_user import DeleteUserCommandHandler
 from answer_service.application.common.ports.conversation_repository import ConversationRepository
 from answer_service.application.common.ports.embedding_port import EmbeddingPort
 from answer_service.application.common.ports.event_bus import EventBus
@@ -23,7 +25,10 @@ from answer_service.application.common.ports.transaction_manager import Transact
 from answer_service.application.common.ports.user_repository import UserRepository
 from answer_service.application.common.ports.vector_search_port import VectorSearchPort
 from answer_service.application.queries.conversation.get_conversation import GetConversationQueryHandler
+from answer_service.application.queries.conversation.get_conversations import GetConversationsQueryHandler
 from answer_service.application.queries.lesson_index.get_lesson_index_status import GetLessonIndexStatusQueryHandler
+from answer_service.application.queries.user.get_user_by_id import GetUserByIdQueryHandler
+from answer_service.application.queries.user.get_users import GetUsersQueryHandler
 from answer_service.domain.common.events_collection import EventsCollection
 from answer_service.domain.conversation.factories.conversation_factory import ConversationFactory
 from answer_service.domain.conversation.ports.id_generator import (
@@ -143,11 +148,16 @@ def interactors_provider() -> Provider:
     provider: Final[Provider] = Provider(scope=Scope.REQUEST)
     provider.provide_all(
         CreateUserCommandHandler,
+        DeleteUserCommandHandler,
+        CreateConversationCommandHandler,
         AskQuestionCommandHandler,
         CloseConversationCommandHandler,
         IndexLessonCommandHandler,
         ReindexLessonCommandHandler,
+        GetUserByIdQueryHandler,
+        GetUsersQueryHandler,
         GetConversationQueryHandler,
+        GetConversationsQueryHandler,
         GetLessonIndexStatusQueryHandler,
     )
     return provider
