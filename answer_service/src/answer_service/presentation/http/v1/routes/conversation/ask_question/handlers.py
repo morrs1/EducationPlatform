@@ -30,7 +30,7 @@ ConversationIdPath = Path(
     summary="Ask a question within an existing conversation",
     responses={
         status.HTTP_404_NOT_FOUND: {"model": ExceptionSchema},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ExceptionSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ExceptionSchema},
         status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ExceptionSchema},
     },
 )

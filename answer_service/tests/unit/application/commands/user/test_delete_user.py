@@ -34,15 +34,15 @@ async def test_delete_user_deletes_and_commits(
 ) -> None:
     # Arrange
     existing_user = make_user()
-    user_repository.get_by_id = AsyncMock(return_value=existing_user)  # type: ignore[method-assign]
+    user_repository.get_by_id = AsyncMock(return_value=existing_user)
 
     # Act
     await handler(DeleteUserCommand(user_id=existing_user.id))
 
     # Assert
-    user_repository.delete.assert_awaited_once_with(existing_user.id)  # type: ignore[attr-defined]
-    transaction_manager.flush.assert_awaited_once()  # type: ignore[attr-defined]
-    transaction_manager.commit.assert_awaited_once()  # type: ignore[attr-defined]
+    user_repository.delete.assert_awaited_once_with(existing_user.id)
+    transaction_manager.flush.assert_awaited_once()
+    transaction_manager.commit.assert_awaited_once()
 
 
 async def test_delete_user_raises_when_not_found(
@@ -50,7 +50,7 @@ async def test_delete_user_raises_when_not_found(
     user_repository: UserRepository,
 ) -> None:
     # Arrange
-    user_repository.get_by_id = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    user_repository.get_by_id = AsyncMock(return_value=None)
 
     # Act / Assert
     with pytest.raises(UserNotFoundError):

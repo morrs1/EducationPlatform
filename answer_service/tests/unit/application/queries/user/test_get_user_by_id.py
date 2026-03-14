@@ -24,7 +24,7 @@ async def test_get_user_by_id_returns_view(
 ) -> None:
     # Arrange
     user = make_user()
-    user_repository.get_by_id = AsyncMock(return_value=user)  # type: ignore[method-assign]
+    user_repository.get_by_id = AsyncMock(return_value=user)
 
     # Act
     result = await handler(GetUserByIdQuery(user_id=user.id))
@@ -39,7 +39,7 @@ async def test_get_user_by_id_raises_when_not_found(
     user_repository: UserRepository,
 ) -> None:
     # Arrange
-    user_repository.get_by_id = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    user_repository.get_by_id = AsyncMock(return_value=None)
 
     # Act / Assert
     with pytest.raises(UserNotFoundError):

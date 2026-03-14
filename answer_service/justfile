@@ -59,6 +59,21 @@ zizmor:
 [group("static analysis")]
 static-analysis: mypy bandit semgrep
 
+# Tests
+[doc("Run pytest with mypy plugin")]
+[group("tests")]
+pytest *params:
+  uv run --active --frozen pytest {{params}}
+
+[doc("Run pytest with coverage")]
+[group("tests")]
+test: pytest --cov=src/answer_service --cov-report=term-missing
+
+[doc("Run pytest without mypy (faster)")]
+[group("tests")]
+test-fast:
+  uv run --active --frozen pytest --ignore-glob='**/mypy_cache' -p no:mypy {{params}}
+
 [doc("Install pre-commit hooks")]
 [group("pre-commit")]
 pre-commit-install:

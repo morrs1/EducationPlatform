@@ -29,7 +29,7 @@ ConversationIdPath = Path(
     summary="Close an active conversation",
     responses={
         status.HTTP_404_NOT_FOUND: {"model": ExceptionSchema},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ExceptionSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ExceptionSchema},
     },
 )
 async def close_conversation_handler(

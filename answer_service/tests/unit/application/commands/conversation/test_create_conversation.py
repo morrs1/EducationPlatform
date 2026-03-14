@@ -63,7 +63,7 @@ async def test_create_conversation_saves_and_commits(
     await handler(command)
 
     # Assert
-    conversation_repository.save.assert_awaited_once()  # type: ignore[attr-defined]
-    transaction_manager.flush.assert_awaited_once()  # type: ignore[attr-defined]
-    transaction_manager.commit.assert_awaited_once()  # type: ignore[attr-defined]
-    event_bus.publish.assert_awaited_once()  # type: ignore[attr-defined]
+    conversation_repository.save.assert_awaited_once()
+    transaction_manager.flush.assert_awaited_once()
+    transaction_manager.commit.assert_awaited_once()
+    event_bus.publish.assert_awaited_once()

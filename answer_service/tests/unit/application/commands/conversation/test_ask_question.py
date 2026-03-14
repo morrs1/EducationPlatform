@@ -29,7 +29,7 @@ from tests.unit.factories.entities import make_conversation
 
 
 @pytest.fixture()
-def handler(  # noqa: PLR0913, PLR0917
+def handler(  # noqa: PLR0917
     transaction_manager: TransactionManager,
     conversation_repository: ConversationRepository,
     conversation_factory: ConversationFactory,
@@ -63,7 +63,7 @@ def llm_response() -> LLMResponse:
     )
 
 
-async def test_ask_question_returns_answer_view(  # noqa: PLR0913, PLR0917
+async def test_ask_question_returns_answer_view(  # noqa: PLR0917
     handler: AskQuestionCommandHandler,
     conversation_repository: ConversationRepository,
     embedding_port: EmbeddingPort,
@@ -74,11 +74,11 @@ async def test_ask_question_returns_answer_view(  # noqa: PLR0913, PLR0917
 ) -> None:
     # Arrange
     conversation = make_conversation()
-    conversation_repository.get_by_id = AsyncMock(return_value=conversation)  # type: ignore[method-assign]
-    embedding_port.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])  # type: ignore[method-assign]
-    vector_search_port.search = AsyncMock(return_value=[])  # type: ignore[method-assign]
-    llm_port.generate = AsyncMock(return_value=llm_response)  # type: ignore[method-assign]
-    cast(MagicMock, context_window_service).select_within_token_budget.return_value = []
+    conversation_repository.get_by_id = AsyncMock(return_value=conversation)
+    embedding_port.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
+    vector_search_port.search = AsyncMock(return_value=[])
+    llm_port.generate = AsyncMock(return_value=llm_response)
+    cast("MagicMock", context_window_service).select_within_token_budget.return_value = []
 
     command = AskQuestionCommand(conversation_id=conversation.id, question="What is 42?")
 
@@ -96,7 +96,7 @@ async def test_ask_question_raises_when_conversation_not_found(
     conversation_repository: ConversationRepository,
 ) -> None:
     # Arrange
-    conversation_repository.get_by_id = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    conversation_repository.get_by_id = AsyncMock(return_value=None)
     command = AskQuestionCommand(conversation_id=uuid4(), question="What is 42?")
 
     # Act / Assert
@@ -104,7 +104,7 @@ async def test_ask_question_raises_when_conversation_not_found(
         await handler(command)
 
 
-async def test_ask_question_saves_and_commits(  # noqa: PLR0913, PLR0917
+async def test_ask_question_saves_and_commits(  # noqa: PLR0917
     handler: AskQuestionCommandHandler,
     conversation_repository: ConversationRepository,
     transaction_manager: TransactionManager,
@@ -117,11 +117,11 @@ async def test_ask_question_saves_and_commits(  # noqa: PLR0913, PLR0917
 ) -> None:
     # Arrange
     conversation = make_conversation()
-    conversation_repository.get_by_id = AsyncMock(return_value=conversation)  # type: ignore[method-assign]
-    embedding_port.embed = AsyncMock(return_value=[0.1])  # type: ignore[method-assign]
-    vector_search_port.search = AsyncMock(return_value=[])  # type: ignore[method-assign]
-    llm_port.generate = AsyncMock(return_value=llm_response)  # type: ignore[method-assign]
-    cast(MagicMock, context_window_service).select_within_token_budget.return_value = []
+    conversation_repository.get_by_id = AsyncMock(return_value=conversation)
+    embedding_port.embed = AsyncMock(return_value=[0.1])
+    vector_search_port.search = AsyncMock(return_value=[])
+    llm_port.generate = AsyncMock(return_value=llm_response)
+    cast("MagicMock", context_window_service).select_within_token_budget.return_value = []
 
     command = AskQuestionCommand(conversation_id=conversation.id, question="Question?")
 
@@ -129,7 +129,7 @@ async def test_ask_question_saves_and_commits(  # noqa: PLR0913, PLR0917
     await handler(command)
 
     # Assert
-    conversation_repository.save.assert_awaited_once()  # type: ignore[attr-defined]
-    transaction_manager.flush.assert_awaited_once()  # type: ignore[attr-defined]
-    transaction_manager.commit.assert_awaited_once()  # type: ignore[attr-defined]
-    event_bus.publish.assert_awaited_once()  # type: ignore[attr-defined]
+    conversation_repository.save.assert_awaited_once()
+    transaction_manager.flush.assert_awaited_once()
+    transaction_manager.commit.assert_awaited_once()
+    event_bus.publish.assert_awaited_once()

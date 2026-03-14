@@ -22,7 +22,7 @@ async def test_get_users_returns_list_of_views(
 ) -> None:
     # Arrange
     users = [make_user(), make_user()]
-    user_repository.get_all = AsyncMock(return_value=users)  # type: ignore[method-assign]
+    user_repository.get_all = AsyncMock(return_value=users)
 
     # Act
     result = await handler(GetUsersQuery())
@@ -37,7 +37,7 @@ async def test_get_users_returns_empty_list_when_none(
     user_repository: UserRepository,
 ) -> None:
     # Arrange
-    user_repository.get_all = AsyncMock(return_value=[])  # type: ignore[method-assign]
+    user_repository.get_all = AsyncMock(return_value=[])
 
     # Act
     result = await handler(GetUsersQuery())

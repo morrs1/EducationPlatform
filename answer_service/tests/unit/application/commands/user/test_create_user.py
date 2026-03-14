@@ -37,16 +37,16 @@ async def test_create_user_saves_and_commits(
 ) -> None:
     # Arrange
     user_id = uuid4()
-    user_repository.get_by_id = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    user_repository.get_by_id = AsyncMock(return_value=None)
 
     # Act
     await handler(CreateUserCommand(user_id=user_id))
 
     # Assert
-    user_repository.save.assert_awaited_once()  # type: ignore[attr-defined]
-    transaction_manager.flush.assert_awaited_once()  # type: ignore[attr-defined]
-    transaction_manager.commit.assert_awaited_once()  # type: ignore[attr-defined]
-    event_bus.publish.assert_awaited_once()  # type: ignore[attr-defined]
+    user_repository.save.assert_awaited_once()
+    transaction_manager.flush.assert_awaited_once()
+    transaction_manager.commit.assert_awaited_once()
+    event_bus.publish.assert_awaited_once()
 
 
 async def test_create_user_skips_if_already_exists(
@@ -56,11 +56,11 @@ async def test_create_user_skips_if_already_exists(
 ) -> None:
     # Arrange
     existing_user = make_user()
-    user_repository.get_by_id = AsyncMock(return_value=existing_user)  # type: ignore[method-assign]
+    user_repository.get_by_id = AsyncMock(return_value=existing_user)
 
     # Act
     await handler(CreateUserCommand(user_id=existing_user.id))
 
     # Assert
-    user_repository.save.assert_not_awaited()  # type: ignore[attr-defined]
-    transaction_manager.commit.assert_not_awaited()  # type: ignore[attr-defined]
+    user_repository.save.assert_not_awaited()
+    transaction_manager.commit.assert_not_awaited()

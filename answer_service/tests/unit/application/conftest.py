@@ -43,51 +43,61 @@ if TYPE_CHECKING:
 
 @pytest.fixture()
 def events_collection() -> EventsCollection:
+    """Create an empty events collection for tests."""
     return EventsCollection(events=deque())
 
 
 @pytest.fixture()
 def transaction_manager() -> TransactionManager:
-    return cast("TransactionManager", cast(object, AsyncMock()))
+    """Create a mock transaction manager for tests."""
+    return cast("TransactionManager", cast("object", AsyncMock()))
 
 
 @pytest.fixture()
 def event_bus() -> EventBus:
-    return cast("EventBus", cast(object, AsyncMock()))
+    """Create a mock event bus for tests."""
+    return cast("EventBus", cast("object", AsyncMock()))
 
 
 @pytest.fixture()
 def user_repository() -> UserRepository:
-    return cast("UserRepository", cast(object, AsyncMock()))
+    """Create a mock user repository for tests."""
+    return cast("UserRepository", cast("object", AsyncMock()))
 
 
 @pytest.fixture()
 def conversation_repository() -> ConversationRepository:
-    return cast("ConversationRepository", cast(object, AsyncMock()))
+    """Create a mock conversation repository for tests."""
+    return cast("ConversationRepository", cast("object", AsyncMock()))
 
 
 @pytest.fixture()
 def embedding_port() -> EmbeddingPort:
-    return cast("EmbeddingPort", cast(object, AsyncMock()))
+    """Create a mock embedding port for tests."""
+    return cast("EmbeddingPort", cast("object", AsyncMock()))
 
 
 @pytest.fixture()
 def vector_search_port() -> VectorSearchPort:
-    return cast("VectorSearchPort", cast(object, AsyncMock()))
+    """Create a mock vector search port for tests."""
+    return cast("VectorSearchPort", cast("object", AsyncMock()))
 
 
 @pytest.fixture()
 def llm_port() -> LLMPort:
-    return cast("LLMPort", cast(object, AsyncMock()))
+    """Create a mock LLM port for tests."""
+    return cast("LLMPort", cast("object", AsyncMock()))
 
 
 @pytest.fixture()
 def context_window_service() -> ContextWindowService:
+    """Create a mock context window service for tests."""
     return cast("ContextWindowService", MagicMock(spec=ContextWindowService))
 
 
 @pytest.fixture()
 def conversation_factory(events_collection: EventsCollection) -> ConversationFactory:
+    """Create a conversation factory for tests."""
     conversation_id_generator = cast(
         "ConversationIdGenerator", MagicMock(return_value=ConversationId(uuid4()))
     )

@@ -30,7 +30,7 @@ async def test_get_conversations_returns_list_of_views(
     # Arrange
     user_id = uuid4()
     conversations = [make_conversation(), make_conversation()]
-    conversation_repository.get_all_by_user = AsyncMock(return_value=conversations)  # type: ignore[method-assign]
+    conversation_repository.get_all_by_user = AsyncMock(return_value=conversations)
 
     # Act
     result = await handler(GetConversationsQuery(user_id=user_id))
@@ -45,7 +45,7 @@ async def test_get_conversations_returns_empty_list_when_none(
     conversation_repository: ConversationRepository,
 ) -> None:
     # Arrange
-    conversation_repository.get_all_by_user = AsyncMock(return_value=[])  # type: ignore[method-assign]
+    conversation_repository.get_all_by_user = AsyncMock(return_value=[])
 
     # Act
     result = await handler(GetConversationsQuery(user_id=uuid4()))

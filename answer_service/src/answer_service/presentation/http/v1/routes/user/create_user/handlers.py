@@ -20,7 +20,7 @@ create_user_router: Final[APIRouter] = APIRouter(
     summary="Create a user reference from the auth service",
     responses={
         status.HTTP_409_CONFLICT: {"model": ExceptionSchema},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ExceptionSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ExceptionSchema},
     },
 )
 async def create_user_handler(
