@@ -65,6 +65,11 @@ from answer_service.setup.ioc import (
     mappers_provider,
 )
 
+# Force all integration tests to share the session-scoped event loop so that
+# session-scoped async fixtures (PostgreSQL engine, Dishka container) and the
+# test functions themselves run in the same loop.
+pytestmark = pytest.mark.asyncio(loop_scope="session")
+
 _POSTGRES_IMAGE: Final[str] = "postgres:16-alpine"
 _TRUNCATE_SQL: Final[str] = (
     "TRUNCATE TABLE messages, conversations, document_chunks, lesson_indexes, users CASCADE"
