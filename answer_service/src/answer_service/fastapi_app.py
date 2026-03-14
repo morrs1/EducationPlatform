@@ -13,7 +13,7 @@ from answer_service._version import __version__
 
 from answer_service.setup.bootstrap import (
     setup_configs,
-    setup_exc_handlers,
+    setup_http_exc_handlers,
     setup_http_middlewares,
     setup_http_routes,
     setup_map_tables,
@@ -23,7 +23,7 @@ from answer_service.setup.configs.database_config import PostgresConfig, SQLAlch
 from answer_service.setup.ioc import setup_providers
 
 if TYPE_CHECKING:
-    from answer_service.setup.configs.settings import AppConfig
+    from answer_service.setup.configs.app_config import AppConfig
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ def create_fastapi_app() -> FastAPI:  # pragma: no cover
 
     container: AsyncContainer = make_async_container(*setup_providers(), context=context)
     setup_http_routes(app)
-    setup_exc_handlers(app)
+    setup_http_exc_handlers(app)
     setup_http_middlewares(app, api_config=configs.asgi)
     setup_dishka(container, app)
     logger.info("App created", extra={"app_version": app.version})

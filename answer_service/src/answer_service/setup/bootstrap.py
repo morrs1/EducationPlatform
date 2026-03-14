@@ -1,7 +1,7 @@
 import logging
 import sys
 from types import TracebackType
-
+from functools import lru_cache
 from fastapi import FastAPI
 
 from answer_service.infrastructure.persistence.models import (
@@ -9,8 +9,13 @@ from answer_service.infrastructure.persistence.models import (
     map_conversations_tables,
     map_lesson_index_tables
 )
+from answer_service.setup.configs.app_config import AppConfig
 from answer_service.setup.configs.asgi_config import ASGIConfig
 from answer_service.setup.configs.logging_config import LoggingConfig, configure_logging
+
+@lru_cache(maxsize=1)
+def setup_configs() -> AppConfig:
+    return AppConfig()
 
 
 def setup_map_tables() -> None:
@@ -39,6 +44,12 @@ def setup_map_tables() -> None:
     map_users_table()
     map_conversations_tables()
     map_lesson_index_tables()
+
+def setup_http_routes(app: FastAPI) -> None:
+    ...
+
+def setup_http_exc_handlers(app: FastAPI) -> None:
+    ...
 
 def setup_http_middlewares(app: FastAPI, /, api_config: ASGIConfig) -> None:
     """
