@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@layer components {
+  .header-btn {
+    @apply px-2 py-1 text-xs text-white transition duration-300 ease-in-out border border-white rounded-md cursor-pointer sm:px-3 sm:py-2 sm:text-sm md:text-base hover:text-black hover:bg-white;
+  }
+
+  .header-catalog-btn {
+    @apply text-xs text-white cursor-pointer hover:underline sm:text-sm md:text-base;
+  }
+
+  .header-search {
+    @apply px-2 py-1 text-xs text-white border border-white rounded-md outline-none sm:px-3 sm:py-2 sm:text-sm md:text-base;
+  }
+
+  .modal-up-btn {
+    @apply text-base transition ease-in-out cursor-pointer sm:text-lg duration-400 hover:text-blue-400;
+  }
+
+  .modal-up-btn.active {
+    @apply text-base text-blue-400 cursor-pointer sm:text-lg;
+  }
+
+  .modal-close-btn {
+    @apply text-xl text-gray-400 transition duration-300 ease-in-out cursor-pointer sm:text-2xl hover:text-black hover:font-bold;
+  }
+
+  .modal-input {
+    @apply w-full px-2 py-1 text-sm border border-black rounded-md outline-none sm:px-3 sm:py-2 sm:text-base;
+  }
+
+  .modal-submit-btn {
+    @apply w-full py-2 my-4 text-base text-white bg-black rounded-md cursor-pointer sm:py-3 sm:my-5 sm:text-lg active:text-black active:bg-white active:border active:border-black;
+  }
+
+  .side-catalog-btn {
+    @apply flex items-center justify-between w-full px-2 py-2 text-sm cursor-pointer sm:text-base hover:bg-green-500/10;
+  }
+
+  .side-catalog-btn.active {
+    @apply flex items-center justify-between w-full px-2 py-2 text-green-600 transition duration-300 hover:bg-transparent;
+  }
+
+  .side-catalog-subcat {
+    @apply inline-block text-sm font-bold cursor-pointer w-fit hover:underline sm:text-base;
+  }
+
+  .side-catalog-course {
+    @apply inline-block text-xs leading-tight transition duration-300 cursor-pointer w-fit hover:text-green-600 sm:text-sm;
+  }
+}
