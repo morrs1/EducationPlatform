@@ -122,18 +122,32 @@ def test_vector_store_provider() -> Provider:
     return provider
 
 
+def _make_unconnected_rabbit_broker() -> RabbitBroker:
+    """Create a bare, unconnected RabbitBroker for use in tests."""
+    return RabbitBroker()
+
+
+def test_broker_provider() -> Provider:
+    """Provides an unconnected RabbitBroker stub for integration tests."""
+    provider: Provider = Provider(scope=Scope.APP)
+    provider.provide(_make_unconnected_rabbit_broker, provides=RabbitBroker)
+    return provider
+
+
 def test_app_providers() -> Iterable[Provider]:
     """All providers for the integration test container.
 
     Mirrors ``setup_providers()`` but swaps ``vector_store_provider()`` for
     ``test_vector_store_provider()`` (FakeEmbeddings, EphemeralClient,
-    FakeChatModel) and replaces ``scheduler_provider()`` with a no-op stub.
+    FakeChatModel), replaces ``scheduler_provider()`` with a no-op stub,
+    and replaces ``broker_provider()`` with a bare unconnected RabbitBroker.
     """
     return (
         configs_provider(),
         db_provider(),
         test_vector_store_provider(),
         bazario_provider(),
+        test_broker_provider(),
         mappers_provider(),
         domain_ports_provider(),
         gateways_provider(),
@@ -197,6 +211,7 @@ def lesson_index_worker_test_providers(
     gw_prov.provide(
         source=SqlAlchemyLessonIndexRepository, provides=LessonIndexRepository
     )
+    gw_prov.provide(source=SqlAlchemyOutboxRepository, provides=OutboxRepository)
     gw_prov.provide(source=ChromaVectorSearchPort, provides=VectorSearchPort)
     gw_prov.provide(source=LangChainEmbeddingPort, provides=EmbeddingPort)
     gw_prov.provide(source=BazarioEventBus, provides=EventBus)

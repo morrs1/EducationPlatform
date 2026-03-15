@@ -2,10 +2,10 @@ from collections import deque
 from collections.abc import Iterable
 from typing import Final
 
-from bazario.asyncio import Dispatcher, Publisher, Registry
+from bazario.asyncio import Dispatcher, Registry
 from bazario.asyncio.resolvers.dishka import DishkaResolver
 from chromadb.api import ClientAPI
-from dishka import AsyncContainer, Provider, Scope
+from dishka import Provider, Scope, WithParents
 from dishka.integrations.fastapi import FastapiProvider
 from dishka.integrations.taskiq import TaskiqProvider
 from dishka_faststream import FastStreamProvider
@@ -113,6 +113,7 @@ from answer_service.infrastructure.adapters.persistence import (
     SqlAlchemyTransactionManager,
     SqlAlchemyUserRepository,
 )
+from answer_service.infrastructure.cache.provider import get_redis
 from answer_service.infrastructure.mappers.event_serializer import RetortEventSerializer
 from answer_service.infrastructure.mappers.llm_mapper import (
     LLMRequestMapper,
@@ -142,10 +143,6 @@ from answer_service.setup.configs.llm_config import OpenAIConfig
 from answer_service.setup.configs.redis_config import RedisConfig
 
 
-def _make_events_collection() -> EventsCollection:
-    return EventsCollection(events=deque())
-
-
 def configs_provider() -> Provider:
     provider: Final[Provider] = Provider(scope=Scope.APP)
     provider.from_context(provides=ASGIConfig)
@@ -155,6 +152,8 @@ def configs_provider() -> Provider:
     provider.from_context(provides=OpenAIConfig)
     provider.from_context(provides=RabbitConfig)
     provider.from_context(provides=RedisConfig)
+    provider.from_context(provides=RabbitBroker)
+    provider.from_context(provides=AsyncBroker)
     return provider
 
 
@@ -176,31 +175,21 @@ def vector_store_provider() -> Provider:
     return provider
 
 
+def _make_registry() -> Registry:
+    return Registry()
+
+
 def bazario_provider() -> Provider:
-    """APP-scoped Bazario registry and in-process event dispatcher."""
-    provider: Final[Provider] = Provider(scope=Scope.APP)
-    registry: Final[Registry] = Registry()
-
-    async def _make_dispatcher(container: AsyncContainer) -> Dispatcher:  # noqa: RUF029
-        resolver = DishkaResolver(container)
-        return Dispatcher(resolver=resolver, registry=registry)
-
-    provider.provide(lambda: registry, provides=Registry)
-    provider.provide(_make_dispatcher, provides=Publisher)
+    """REQUEST-scoped Bazario resolver and dispatcher; APP-scoped registry."""
+    provider: Final[Provider] = Provider(scope=Scope.REQUEST)
+    provider.provide(_make_registry, provides=Registry, scope=Scope.APP)
+    provider.provide(WithParents[DishkaResolver])
+    provider.provide(WithParents[Dispatcher])
     return provider
 
 
-def broker_provider() -> Provider:
-    """APP-scoped FastStream RabbitMQ broker."""
-    provider: Final[Provider] = Provider(scope=Scope.APP)
-
-    async def _make_rabbit_broker(config: RabbitConfig) -> RabbitBroker:
-        broker = RabbitBroker(config.uri)
-        await broker.connect()
-        return broker
-
-    provider.provide(_make_rabbit_broker, provides=RabbitBroker)
-    return provider
+def _make_events_collection() -> EventsCollection:
+    return EventsCollection(events=deque())
 
 
 def domain_ports_provider() -> Provider:
@@ -272,11 +261,16 @@ def interactors_provider() -> Provider:
     return provider
 
 
+def cache_provider() -> Provider:
+    """APP-scoped Redis client managed by Dishka (lifecycle via async generator)."""
+    provider: Final[Provider] = Provider(scope=Scope.APP)
+    provider.provide(get_redis, provides=Redis, scope=Scope.REQUEST)
+    return provider
+
+
 def scheduler_provider() -> Provider:
     """APP-scoped schedule source + REQUEST-scoped TaskIQ scheduler adapter."""
     provider: Final[Provider] = Provider(scope=Scope.REQUEST)
-    provider.from_context(provides=AsyncBroker)
-    provider.from_context(provides=Redis)
     provider.provide(
         source=setup_schedule_source,
         scope=Scope.APP,
@@ -289,9 +283,9 @@ def setup_providers() -> Iterable[Provider]:
     return (
         configs_provider(),
         db_provider(),
+        cache_provider(),
         vector_store_provider(),
         bazario_provider(),
-        broker_provider(),
         mappers_provider(),
         domain_ports_provider(),
         gateways_provider(),

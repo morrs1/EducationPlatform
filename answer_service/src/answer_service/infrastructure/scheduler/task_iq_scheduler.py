@@ -1,7 +1,6 @@
 import logging
 from typing import TYPE_CHECKING, Any, Final, override
 
-from redis.asyncio import Redis
 from taskiq import AsyncBroker, ScheduleSource
 from taskiq.depends.progress_tracker import TaskProgress, TaskState
 
@@ -21,12 +20,9 @@ logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 class TaskIQTaskScheduler(TaskScheduler):
-    def __init__(
-        self, broker: AsyncBroker, schedule_source: ScheduleSource, redis: Redis
-    ) -> None:
+    def __init__(self, broker: AsyncBroker, schedule_source: ScheduleSource) -> None:
         self._broker: Final[AsyncBroker] = broker
         self._schedule_source: Final[ScheduleSource] = schedule_source
-        self._redis: Final[Redis] = redis
 
     @override
     async def schedule(

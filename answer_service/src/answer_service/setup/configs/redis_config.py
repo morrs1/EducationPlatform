@@ -32,6 +32,11 @@ class RedisConfig(BaseModel):
         default=2,
         description="Redis DB index for taskiq schedule source",
     )
+    cache_db: int = Field(
+        alias="REDIS_CACHE_DB",
+        default=0,
+        description="Redis DB index for application cache",
+    )
 
     @field_validator("port")
     @classmethod
@@ -41,7 +46,7 @@ class RedisConfig(BaseModel):
             raise ValueError(msg)
         return v
 
-    @field_validator("worker_db", "schedule_source_db")
+    @field_validator("worker_db", "schedule_source_db", "cache_db")
     @classmethod
     def validate_redis_db(cls, v: int) -> int:
         if not REDIS_DB_MIN <= v <= REDIS_DB_MAX:
@@ -73,5 +78,17 @@ class RedisConfig(BaseModel):
                 port=self.port,
                 password=self.password or None,
                 path=f"/{self.schedule_source_db}",
+            )
+        )
+
+    @property
+    def cache_uri(self) -> str:
+        return str(
+            RedisDsn.build(
+                scheme="redis",
+                host=self.host,
+                port=self.port,
+                password=self.password or None,
+                path=f"/{self.cache_db}",
             )
         )

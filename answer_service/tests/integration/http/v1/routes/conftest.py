@@ -1,9 +1,15 @@
 """Shared fixtures for route integration tests."""
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
+from dishka import AsyncContainer
 from httpx import AsyncClient
+
+from answer_service.application.commands.lesson_index.index_lesson import (
+    IndexLessonCommand,
+    IndexLessonCommandHandler,
+)
 
 
 @pytest.fixture()
@@ -15,8 +21,19 @@ async def user_id(client: AsyncClient) -> str:
 
 
 @pytest.fixture()
-def indexed_lesson_id() -> str:
-    return str(uuid4())
+async def indexed_lesson_id(dishka_container: AsyncContainer) -> str:
+    """Return the UUID of a lesson that has been fully indexed in the DB."""
+    lesson_id: UUID = uuid4()
+    async with dishka_container() as request_container:
+        handler = await request_container.get(IndexLessonCommandHandler)
+        await handler(
+            IndexLessonCommand(
+                lesson_id=lesson_id,
+                title="Intro to Python",
+                content="Python is a programming language. " * 20,
+            )
+        )
+    return str(lesson_id)
 
 
 @pytest.fixture()
