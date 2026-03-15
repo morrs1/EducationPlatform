@@ -34,7 +34,10 @@ from answer_service.presentation.http.v1.middlewares.logging import LoggingMiddl
 from answer_service.presentation.http.v1.routes.conversation import conversation_router
 from answer_service.presentation.http.v1.routes.lesson_index import lesson_router
 from answer_service.presentation.http.v1.routes.user import user_router
-from answer_service.presentation.rabbitmq.v1 import lesson_index_rabbit_router
+from answer_service.presentation.rabbitmq.v1 import (
+    lesson_index_rabbit_router,
+    user_rabbit_router,
+)
 from answer_service.setup.configs.app_config import AppConfig
 from answer_service.setup.configs.asgi_config import ASGIConfig
 from answer_service.setup.configs.broker_config import RabbitConfig
@@ -151,6 +154,7 @@ def setup_rabbit_broker(rabbit_config: RabbitConfig) -> RabbitBroker:
 def setup_rabbit_routes(broker: RabbitBroker) -> None:
     """Include all FastStream RabbitMQ routers into the broker."""
     broker.include_router(lesson_index_rabbit_router)
+    broker.include_router(user_rabbit_router)
 
 
 def setup_http_routes(app: FastAPI, /) -> None:

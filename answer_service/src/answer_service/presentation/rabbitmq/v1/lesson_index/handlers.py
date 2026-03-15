@@ -14,6 +14,7 @@ from answer_service.application.commands.lesson_index.schedule_reindex_lesson im
     ScheduleReindexLessonCommand,
     ScheduleReindexLessonCommandHandler,
 )
+from answer_service.domain.common.errors import AppError
 from answer_service.presentation.rabbitmq.v1.lesson_index.schemas import (
     LessonCreatedMessage,
     LessonUpdatedMessage,
@@ -47,7 +48,7 @@ async def on_lesson_created(
         )
         await msg.ack()
         logger.info("lesson.created processed: lesson_id=%s", message.lesson_id)
-    except Exception:
+    except AppError:
         logger.exception("lesson.created failed: lesson_id=%s", message.lesson_id)
         await msg.nack()
 
@@ -75,6 +76,6 @@ async def on_lesson_updated(
         )
         await msg.ack()
         logger.info("lesson.updated processed: lesson_id=%s", message.lesson_id)
-    except Exception:
+    except AppError:
         logger.exception("lesson.updated failed: lesson_id=%s", message.lesson_id)
         await msg.nack()

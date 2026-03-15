@@ -13,6 +13,7 @@ from answer_service.application.common.ports.transaction_manager import Transact
 from answer_service.application.common.ports.vector_search_port import VectorSearchPort
 from answer_service.application.common.views.conversation_views import AnswerView
 from answer_service.application.errors import ConversationNotFoundError
+from answer_service.domain.common.errors import AppError
 from answer_service.domain.common.events_collection import EventsCollection
 from answer_service.domain.conversation.factories.conversation_factory import (
     ConversationFactory,
@@ -123,7 +124,7 @@ class AskQuestionCommandHandler:
                 question=data.question,
                 model_name=_DEFAULT_MODEL,
             )
-        except Exception as exc:
+        except AppError as exc:
             conversation.mark_answer_failed(
                 message_id=MessageId(message.id),
                 reason=str(exc),
