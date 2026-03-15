@@ -1,0 +1,506 @@
+# Project Structure
+
+```
+src/
+  domain/
+  application/
+  infrastructure/
+  presentation/
+  setup/
+tests/
+  unit/
+  integration/
+  e2e/
+```
+
+Rules:
+- Dependencies flow inward: presentation → application → domain
+- `domain` contains only business logic, no external dependencies
+- `infrastructure` implements interfaces defined in `application`
+
+## Application layer
+
+Application folder has these directories:
+```
+commands/
+queries/
+common/
+event_handlers/
+```
+
+In commands folder and queries folder we have folders with domain name. In folders with domain name we have different interactors (command handlers and queries).
+For example, we have domain which represents user. So, we creating `application/commands/user/create_user.py`. And writing code like this:
+
+```
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CreateUserCommand:
+    email: str
+    name: str
+    password: str
+    role: UserRole = UserRole.USER
+
+
+@final
+class CreateUserCommandHandler:
+    def __init__(
+        self,
+        transaction_manager: TransactionManager,
+        user_command_gateway: UserCommandGateway,
+        user_service: UserService,
+        event_bus: EventBus,
+        current_user_service: CurrentUserService,
+        access_service: AccessService,
+    ) -> None:
+        self._transaction_manager: Final[TransactionManager] = transaction_manager
+        self._user_command_gateway: Final[UserCommandGateway] = user_command_gateway
+        self._user_service: Final[UserService] = user_service
+        self._event_bus: Final[EventBus] = event_bus
+        self._current_user_service: Final[CurrentUserService] = current_user_service
+        self._access_service: Final[AccessService] = access_service
+
+    async def __call__(self, data: CreateUserCommand) -> CreateUserView:
+        logger.info(
+            "Create user: started. Username: '%s'.",
+            data.name,
+        )
+
+        current_user: User = await self._current_user_service.get_current_user()
+
+        self._access_service.authorize(
+            CanManageRole(),
+            context=RoleManagementContext(
+                subject=current_user,
+                target_role=data.role,
+            ),
+        )
+
+        new_user: User = self._user_service.create(
+            email=UserEmail(data.email),
+            name=Username(data.name),
+            raw_password=RawPassword(data.password),
+            role=data.role,
+        )
+
+        if (await self._user_command_gateway.read_by_email(new_user.email)) is not None:
+            msg: str = f"user with this email: {new_user.email} already exists"
+            raise UserAlreadyExistsError(msg)
+
+        await self._user_command_gateway.add(new_user)
+        await self._transaction_manager.flush()
+        await self._event_bus.publish(self._user_service.pull_events())
+        await self._transaction_manager.commit()
+
+        logger.info("Create user: done. Username: '%s'.", new_user.name)
+
+        return CreateUserView(
+            user_id=new_user.id,
+        )
+```
+
+Example of code in `queries/users/read_all.py`:
+
+```
+import logging
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Final, final
+
+from pix_erase.application.common.ports.user.query_gateway import UserQueryGateway
+from pix_erase.application.common.query_params.pagination import Pagination
+from pix_erase.application.common.query_params.sorting import SortingOrder
+from pix_erase.application.common.query_params.user_filters import UserListParams, UserListSorting, UserQueryFilters
+from pix_erase.application.common.services.current_user import CurrentUserService
+from pix_erase.application.common.views.user.read_user_by_id import ReadUserByIDView
+from pix_erase.application.errors.query_params import SortingError
+from pix_erase.domain.user.services.access_service import AccessService
+
+if TYPE_CHECKING:
+    from pix_erase.domain.user.entities.user import User
+
+logger: Final[logging.Logger] = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ReadAllUsersQuery:
+    limit: int
+    offset: int
+    sorting_field: str
+    sorting_order: SortingOrder
+
+
+@final
+class ReadAllUsersQueryHandler:
+    """
+    - Open to everyone.
+    - Retrieves a paginated list of existing users with relevant information.
+    """
+
+    def __init__(
+        self,
+        user_query_gateway: UserQueryGateway,
+        current_user_service: CurrentUserService,
+        access_service: AccessService,
+    ) -> None:
+        self._user_query_gateway: Final[UserQueryGateway] = user_query_gateway
+        self._current_user_service: Final[CurrentUserService] = current_user_service
+        self._access_service: Final[AccessService] = access_service
+
+    async def __call__(self, data: ReadAllUsersQuery) -> list[ReadUserByIDView]:
+        logger.info("List users started")
+
+        logger.debug("Started got current user")
+        current_user: User = await self._current_user_service.get_current_user()
+        logger.debug("Got current user, user id: %s", current_user.id)
+
+        logger.debug("Retrieving list of users.")
+
+        user_list_params: UserListParams = UserListParams(
+            pagination=Pagination(
+                limit=data.limit,
+                offset=data.offset,
+            ),
+            sorting=UserListSorting(
+                sorting_field=UserQueryFilters(data.sorting_field),
+                sorting_order=data.sorting_order,
+            ),
+        )
+
+        users: list[User] | None = await self._user_query_gateway.read_all_users(user_list_params)
+
+        if users is None:
+            logger.error(
+                "Retrieving list of users failed: invalid sorting column '%s'.",
+                data.sorting_field,
+            )
+            msg = f"Invalid sorting field: {data.sorting_field}"
+            raise SortingError(msg)
+
+        response: list[ReadUserByIDView] = [
+            ReadUserByIDView(id=user.id, email=str(user.email), name=str(user.name), role=user.role) for user in users
+        ]
+
+        return response
+```
+
+All ports to infrastructure things create in application/common/ports. For example, `application/common/ports/event_bus.py`:
+
+```
+from abc import abstractmethod
+from collections.abc import Iterable
+from typing import Protocol
+
+from pix_erase.domain.common.events import BaseDomainEvent
+
+
+class EventBus(Protocol):
+    @abstractmethod
+    async def publish(self, events: Iterable[BaseDomainEvent]) -> None:
+        raise NotImplementedError
+```
+
+## Domain layer
+
+Example of structure for domain which represents user:
+
+```
+domain/
+    user/
+        entities/
+            user.py
+        value_objects/
+            username.py
+        services/
+            user_service.py
+        ports/
+            id_generator.py
+        event.py
+```
+
+In domain layer we have domain entities, aggregates. All entities and aggregates must inherit from `BaseEntity` and `BaseAggregateRoot`.
+All Value objects must inherit from `BaseValueObject`.
+All domain services must inherit from `BaseDomainService`.
+
+All ports in domain has adapters in infrastructure. For example ID generator in `user/ports/id_generator`:
+
+```
+from abc import abstractmethod
+from typing import Protocol
+
+from pix_erase.domain.user.values.user_id import UserID
+
+
+class UserIdGenerator(Protocol):
+    @abstractmethod
+    def __call__(self) -> UserID:
+        raise NotImplementedError
+```
+
+
+---
+
+## Architecture Principles (if applicable)
+
+- Follow Clean Architecture by default
+- Depend on abstractions, not concrete implementations
+- Extend behavior via composition, not modification
+- Keep modules small with a single responsibility
+- Use Dependency Injection
+- Also use SOLID and GRASP
+
+# Testing Rules (Mandatory)
+
+- Tests mirror `src/` structure
+- Use `unit/`, `integration/`, `e2e/`
+- Use **Arrange / Act / Assert** with explicit comments
+- Do not add comments in tests except parametrization case descriptions
+- Name tests by behavior and expected outcome
+- Prefer unit tests; add integration tests when behavior spans layers
+- Keep tests deterministic, fast, and isolated from network/IO
+
+# Tooling & Standards (Mandatory)
+
+- Python **3.12**
+- Task runner: `just` and `pre-commit`
+- Formatting & linting: **Ruff**
+- Type checking: **mypy**
+- Testing: **pytest** with coverage
+- All code must be **fully type annotated**
+- Try not to use **typing.Any**
+
+Common commands:
+```sh
+just pre-commit-all
+just ruff-check
+just ruff-format
+pytest -v
+```
+
+## Code Quality Rules (Mandatory)
+
+**After writing ANY code**, run in this order:
+
+```sh
+# 1. Format + lint (ruff format + ruff check + codespell)
+just lint
+
+# 2. Type checking + security
+just mypy
+just bandit
+
+# 3. Full static analysis (CI-level, before commit)
+just static-analysis   # mypy + bandit + semgrep
+```
+
+`just lint` = `just linter` (alias) = ruff-format → ruff-check → codespell
+`just static-analysis` = mypy → bandit → semgrep
+
+**Rules:**
+- Fix ALL ruff and mypy errors before moving on — never leave type errors unresolved
+- `just lint` is the minimum bar after every code change
+- `just static-analysis` before any commit
+- When tests exist: `pytest -v` must pass before marking work done
+- Never use `# type: ignore` without a comment explaining why
+
+---
+
+## answer-service: Domain Model
+
+### Service Purpose
+RAG-сервис для образовательной платформы. Принимает вопросы пользователей, находит релевантные фрагменты урока через векторный поиск, генерирует ответ через LLM.
+
+**Входящие данные:** user_id, lesson_id (UUID из другого сервиса), вопрос пользователя.
+**Других данных извне не приходит** — весь контент хранится и индексируется внутри сервиса.
+
+### Infrastructure Stack
+- **Vector store:** ChromaDB (`langchain-chroma`) — хранит embeddings чанков уроков
+- **Relational DB:** PostgreSQL + SQLAlchemy asyncio + asyncpg — диалоги и сообщения
+- **LLM:** через `langchain-openai`
+- **HTTP:** FastAPI
+- **IoC:** Dishka
+- **Message broker:** FastStream + RabbitMQ (для событий)
+
+### Domain Structure
+```
+domain/
+├── common/
+│   ├── aggregate.py         # Aggregate[EntityId]
+│   ├── entity.py            # Entity[EntityId]
+│   ├── events.py            # Event (base)
+│   ├── events_collection.py # EventsCollection
+│   ├── value_object.py      # ValueObject(ABC) — _validate() + __str__() abstract
+│   ├── errors.py            # DomainError, DomainFieldError
+│   └── event_id.py          # EventId = NewType(UUID)
+│
+├── user/                    # Aggregate: User
+│   ├── entities/
+│   │   └── user.py          # Aggregate root (identity from auth service)
+│   ├── value_objects/
+│   │   └── user_id.py       # UserId = NewType(UUID)
+│   ├── events.py            # UserRegistered
+│   └── errors.py
+│
+├── conversation/            # Aggregate: Conversation, Entity: Message
+│   ├── entities/
+│   │   ├── conversation.py  # Aggregate root
+│   │   └── message.py       # Entity (question + answer + status)
+│   ├── value_objects/
+│   │   ├── conversation_id.py
+│   │   ├── message_id.py
+│   │   ├── question.py      # max 4096 chars
+│   │   ├── answer.py        # content + TokenUsage + ModelName
+│   │   ├── token_usage.py
+│   │   ├── model_name.py
+│   │   └── statuses.py      # ConversationStatus, MessageStatus (StrEnum)
+│   ├── factories/
+│   │   └── conversation_factory.py  # получает EventsCollection через DI
+│   ├── ports/
+│   │   └── id_generator.py  # ConversationIdGenerator, MessageIdGenerator (Protocol)
+│   ├── events.py            # ConversationStarted, QuestionAsked, AnswerGenerated,
+│   │                        # AnswerGenerationFailed, ConversationClosed
+│   └── errors.py
+│
+└── lesson_index/            # Aggregate: LessonIndex, Entity: DocumentChunk
+    ├── entities/
+    │   ├── lesson_index.py  # Aggregate root (id = LessonId, 1:1 с уроком)
+    │   └── document_chunk.py # Entity (content + embedding + position)
+    ├── value_objects/
+    │   ├── lesson_id.py     # LessonId = NewType(UUID)  ← внешний ID урока
+    │   ├── chunk_id.py
+    │   ├── chunk_content.py # max 8192 chars
+    │   ├── embedding.py     # vector: tuple[float, ...] (immutable)
+    │   └── index_status.py  # IndexStatus: PENDING|INDEXING|READY|FAILED
+    ├── factories/
+    │   └── lesson_index_factory.py  # получает EventsCollection через DI
+    ├── ports/
+    │   └── id_generator.py  # ChunkIdGenerator (Protocol)
+    ├── events.py            # LessonIndexingRequested, LessonIndexed,
+    │                        # LessonIndexingFailed, LessonReindexRequested
+    └── errors.py
+```
+
+### Domain Services
+
+`BaseDomainService` → `domain/common/service.py` — маркерный базовый класс.
+Все доменные сервисы **stateless**: данные приходят через параметры методов.
+
+| Сервис | Путь | Зачем |
+|---|---|---|
+| `TextSplitterService` | `lesson_index/services/` | Нарезает текст урока на `ChunkContent[]` со smart-разбиением по границам предложений. Логика чанкования (размер, перекрытие) — бизнес-решение, влияющее на качество RAG. |
+| `ContextWindowService` | `conversation/services/` | Выбирает сообщения из истории диалога для контекстного окна LLM. Три метода: `select_for_context` (последние N), `select_within_token_budget` (по бюджету токенов), `estimate_tokens` (chars/4 heuristic). |
+
+Домен `user/` — доменный сервис не нужен, агрегат достаточно тонкий.
+
+### ValueObject contract
+```python
+@dataclass(frozen=True, eq=True, unsafe_hash=True)
+class ValueObject(ABC):
+    def __post_init__(self) -> None:
+        if not fields(self):   # гарантия: у VO есть хотя бы одно поле
+            raise DomainFieldError(...)
+        self._validate()
+
+    @abstractmethod
+    def _validate(self) -> None: ...   # вся валидация здесь
+
+    @abstractmethod
+    def __str__(self) -> str: ...      # строковое представление обязательно
+```
+Конкретные VO НЕ переопределяют `__post_init__`, только `_validate()` и `__str__`.
+
+### Key Design Decisions
+
+**EventsCollection через DI (Dishka, request scope):**
+Агрегаты НЕ создают EventsCollection самостоятельно. Она инджектится через фабрику.
+Один EventsCollection на весь request — все события публикуются атомарно в конце.
+
+```python
+# Агрегат получает events_collection явно:
+Conversation.create(conversation_id, user_id, lesson_id, events_collection)
+LessonIndex.create(lesson_id, title, events_collection)
+
+# Фабрика получает EventsCollection из Dishka:
+class ConversationFactory:
+    def __init__(self, events_collection: EventsCollection, ...): ...
+```
+
+**Indexing flow (LessonIndex):**
+```
+create() → PENDING → start_indexing() → INDEXING
+→ add_chunk() × N → mark_indexed() → READY
+                  → mark_failed()  → FAILED
+reindex() → INDEXING (повторно, если контент изменился)
+```
+
+**Conversation history для LLM:**
+`conversation.get_history(limit=10)` — последние N сообщений.
+Хранится в PostgreSQL, передаётся в контекстное окно LLM при генерации.
+
+**Embedding immutability:**
+`Embedding.vector: tuple[float, ...]` — tuple вместо list для гарантии неизменности VO.
+
+---
+
+## Presentation layer
+
+### HTTP routes structure
+
+```
+presentation/http/v1/
+├── common/
+│   ├── routes/
+│   │   ├── healthcheck.py   # GET /healthcheck/
+│   │   └── index.py         # GET /
+│   └── exception_handler.py # ExceptionSchema + setup_exception_handlers(app)
+├── middlewares/
+│   └── logging.py           # LoggingMiddleware
+└── routes/
+    ├── user/
+    │   └── create_user/       # POST /users/
+    │       ├── handlers.py    # create_user_router
+    │       └── schemas.py     # CreateUserRequest
+    ├── conversation/
+    │   ├── ask_question/      # POST /conversations/ask
+    │   │   ├── handlers.py    # ask_question_router
+    │   │   └── schemas.py     # AskQuestionRequest, AnswerResponse
+    │   ├── get_conversation/  # GET /conversations/{conversation_id}
+    │   │   ├── handlers.py    # get_conversation_router
+    │   │   └── schemas.py     # ConversationResponse, MessageResponse
+    │   └── close_conversation/ # PATCH /conversations/{conversation_id}/close
+    │       ├── handlers.py    # close_conversation_router
+    │       └── schemas.py     # (empty — no body/response)
+    └── lesson_index/
+        ├── index_lesson/      # POST /lessons/{lesson_id}/index
+        │   ├── handlers.py    # index_lesson_router
+        │   └── schemas.py     # IndexLessonRequest
+        ├── reindex_lesson/    # PUT /lessons/{lesson_id}/index
+        │   ├── handlers.py    # reindex_lesson_router
+        │   └── schemas.py     # ReindexLessonRequest
+        └── get_lesson_index_status/ # GET /lessons/{lesson_id}/index
+            ├── handlers.py    # get_lesson_index_status_router
+            └── schemas.py     # LessonIndexStatusResponse
+```
+
+### Route conventions
+
+- Each operation lives in its own directory (named after the operation, e.g. `ask_question/`)
+- `handlers.py` — defines the `APIRouter` (named `<operation>_router`) and the endpoint function
+- `schemas.py` — Pydantic `BaseModel` request/response schemas for that endpoint only
+- `__init__.py` — always empty
+- Router is named after the operation: `ask_question_router`, `create_user_router`, etc.
+- Use `DishkaRoute` as `route_class` on every router
+- Inject interactors via `FromDishka[HandlerType]`
+- Map dataclass views from application layer to Pydantic response models explicitly (no `model_validate`)
+- Document all non-2xx responses with `{"model": ExceptionSchema}` in `responses=`
+
+### Exception handling
+
+`presentation/http/v1/common/exception_handler.py` maps application/domain errors to HTTP codes:
+
+| Exception | HTTP Status |
+|---|---|
+| `ConversationNotFoundError` | 404 |
+| `LessonIndexNotFoundError` | 404 |
+| `LessonAlreadyIndexedError` | 409 |
+| `ApplicationError` (base) | 400 |
+| `DomainError` | 422 |
+
+Call `setup_exception_handlers(app)` in the app factory.
