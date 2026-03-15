@@ -18,6 +18,9 @@ from answer_service.infrastructure.persistence.models import (
     map_outbox_table,
     map_users_table,
 )
+from answer_service.infrastructure.scheduler.tasks.lesson_index_tasks import (
+    setup_lesson_index_tasks,
+)
 from answer_service.infrastructure.scheduler.tasks.outbox_tasks import setup_outbox_tasks
 from answer_service.presentation.http.v1.common.exception_handler import (
     setup_exception_handlers,
@@ -113,8 +116,9 @@ def setup_task_manager_middlewares(
 
 
 def setup_task_manager_tasks(broker: AsyncBroker) -> None:
-    """Import task modules so tasks register themselves with async_shared_broker."""
+    """Register all taskiq tasks with the broker."""
     setup_outbox_tasks(broker)
+    setup_lesson_index_tasks(broker)
 
 
 def setup_schedule_source(redis_config: RedisConfig) -> ScheduleSource:

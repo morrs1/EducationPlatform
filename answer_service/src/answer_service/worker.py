@@ -24,7 +24,7 @@ from answer_service.setup.configs.chroma_config import ChromaConfig
 from answer_service.setup.configs.database_config import PostgresConfig, SQLAlchemyConfig
 from answer_service.setup.configs.llm_config import OpenAIConfig
 from answer_service.setup.configs.redis_config import RedisConfig
-from answer_service.setup.ioc import setup_worker_providers
+from answer_service.setup.ioc import setup_providers
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -63,11 +63,10 @@ def create_worker_taskiq_app() -> AsyncBroker:
         ChromaConfig: configs.chroma,
         OpenAIConfig: configs.openai,
         RedisConfig: configs.redis,
+        AsyncBroker: worker_broker,
     }
 
-    container: AsyncContainer = make_async_container(
-        *setup_worker_providers(), context=context
-    )
+    container: AsyncContainer = make_async_container(*setup_providers(), context=context)
     setup_dishka(container, broker=worker_broker)
 
     return worker_broker

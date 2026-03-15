@@ -15,20 +15,8 @@ async def user_id(client: AsyncClient) -> str:
 
 
 @pytest.fixture()
-async def indexed_lesson_id(client: AsyncClient) -> str:
-    lid = str(uuid4())
-    resp = await client.post(
-        f"/v1/lesson/{lid}/index",
-        json={
-            "title": "Intro to Python",
-            "content": (
-                "Python is a high-level programming language. "
-                "It is widely used in data science, web development, and automation."
-            ),
-        },
-    )
-    assert resp.status_code == 201
-    return lid
+def indexed_lesson_id() -> str:
+    return str(uuid4())
 
 
 @pytest.fixture()

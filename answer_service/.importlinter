@@ -34,6 +34,7 @@ allowed_importers =
     answer_service.presentation
     answer_service.infrastructure.adapters
     answer_service.infrastructure.mappers
+    answer_service.infrastructure.scheduler
     answer_service.setup
 
 

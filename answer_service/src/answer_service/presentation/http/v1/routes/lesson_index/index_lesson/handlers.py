@@ -5,13 +5,14 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Body, Path, status
 
-from answer_service.application.commands.lesson_index.index_lesson import (
-    IndexLessonCommand,
-    IndexLessonCommandHandler,
+from answer_service.application.commands.lesson_index.schedule_index_lesson import (
+    ScheduleIndexLessonCommand,
+    ScheduleIndexLessonCommandHandler,
 )
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
 from answer_service.presentation.http.v1.routes.lesson_index.index_lesson.schemas import (
     IndexLessonRequest,
+    ScheduleIndexLessonResponse,
 )
 
 index_lesson_router: Final[APIRouter] = APIRouter(
@@ -28,23 +29,22 @@ LessonIdPath = Path(
 
 @index_lesson_router.post(
     "/{lesson_id}/index",
-    status_code=status.HTTP_201_CREATED,
-    summary="Index lesson content for RAG search",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Schedule lesson content indexing for RAG search",
     responses={
-        status.HTTP_409_CONFLICT: {"model": ExceptionSchema},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ExceptionSchema},
-        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ExceptionSchema},
     },
 )
 async def index_lesson_handler(
     lesson_id: Annotated[UUID, LessonIdPath],
     body: Annotated[IndexLessonRequest, Body()],
-    interactor: FromDishka[IndexLessonCommandHandler],
-) -> None:
-    await interactor(
-        IndexLessonCommand(
+    interactor: FromDishka[ScheduleIndexLessonCommandHandler],
+) -> ScheduleIndexLessonResponse:
+    view = await interactor(
+        ScheduleIndexLessonCommand(
             lesson_id=lesson_id,
             title=body.title,
             content=body.content,
         )
     )
+    return ScheduleIndexLessonResponse(task_id=view.task_id)

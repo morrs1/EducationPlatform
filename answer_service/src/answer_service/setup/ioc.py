@@ -6,11 +6,16 @@ from bazario.asyncio import Dispatcher, Publisher, Registry
 from bazario.asyncio.resolvers.dishka import DishkaResolver
 from chromadb.api import ClientAPI
 from dishka import AsyncContainer, Provider, Scope
+from dishka.integrations.fastapi import FastapiProvider
+from dishka.integrations.taskiq import TaskiqProvider
+from dishka_faststream import FastStreamProvider
 from faststream.rabbit import RabbitBroker
 from langchain_chroma import Chroma
 from langchain_core.embeddings import Embeddings
 from langchain_openai import ChatOpenAI
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
+from taskiq import AsyncBroker
 
 from answer_service.application.commands.conversation.ask_question import (
     AskQuestionCommandHandler,
@@ -26,6 +31,12 @@ from answer_service.application.commands.lesson_index.index_lesson import (
 )
 from answer_service.application.commands.lesson_index.reindex_lesson import (
     ReindexLessonCommandHandler,
+)
+from answer_service.application.commands.lesson_index.schedule_index_lesson import (
+    ScheduleIndexLessonCommandHandler,
+)
+from answer_service.application.commands.lesson_index.schedule_reindex_lesson import (
+    ScheduleReindexLessonCommandHandler,
 )
 from answer_service.application.commands.outbox.relay_outbox import (
     RelayOutboxCommandHandler,
@@ -44,6 +55,9 @@ from answer_service.application.common.ports.lesson_index_repository import (
 from answer_service.application.common.ports.llm_port import LLMPort
 from answer_service.application.common.ports.outbox_publisher import OutboxPublisher
 from answer_service.application.common.ports.outbox_repository import OutboxRepository
+from answer_service.application.common.ports.scheduler.task_scheduler import (
+    TaskScheduler,
+)
 from answer_service.application.common.ports.transaction_manager import TransactionManager
 from answer_service.application.common.ports.user_repository import UserRepository
 from answer_service.application.common.ports.vector_search_port import VectorSearchPort
@@ -118,11 +132,14 @@ from answer_service.infrastructure.persistence.provider import (
     get_session,
     get_sessionmaker,
 )
+from answer_service.infrastructure.scheduler.task_iq_scheduler import TaskIQTaskScheduler
+from answer_service.setup.bootstrap import setup_schedule_source
 from answer_service.setup.configs.asgi_config import ASGIConfig
 from answer_service.setup.configs.broker_config import RabbitConfig
 from answer_service.setup.configs.chroma_config import ChromaConfig
 from answer_service.setup.configs.database_config import PostgresConfig, SQLAlchemyConfig
 from answer_service.setup.configs.llm_config import OpenAIConfig
+from answer_service.setup.configs.redis_config import RedisConfig
 
 
 def _make_events_collection() -> EventsCollection:
@@ -136,6 +153,8 @@ def configs_provider() -> Provider:
     provider.from_context(provides=SQLAlchemyConfig)
     provider.from_context(provides=ChromaConfig)
     provider.from_context(provides=OpenAIConfig)
+    provider.from_context(provides=RabbitConfig)
+    provider.from_context(provides=RedisConfig)
     return provider
 
 
@@ -223,6 +242,7 @@ def gateways_provider() -> Provider:
         source=SqlAlchemyLessonIndexRepository, provides=LessonIndexRepository
     )
     provider.provide(source=SqlAlchemyOutboxRepository, provides=OutboxRepository)
+    provider.provide(source=FastStreamOutboxPublisher, provides=OutboxPublisher)
     provider.provide(source=ChromaVectorSearchPort, provides=VectorSearchPort)
     provider.provide(source=LangChainEmbeddingPort, provides=EmbeddingPort)
     provider.provide(source=LangChainOpenAILLMPort, provides=LLMPort)
@@ -240,6 +260,9 @@ def interactors_provider() -> Provider:
         CloseConversationCommandHandler,
         IndexLessonCommandHandler,
         ReindexLessonCommandHandler,
+        ScheduleIndexLessonCommandHandler,
+        ScheduleReindexLessonCommandHandler,
+        RelayOutboxCommandHandler,
         GetUserByIdQueryHandler,
         GetUsersQueryHandler,
         GetConversationQueryHandler,
@@ -249,39 +272,32 @@ def interactors_provider() -> Provider:
     return provider
 
 
+def scheduler_provider() -> Provider:
+    """APP-scoped schedule source + REQUEST-scoped TaskIQ scheduler adapter."""
+    provider: Final[Provider] = Provider(scope=Scope.REQUEST)
+    provider.from_context(provides=AsyncBroker)
+    provider.from_context(provides=Redis)
+    provider.provide(
+        source=setup_schedule_source,
+        scope=Scope.APP,
+    )
+    provider.provide(source=TaskIQTaskScheduler, provides=TaskScheduler)
+    return provider
+
+
 def setup_providers() -> Iterable[Provider]:
     return (
         configs_provider(),
         db_provider(),
         vector_store_provider(),
         bazario_provider(),
+        broker_provider(),
         mappers_provider(),
         domain_ports_provider(),
         gateways_provider(),
         interactors_provider(),
-    )
-
-
-def outbox_relay_provider() -> Provider:
-    """REQUEST-scoped providers for the outbox relay worker task."""
-    provider: Final[Provider] = Provider(scope=Scope.REQUEST)
-    provider.provide(source=SqlAlchemyTransactionManager, provides=TransactionManager)
-    provider.provide(source=SqlAlchemyOutboxRepository, provides=OutboxRepository)
-    provider.provide(source=FastStreamOutboxPublisher, provides=OutboxPublisher)
-    provider.provide(source=RelayOutboxCommandHandler)
-    return provider
-
-
-def setup_worker_providers() -> Iterable[Provider]:
-    """Minimal providers for the taskiq worker process."""
-    provider: Final[Provider] = Provider(scope=Scope.APP)
-    provider.from_context(provides=PostgresConfig)
-    provider.from_context(provides=SQLAlchemyConfig)
-    provider.from_context(provides=RabbitConfig)
-
-    return (
-        provider,
-        db_provider(),
-        broker_provider(),
-        outbox_relay_provider(),
+        scheduler_provider(),
+        TaskiqProvider(),
+        FastapiProvider(),
+        FastStreamProvider(),
     )

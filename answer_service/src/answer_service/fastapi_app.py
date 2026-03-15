@@ -9,6 +9,7 @@ from dishka import AsyncContainer, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.orm import clear_mappers
+from taskiq import AsyncBroker
 
 from answer_service._version import __version__
 from answer_service.setup.bootstrap import (
@@ -17,6 +18,8 @@ from answer_service.setup.bootstrap import (
     setup_http_middlewares,
     setup_http_routes,
     setup_map_tables,
+    setup_task_manager,
+    setup_task_manager_tasks,
 )
 from answer_service.setup.configs.asgi_config import ASGIConfig
 from answer_service.setup.configs.chroma_config import ChromaConfig
@@ -39,7 +42,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     registry on shutdown. The outbox relay runs in the separate taskiq
     worker process — the FastAPI app itself has no broker connection.
     """
+    task_manager: AsyncBroker = cast("AsyncBroker", app.state.task_manager)
+
+    if not task_manager.is_worker_process:
+        logger.info("Setting up taskiq")
+        await task_manager.startup()
+
     yield
+
+    if not task_manager.is_worker_process:
+        logger.info("Shutting down taskiq")
+        await task_manager.shutdown()
 
     clear_mappers()
     await cast("AsyncContainer", app.state.dishka_container).close()
@@ -57,6 +70,16 @@ def create_fastapi_app() -> FastAPI:  # pragma: no cover
         debug=configs.asgi.fastapi_debug,
     )
 
+    task_manager: AsyncBroker = setup_task_manager(
+        taskiq_config=configs.taskiq,
+        rabbitmq_config=configs.rabbit,
+        redis_config=configs.redis,
+    )
+
+    setup_task_manager_tasks(task_manager)
+
+    app.state.task_manager = task_manager
+
     context = {
         ASGIConfig: configs.asgi,
         SQLAlchemyConfig: configs.alchemy,
@@ -64,6 +87,7 @@ def create_fastapi_app() -> FastAPI:  # pragma: no cover
         ChromaConfig: configs.chroma,
         OpenAIConfig: configs.openai,
         RedisConfig: configs.redis,
+        AsyncBroker: task_manager,
     }
 
     container: AsyncContainer = make_async_container(*setup_providers(), context=context)

@@ -1,4 +1,4 @@
-"""Integration tests for PUT /v1/lesson/{lesson_id}/index."""
+"""Integration tests for PUT /v1/lesson/{lesson_id}/index (scheduled)."""
 
 from uuid import uuid4
 
@@ -8,92 +8,67 @@ from httpx import AsyncClient
 pytestmark = pytest.mark.integration
 
 
-async def test_reindex_lesson_returns_204(
-    client: AsyncClient,
-    indexed_lesson_id: str,
-) -> None:
+async def test_reindex_lesson_returns_202(client: AsyncClient) -> None:
     # Arrange & Act
     response = await client.put(
-        f"/v1/lesson/{indexed_lesson_id}/index",
-        json={
-            "new_title": "Updated Title",
-            "new_content": "Updated content about Python.",
-        },
+        f"/v1/lesson/{uuid4()}/index",
+        json={"new_content": "Updated content about Python."},
     )
 
     # Assert
-    assert response.status_code == 204
+    assert response.status_code == 202
 
 
-async def test_reindex_lesson_without_new_title_returns_204(
-    client: AsyncClient,
-    indexed_lesson_id: str,
-) -> None:
+async def test_reindex_lesson_returns_task_id(client: AsyncClient) -> None:
+    # Arrange
+    lesson_id = uuid4()
+
+    # Act
+    response = await client.put(
+        f"/v1/lesson/{lesson_id}/index",
+        json={"new_content": "Updated content about Python."},
+    )
+
+    # Assert
+    assert response.status_code == 202
+    body = response.json()
+    assert "task_id" in body
+    assert str(lesson_id) in body["task_id"]
+
+
+async def test_reindex_lesson_without_new_title_returns_202(client: AsyncClient) -> None:
     # Arrange & Act
     response = await client.put(
-        f"/v1/lesson/{indexed_lesson_id}/index",
+        f"/v1/lesson/{uuid4()}/index",
         json={"new_content": "Updated content about Python programming."},
     )
 
     # Assert
-    assert response.status_code == 204
+    assert response.status_code == 202
 
 
-async def test_reindex_lesson_status_remains_ready(
+async def test_reindex_lesson_task_id_is_deterministic_for_same_lesson(
     client: AsyncClient,
-    indexed_lesson_id: str,
 ) -> None:
+    """Two PUT requests for the same lesson_id return the same task_id."""
     # Arrange
-    await client.put(
-        f"/v1/lesson/{indexed_lesson_id}/index",
-        json={"new_content": "Updated Python content.", "new_title": "Updated Title"},
-    )
+    lesson_id = uuid4()
+    payload = {"new_content": "Content"}
 
     # Act
-    response = await client.get(f"/v1/lesson/{indexed_lesson_id}/index")
+    resp1 = await client.put(f"/v1/lesson/{lesson_id}/index", json=payload)
+    resp2 = await client.put(f"/v1/lesson/{lesson_id}/index", json=payload)
 
     # Assert
-    assert response.status_code == 200
-    assert response.json()["status"] == "ready"
+    assert resp1.status_code == 202
+    assert resp2.status_code == 202
+    assert resp1.json()["task_id"] == resp2.json()["task_id"]
 
 
-async def test_reindex_lesson_updates_title(
-    client: AsyncClient,
-    indexed_lesson_id: str,
-) -> None:
-    # Arrange
-    new_title = "Completely New Title"
-    await client.put(
-        f"/v1/lesson/{indexed_lesson_id}/index",
-        json={"new_content": "Updated content.", "new_title": new_title},
-    )
-
-    # Act
-    response = await client.get(f"/v1/lesson/{indexed_lesson_id}/index")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json()["title"] == new_title
-
-
-async def test_reindex_lesson_returns_404_when_not_indexed(client: AsyncClient) -> None:
+async def test_reindex_lesson_with_empty_content_returns_422(client: AsyncClient) -> None:
     # Arrange & Act
     response = await client.put(
         f"/v1/lesson/{uuid4()}/index",
-        json={"new_title": "Title", "new_content": "Content."},
-    )
-
-    # Assert
-    assert response.status_code == 404
-
-
-async def test_reindex_lesson_with_empty_content_returns_422(
-    client: AsyncClient,
-    indexed_lesson_id: str,
-) -> None:
-    # Arrange & Act
-    response = await client.put(
-        f"/v1/lesson/{indexed_lesson_id}/index",
         json={"new_content": ""},
     )
 
