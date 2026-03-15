@@ -1,5 +1,8 @@
 """Integration tests for FastStreamOutboxPublisher using TestRabbitBroker."""
 
+import json
+from typing import Any
+
 import pytest
 from faststream.rabbit import ExchangeType, RabbitBroker, RabbitExchange, RabbitQueue
 
@@ -25,8 +28,8 @@ async def test_publishes_payload_to_domain_events_exchange(
     # Act
     await outbox_publisher.publish(message)
 
-    # Assert — wildcard subscriber received exactly the payload string
-    capture_subscriber.mock.assert_called_once_with(message.payload)
+    # Assert — subscriber receives the parsed dict, not the raw JSON string
+    capture_subscriber.mock.assert_called_once_with(json.loads(message.payload))
 
 
 async def test_routes_by_event_type_as_routing_key(
@@ -36,14 +39,12 @@ async def test_routes_by_event_type_as_routing_key(
     outbox_publisher: FastStreamOutboxPublisher,
 ) -> None:
     """Only the subscriber with matching routing key receives the message."""
-    received: list[str] = []
 
     @rabbit_broker.subscriber(
         queue=RabbitQueue("specific_q", routing_key="SpecificEvent"),
         exchange=RabbitExchange("domain_events", type=ExchangeType.TOPIC),
     )
-    def specific_handler(body: str) -> None:
-        received.append(body)
+    def specific_handler(body: dict[str, Any]) -> None: ...
 
     # Arrange — publish an event with a different routing key
     message = make_outbox_message(event_type="OtherEvent")
@@ -62,9 +63,9 @@ async def test_publishes_multiple_messages_independently(
 ) -> None:
     # Arrange
     messages = [
-        make_outbox_message(event_type="EventA", payload='"payload_a"'),
-        make_outbox_message(event_type="EventB", payload='"payload_b"'),
-        make_outbox_message(event_type="EventC", payload='"payload_c"'),
+        make_outbox_message(event_type="EventA", payload='{"name": "a"}'),
+        make_outbox_message(event_type="EventB", payload='{"name": "b"}'),
+        make_outbox_message(event_type="EventC", payload='{"name": "c"}'),
     ]
 
     # Act

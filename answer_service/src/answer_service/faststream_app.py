@@ -20,6 +20,7 @@ from taskiq import AsyncBroker
 from answer_service.setup.bootstrap import (
     setup_map_tables,
     setup_rabbit_broker,
+    setup_rabbit_middlewares,
     setup_rabbit_routes,
     setup_task_manager,
     setup_task_manager_tasks,
@@ -69,6 +70,8 @@ async def lifespan(context: ContextRepo) -> AsyncIterator[None]:  # pragma: no c
         AsyncBroker: task_manager,
         RabbitBroker: rabbit_broker,
     }
+
+    setup_rabbit_middlewares(rabbit_broker)
 
     container: AsyncContainer = make_async_container(
         *setup_providers(), context=dishka_context

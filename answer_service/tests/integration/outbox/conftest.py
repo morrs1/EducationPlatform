@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
-from typing import Final, Protocol
+from typing import Any, Final, Protocol
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -104,14 +104,14 @@ def capture_subscriber(rabbit_broker: RabbitBroker) -> SubscriberHandler:
             ...,
         ) -> None:
             ...
-            capture_subscriber.mock.assert_called_once_with(expected_payload)
+            capture_subscriber.mock.assert_called_once_with(expected_body)
     """
 
     @rabbit_broker.subscriber(
         queue=RabbitQueue("test_capture", routing_key="#"),
         exchange=RabbitExchange(_DOMAIN_EVENTS_EXCHANGE, type=ExchangeType.TOPIC),
     )
-    async def _handler(body: str) -> None: ...
+    async def _handler(body: dict[str, Any]) -> None: ...
 
     # FastStream attaches .mock to the handler at TestRabbitBroker startup
     return _handler

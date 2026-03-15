@@ -15,6 +15,7 @@ from taskiq_redis import ListRedisScheduleSource, RedisAsyncResultBackend
 
 from answer_service.infrastructure.persistence.models import (
     map_conversations_tables,
+    map_inbox_table,
     map_lesson_index_tables,
     map_outbox_table,
     map_users_table,
@@ -37,6 +38,9 @@ from answer_service.presentation.http.v1.routes.user import user_router
 from answer_service.presentation.rabbitmq.v1 import (
     lesson_index_rabbit_router,
     user_rabbit_router,
+)
+from answer_service.presentation.rabbitmq.v1.middlewares.inbox_middleware import (
+    InboxMiddleware,
 )
 from answer_service.setup.configs.app_config import AppConfig
 from answer_service.setup.configs.asgi_config import ASGIConfig
@@ -79,6 +83,7 @@ def setup_map_tables() -> None:
     map_conversations_tables()
     map_lesson_index_tables()
     map_outbox_table()
+    map_inbox_table()
 
 
 def setup_task_manager(
@@ -108,7 +113,7 @@ def setup_task_manager_middlewares(
     broker: AsyncBroker,
     taskiq_config: TaskIQConfig,
 ) -> AsyncBroker:
-    """Apply retry middleware to the taskiq broker."""
+    """Apply retry middlewares to the taskiq broker."""
     return broker.with_middlewares(
         SmartRetryMiddleware(
             default_retry_count=taskiq_config.default_retry_count,
@@ -149,6 +154,16 @@ def setup_scheduler(
 def setup_rabbit_broker(rabbit_config: RabbitConfig) -> RabbitBroker:
     """Create a FastStream RabbitMQ broker (not yet started)."""
     return RabbitBroker(rabbit_config.uri)
+
+
+def setup_rabbit_middlewares(broker: RabbitBroker) -> None:
+    """Register all FastStream RabbitMQ middlewares into the broker.
+
+    Must be called BEFORE setup_dishka — setup_dishka uses insert_middleware
+    (prepend) so DishkaMiddleware ends up outermost, and all middlewares
+    registered here run inside the Dishka request scope.
+    """
+    broker.insert_middleware(InboxMiddleware)
 
 
 def setup_rabbit_routes(broker: RabbitBroker) -> None:

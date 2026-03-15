@@ -7,10 +7,12 @@ from dishka import AsyncContainer
 from dishka_faststream import setup_dishka as setup_faststream_dishka
 from faststream.rabbit import RabbitBroker, TestRabbitBroker
 
-from answer_service.presentation.rabbitmq.v1.lesson_index.handlers import (
+from answer_service.presentation.rabbitmq.v1.routes.lesson_index.handlers import (
     lesson_index_rabbit_router,
 )
-from answer_service.presentation.rabbitmq.v1.user.handlers import user_rabbit_router
+from answer_service.presentation.rabbitmq.v1.routes.user.handlers import (
+    user_rabbit_router,
+)
 
 
 @pytest.fixture()

@@ -26,6 +26,7 @@ from answer_service.application.commands.conversation.close_conversation import 
 from answer_service.application.commands.conversation.create_conversation import (
     CreateConversationCommandHandler,
 )
+from answer_service.application.commands.inbox.check_inbox import CheckInboxCommandHandler
 from answer_service.application.commands.lesson_index.index_lesson import (
     IndexLessonCommandHandler,
 )
@@ -49,6 +50,7 @@ from answer_service.application.common.ports.conversation_repository import (
 from answer_service.application.common.ports.embedding_port import EmbeddingPort
 from answer_service.application.common.ports.event_bus import EventBus
 from answer_service.application.common.ports.event_serializer import EventSerializer
+from answer_service.application.common.ports.inbox_repository import InboxRepository
 from answer_service.application.common.ports.lesson_index_repository import (
     LessonIndexRepository,
 )
@@ -108,6 +110,7 @@ from answer_service.infrastructure.adapters.messaging.faststream_outbox_publishe
 from answer_service.infrastructure.adapters.persistence import (
     ChromaVectorSearchPort,
     SqlAlchemyConversationRepository,
+    SqlAlchemyInboxRepository,
     SqlAlchemyLessonIndexRepository,
     SqlAlchemyOutboxRepository,
     SqlAlchemyTransactionManager,
@@ -230,6 +233,7 @@ def gateways_provider() -> Provider:
     provider.provide(
         source=SqlAlchemyLessonIndexRepository, provides=LessonIndexRepository
     )
+    provider.provide(source=SqlAlchemyInboxRepository, provides=InboxRepository)
     provider.provide(source=SqlAlchemyOutboxRepository, provides=OutboxRepository)
     provider.provide(source=FastStreamOutboxPublisher, provides=OutboxPublisher)
     provider.provide(source=ChromaVectorSearchPort, provides=VectorSearchPort)
@@ -242,6 +246,7 @@ def gateways_provider() -> Provider:
 def interactors_provider() -> Provider:
     provider: Final[Provider] = Provider(scope=Scope.REQUEST)
     provider.provide_all(
+        CheckInboxCommandHandler,
         CreateUserCommandHandler,
         DeleteUserCommandHandler,
         CreateConversationCommandHandler,

@@ -4,11 +4,15 @@ from unittest import mock
 
 from fastapi import FastAPI
 
+from answer_service.presentation.rabbitmq.v1.middlewares.inbox_middleware import (
+    InboxMiddleware,
+)
 from answer_service.setup.bootstrap import (
     setup_http_exc_handlers,
     setup_http_middlewares,
     setup_http_routes,
     setup_map_tables,
+    setup_rabbit_middlewares,
 )
 from answer_service.setup.configs.asgi_config import ASGIConfig
 
@@ -20,8 +24,10 @@ class TestSetupMapTables:
     @mock.patch("answer_service.setup.bootstrap.map_conversations_tables")
     @mock.patch("answer_service.setup.bootstrap.map_lesson_index_tables")
     @mock.patch("answer_service.setup.bootstrap.map_outbox_table")
+    @mock.patch("answer_service.setup.bootstrap.map_inbox_table")
     def test_setup_map_tables_calls_all_mappings(
         self,
+        mock_map_inbox: mock.Mock,
         mock_map_outbox: mock.Mock,
         mock_map_lesson: mock.Mock,
         mock_map_conversations: mock.Mock,
@@ -36,6 +42,7 @@ class TestSetupMapTables:
         mock_map_conversations.assert_called_once()
         mock_map_lesson.assert_called_once()
         mock_map_outbox.assert_called_once()
+        mock_map_inbox.assert_called_once()
 
 
 class TestSetupHttpRoutes:
@@ -94,7 +101,7 @@ class TestSetupHttpMiddlewares:
     """Tests for setup_http_middlewares function."""
 
     def test_setup_http_middlewares_adds_cors_middleware(self) -> None:
-        """Test that setup_http_middlewares adds CORS middleware."""
+        """Test that setup_http_middlewares adds CORS middlewares."""
         # Arrange
         fake_app = mock.Mock(spec=FastAPI)
         fake_app.add_middleware = mock.Mock()
@@ -110,10 +117,10 @@ class TestSetupHttpMiddlewares:
         setup_http_middlewares(fake_app, fake_api_config)
 
         # Assert
-        assert fake_app.add_middleware.call_count >= 1  # At least CORS middleware
+        assert fake_app.add_middleware.call_count >= 1  # At least CORS middlewares
 
     def test_setup_http_middlewares_adds_logging_middleware(self) -> None:
-        """Test that setup_http_middlewares adds logging middleware."""
+        """Test that setup_http_middlewares adds logging middlewares."""
         # Arrange
         fake_app = mock.Mock(spec=FastAPI)
         fake_app.add_middleware = mock.Mock()
@@ -133,7 +140,7 @@ class TestSetupHttpMiddlewares:
         assert fake_app.add_middleware.call_count >= 2
 
     def test_setup_http_middlewares_cors_config(self) -> None:
-        """Test that CORS middleware is configured with correct origins."""
+        """Test that CORS middlewares is configured with correct origins."""
         # Arrange
         fake_app = mock.Mock(spec=FastAPI)
         fake_app.add_middleware = mock.Mock()
@@ -150,5 +157,29 @@ class TestSetupHttpMiddlewares:
 
         # Assert
         cors_call = fake_app.add_middleware.call_args_list[0]
-        # First call should be CORS middleware
+        # First call should be CORS middlewares
         assert cors_call is not None
+
+
+class TestSetupRabbitMiddlewares:
+    """Tests for setup_rabbit_middlewares function."""
+
+    def test_setup_rabbit_middlewares_registers_inbox_middleware(self) -> None:
+        # Arrange
+        fake_broker = mock.Mock()
+
+        # Act
+        setup_rabbit_middlewares(fake_broker)
+
+        # Assert
+        fake_broker.insert_middleware.assert_called_once()
+
+    def test_setup_rabbit_middlewares_passes_inbox_middleware_class(self) -> None:
+        # Arrange
+        fake_broker = mock.Mock()
+
+        # Act
+        setup_rabbit_middlewares(fake_broker)
+
+        # Assert
+        fake_broker.insert_middleware.assert_called_once_with(InboxMiddleware)
