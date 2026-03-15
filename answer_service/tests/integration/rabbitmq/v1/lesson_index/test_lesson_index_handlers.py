@@ -7,7 +7,7 @@ the handler does not propagate errors to the caller (i.e. ack/nack is handled
 internally).
 """
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from faststream.rabbit import RabbitBroker
@@ -56,11 +56,11 @@ async def test_on_lesson_created_passes_correct_lesson_id(
         routing_key="lesson.created",
     )
 
-    # Assert — parsed message carried the correct lesson_id
+    # Assert — FastStream mock receives the raw dict; lesson_id is a str in it
     call_args = on_lesson_created.mock.call_args
     assert call_args is not None
-    received_message = call_args.args[0]
-    assert received_message.lesson_id == lesson_id
+    received: dict[str, str] = call_args.args[0]
+    assert UUID(received["lesson_id"]) == lesson_id
 
 
 async def test_on_lesson_updated_handler_is_invoked(
@@ -98,8 +98,8 @@ async def test_on_lesson_updated_passes_correct_lesson_id(
         routing_key="lesson.updated",
     )
 
-    # Assert — parsed message carried the correct lesson_id
+    # Assert — FastStream mock receives the raw dict; lesson_id is a str in it
     call_args = on_lesson_updated.mock.call_args
     assert call_args is not None
-    received_message = call_args.args[0]
-    assert received_message.lesson_id == lesson_id
+    received: dict[str, str] = call_args.args[0]
+    assert UUID(received["lesson_id"]) == lesson_id

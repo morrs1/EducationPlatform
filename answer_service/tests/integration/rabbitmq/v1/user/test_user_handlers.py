@@ -63,11 +63,11 @@ async def test_on_user_registered_passes_correct_user_id(
         routing_key="user.registered",
     )
 
-    # Assert — parsed message carried the correct user_id
+    # Assert — FastStream mock receives the raw dict; user_id is a str in it
     call_args = on_user_registered.mock.call_args
     assert call_args is not None
-    received_message = call_args.args[0]
-    assert received_message.user_id == user_id
+    received: dict[str, str] = call_args.args[0]
+    assert UUID(received["user_id"]) == user_id
 
 
 async def test_on_user_registered_is_idempotent(
