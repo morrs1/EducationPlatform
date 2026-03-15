@@ -9,6 +9,6 @@ LICENSE
 README.md
 /tests
 docker-compose.yaml
-Dockerfile
+deploy/prod/answer_service/Dockerfile
 ./vscode
 /vscode

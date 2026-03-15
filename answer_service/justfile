@@ -116,6 +116,21 @@ infra-logs:
 app:
   uv run --active dotenv -f .env.dev run -- python -m answer_service.fastapi_app
 
+[doc("Start FastStream RabbitMQ consumer (loads .env.dev)")]
+[group("dev")]
+consumer:
+  uv run --active dotenv -f .env.dev run -- faststream run answer_service.faststream_app:create_faststream_app
+
+[doc("Start TaskIQ worker (loads .env.dev)")]
+[group("dev")]
+worker:
+  uv run --active dotenv -f .env.dev run -- taskiq worker --ack-type when_saved answer_service.worker:create_worker_taskiq_app -fsd -tp **/tasks/*.py
+
+[doc("Start TaskIQ scheduler (loads .env.dev)")]
+[group("dev")]
+scheduler:
+  uv run --active dotenv -f .env.dev run -- taskiq scheduler answer_service.scheduler:create_scheduler_taskiq_app -fsd -tp **/tasks/*.py
+
 [doc("Start full dev environment: infra then app")]
 [group("dev")]
 dev: infra-up app
