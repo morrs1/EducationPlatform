@@ -58,13 +58,10 @@ async def test_lifespan_handles_error_during_startup() -> None:
     fake_app.state.dishka_container.close = mock.AsyncMock()
 
     # Act & Assert
-    # Errors during startup (before yield) should propagate
-    with mock.patch("answer_service.fastapi_app.clear_mappers"):
-        with pytest.raises(ValueError, match="Test error"):
-            async with lifespan(fake_app):
-                msg = "Test error"
-                raise ValueError(msg)
+    with pytest.raises(ValueError, match="Test error"):
+        async with lifespan(fake_app):
+            msg = "Test error"
+            raise ValueError(msg)
 
     # Note: container.close() is not called because error occurred before yield
-    # This is expected behavior - shutdown code only runs after successful startup
     fake_app.state.dishka_container.close.assert_not_called()

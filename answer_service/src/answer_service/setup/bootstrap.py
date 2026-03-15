@@ -1,25 +1,41 @@
 import logging
 import sys
-from types import TracebackType
 from functools import lru_cache
+from types import TracebackType
+from typing import Final
+
 from fastapi import FastAPI, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
+from taskiq import TaskiqScheduler
+from taskiq import async_shared_broker, ScheduleSource, AsyncBroker
+from taskiq.middlewares import SmartRetryMiddleware
+from taskiq.schedule_sources.label_based import LabelScheduleSource
+from taskiq_aio_pika import AioPikaBroker
+from taskiq_redis import ListRedisScheduleSource
+from taskiq_redis import RedisAsyncResultBackend
 
 from answer_service.infrastructure.persistence.models import (
     map_users_table,
     map_conversations_tables,
-    map_lesson_index_tables
+    map_lesson_index_tables,
+    map_outbox_table,
 )
-from answer_service.setup.configs.app_config import AppConfig
-from answer_service.setup.configs.asgi_config import ASGIConfig
-from answer_service.setup.configs.logging_config import LoggingConfig, configure_logging
-from answer_service.presentation.http.v1.middlewares.logging import LoggingMiddleware
-from fastapi.middleware.cors import CORSMiddleware
+from answer_service.infrastructure.taskiq.tasks.outbox_tasks import setup_outbox_tasks
 from answer_service.presentation.http.v1.common.exception_handler import setup_exception_handlers
 from answer_service.presentation.http.v1.common.routes.healthcheck import healthcheck_router
 from answer_service.presentation.http.v1.common.routes.index import index_router
+from answer_service.presentation.http.v1.middlewares.logging import LoggingMiddleware
 from answer_service.presentation.http.v1.routes.conversation import conversation_router
 from answer_service.presentation.http.v1.routes.lesson_index import lesson_router
 from answer_service.presentation.http.v1.routes.user import user_router
+from answer_service.setup.configs.app_config import AppConfig
+from answer_service.setup.configs.asgi_config import ASGIConfig
+from answer_service.setup.configs.broker_config import RabbitConfig
+from answer_service.setup.configs.logging_config import LoggingConfig, configure_logging
+from answer_service.setup.configs.redis_config import RedisConfig
+from answer_service.setup.configs.taskiq_config import TaskIQConfig
+
+logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 @lru_cache(maxsize=1)
 def setup_configs() -> AppConfig:
@@ -52,6 +68,76 @@ def setup_map_tables() -> None:
     map_users_table()
     map_conversations_tables()
     map_lesson_index_tables()
+    map_outbox_table()
+
+def setup_task_manager(
+    taskiq_config: TaskIQConfig,
+    rabbitmq_config: RabbitConfig,
+    redis_config: RedisConfig,
+) -> AsyncBroker:
+    """Create and configure the taskiq AioPika broker with Redis result backend."""
+
+    logger.debug("Creating taskiq broker...")
+    broker: AsyncBroker = AioPikaBroker(
+        url=rabbitmq_config.uri,
+        declare_exchange=taskiq_config.declare_exchange,
+        declare_queues_kwargs={"durable": taskiq_config.durable_queue},
+        declare_exchange_kwargs={"durable": taskiq_config.durable_exchange},
+    ).with_result_backend(
+        RedisAsyncResultBackend(
+            redis_url=redis_config.worker_uri,
+            result_ex_time=1000,
+        )
+    )
+    async_shared_broker.default_broker(broker)
+    logger.debug("Taskiq broker created and set as default")
+    return broker
+
+
+def setup_task_manager_middlewares(
+    broker: AsyncBroker,
+    taskiq_config: TaskIQConfig,
+) -> AsyncBroker:
+    """Apply retry middleware to the taskiq broker."""
+
+    return broker.with_middlewares(
+        SmartRetryMiddleware(
+            default_retry_count=taskiq_config.default_retry_count,
+            default_delay=taskiq_config.default_delay,
+            use_jitter=taskiq_config.use_jitter,
+            use_delay_exponent=taskiq_config.use_delay_exponent,
+            max_delay_exponent=taskiq_config.max_delay_component,
+        ),
+    )
+
+
+def setup_task_manager_tasks(broker: AsyncBroker) -> None:
+    """Import task modules so tasks register themselves with async_shared_broker."""
+    setup_outbox_tasks(broker)
+
+
+def setup_schedule_source(redis_config: RedisConfig) -> ScheduleSource:
+    """Create a Redis-backed schedule source for the taskiq scheduler."""
+    return ListRedisScheduleSource(
+        url=redis_config.schedule_source_uri
+    )
+
+
+def setup_scheduler(
+    broker: AsyncBroker,
+    schedule_source: ScheduleSource,
+) -> TaskiqScheduler:
+    """Create the taskiq scheduler with label + Redis schedule sources."""
+
+    logger.debug("Creating taskiq scheduler...")
+    return TaskiqScheduler(
+        broker=broker,
+        sources=[
+            LabelScheduleSource(broker),
+            schedule_source,
+        ],
+    )
+
 
 def setup_http_routes(app: FastAPI, /) -> None:
     """

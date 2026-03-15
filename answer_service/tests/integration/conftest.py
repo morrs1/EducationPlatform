@@ -57,6 +57,7 @@ from answer_service.setup.configs.chroma_config import ChromaConfig
 from answer_service.setup.configs.database_config import PostgresConfig, SQLAlchemyConfig
 from answer_service.setup.configs.llm_config import OpenAIConfig
 from answer_service.setup.ioc import (
+    bazario_provider,
     configs_provider,
     db_provider,
     domain_ports_provider,
@@ -72,7 +73,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 _POSTGRES_IMAGE: Final[str] = "postgres:16-alpine"
 _TRUNCATE_SQL: Final[str] = (
-    "TRUNCATE TABLE messages, conversations, document_chunks, lesson_indexes, users CASCADE"
+    "TRUNCATE TABLE messages, conversations, document_chunks, lesson_indexes, users, outbox_messages CASCADE"
 )
 _FAKE_LLM_RESPONSE: Final[str] = "Integration test answer."
 
@@ -163,6 +164,7 @@ async def dishka_container(
         configs_provider(),
         db_provider(),
         test_vector_store_provider(),  # replaces vector_store_provider()
+        bazario_provider(),
         mappers_provider(),
         domain_ports_provider(),
         gateways_provider(),

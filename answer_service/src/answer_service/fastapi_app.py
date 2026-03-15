@@ -9,8 +9,8 @@ from dishka import AsyncContainer, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.orm import clear_mappers
-from answer_service._version import __version__
 
+from answer_service._version import __version__
 from answer_service.setup.bootstrap import (
     setup_configs,
     setup_http_exc_handlers,
@@ -19,8 +19,10 @@ from answer_service.setup.bootstrap import (
     setup_map_tables,
 )
 from answer_service.setup.configs.asgi_config import ASGIConfig
-from answer_service.setup.configs.broker_config import RabbitConfig
+from answer_service.setup.configs.chroma_config import ChromaConfig
 from answer_service.setup.configs.database_config import PostgresConfig, SQLAlchemyConfig
+from answer_service.setup.configs.llm_config import OpenAIConfig
+from answer_service.setup.configs.redis_config import RedisConfig
 from answer_service.setup.ioc import setup_providers
 
 if TYPE_CHECKING:
@@ -33,21 +35,10 @@ logger: Final[logging.Logger] = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Async context manager for FastAPI application lifecycle management.
 
-    Handles the startup and shutdown events of the FastAPI application.
-    Specifically ensures proper cleanup
-        of Dishka container resources on shutdown.
-
-    Args:
-        app: FastAPI application instance. Positional-only parameter.
-
-    Yields:
-        None: Indicates successful entry into the context.
-
-    Note:
-        The actual resource cleanup (Dishka container closure)
-            happens after yield, during the application shutdown phase.
+    Ensures proper cleanup of the Dishka container and SQLAlchemy mapper
+    registry on shutdown. The outbox relay runs in the separate taskiq
+    worker process — the FastAPI app itself has no broker connection.
     """
-
     yield
 
     clear_mappers()
@@ -55,27 +46,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_fastapi_app() -> FastAPI:  # pragma: no cover
-    """Creates and configures a FastAPI application
-        instance with all dependencies.
-
-    Performs comprehensive application setup including:
-    - Configuration initialization
-    - Dependency injection container setup
-    - Database mapping
-    - Route registration
-    - Exception handlers
-    - Middleware stack
-    - Dishka integration
-
-    Returns:
-        FastAPI: Fully configured application instance ready for use.
-
-    Side Effects:
-        - Configures global application state
-        - Initializes database mappings
-        - Sets up observability tools
-        - Registers all route handlers
-    """
+    """Creates and configures a FastAPI application instance with all dependencies."""
     configs: AppConfig = setup_configs()
     setup_map_tables()
 
@@ -90,6 +61,9 @@ def create_fastapi_app() -> FastAPI:  # pragma: no cover
         ASGIConfig: configs.asgi,
         SQLAlchemyConfig: configs.alchemy,
         PostgresConfig: configs.postgres,
+        ChromaConfig: configs.chroma,
+        OpenAIConfig: configs.openai,
+        RedisConfig: configs.redis,
     }
 
     container: AsyncContainer = make_async_container(*setup_providers(), context=context)

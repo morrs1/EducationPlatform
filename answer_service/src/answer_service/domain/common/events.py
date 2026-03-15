@@ -1,10 +1,13 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+
+from bazario import Notification
+
 from answer_service.domain.common.event_id import EventId
 
 
 @dataclass(frozen=True, kw_only=True)
-class Event:
+class Event(Notification):
     """Базовый класс доменных событий."""
 
     event_id: EventId | None = field(

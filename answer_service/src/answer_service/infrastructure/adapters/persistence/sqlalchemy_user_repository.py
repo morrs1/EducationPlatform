@@ -28,7 +28,10 @@ class SqlAlchemyUserRepository(UserRepository):
 
     @override
     async def save(self, user: User) -> None:
-        self._session.add(user)
+        try:
+            self._session.add(user)
+        except SQLAlchemyError as e:
+            raise RepoError("Database query failed.") from e
 
     @override
     async def get_by_id(self, user_id: UUID) -> User | None:

@@ -120,8 +120,8 @@ class TestSetupProviders:
         assert result is not None
         providers_list = list(result)
         assert (
-            len(providers_list) == 7
-        )  # configs, db, vector_store, mappers, domain_ports, gateways, interactors
+            len(providers_list) == 8
+        )  # configs, db, vector_store, bazario, mappers, domain_ports, gateways, interactors
 
     def test_setup_providers_order(self) -> None:
         """Test that setup_providers returns providers in correct order."""

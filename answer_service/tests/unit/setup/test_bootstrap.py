@@ -19,8 +19,10 @@ class TestSetupMapTables:
     @mock.patch("answer_service.setup.bootstrap.map_users_table")
     @mock.patch("answer_service.setup.bootstrap.map_conversations_tables")
     @mock.patch("answer_service.setup.bootstrap.map_lesson_index_tables")
+    @mock.patch("answer_service.setup.bootstrap.map_outbox_table")
     def test_setup_map_tables_calls_all_mappings(
         self,
+        mock_map_outbox: mock.Mock,
         mock_map_lesson: mock.Mock,
         mock_map_conversations: mock.Mock,
         mock_map_users: mock.Mock,
@@ -33,6 +35,7 @@ class TestSetupMapTables:
         mock_map_users.assert_called_once()
         mock_map_conversations.assert_called_once()
         mock_map_lesson.assert_called_once()
+        mock_map_outbox.assert_called_once()
 
 
 class TestSetupHttpRoutes:
