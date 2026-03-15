@@ -6,15 +6,16 @@ from answer_service.setup.configs.consts import PORT_MAX, PORT_MIN
 class RabbitConfig(BaseModel):
     """Configuration container for RabbitMQ connection settings.
 
-        Attributes:
-            user: rabbitmq username.
-            password: rabbitmq password.
-            host: rabbitmq hostname or IP address.
-            port: rabbitmq server port.
+    Attributes:
+        user: rabbitmq username.
+        password: rabbitmq password.
+        host: rabbitmq hostname or IP address.
+        port: rabbitmq server port.
 
-        Properties:
-            uri: Complete RabbitMQ connection URI.
+    Properties:
+        uri: Complete RabbitMQ connection URI.
     """
+
     host: str = Field(
         alias="RABBITMQ_HOST",
         description="RabbitMQ host name or IP address.",
@@ -36,9 +37,8 @@ class RabbitConfig(BaseModel):
     @classmethod
     def validate_port(cls, v: int) -> int:
         if not PORT_MIN <= v <= PORT_MAX:
-            raise ValueError(
-                f"RABBITMQ_PORT must be between {PORT_MIN} and {PORT_MAX}, got {v}."
-            )
+            msg = f"RABBITMQ_PORT must be between {PORT_MIN} and {PORT_MAX}, got {v}."
+            raise ValueError(msg)
         return v
 
     @property

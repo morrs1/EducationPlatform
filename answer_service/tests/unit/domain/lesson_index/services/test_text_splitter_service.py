@@ -65,13 +65,13 @@ def test_split_chunks_are_chunk_content_instances(service: TextSplitterService) 
 
 def test_split_invalid_chunk_size_zero_raises(service: TextSplitterService) -> None:
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="chunk_size must be > 0"):
         service.split("text", chunk_size=0)
 
 
 def test_split_invalid_chunk_size_negative_raises(service: TextSplitterService) -> None:
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="chunk_size must be > 0"):
         service.split("text", chunk_size=-1)
 
 
@@ -79,25 +79,25 @@ def test_split_invalid_chunk_overlap_negative_raises(
     service: TextSplitterService,
 ) -> None:
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="chunk_overlap must be >= 0"):
         service.split("text", chunk_overlap=-1)
 
 
 def test_split_overlap_equal_to_size_raises(service: TextSplitterService) -> None:
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="chunk_overlap"):
         service.split("text", chunk_size=10, chunk_overlap=10)
 
 
 def test_split_overlap_greater_than_size_raises(service: TextSplitterService) -> None:
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="chunk_overlap"):
         service.split("text", chunk_size=10, chunk_overlap=11)
 
 
 def test_split_chunk_size_exceeds_max_raises(service: TextSplitterService) -> None:
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="exceeds domain maximum"):
         service.split("text", chunk_size=MAX_CHUNK_LENGTH + 1)
 
 

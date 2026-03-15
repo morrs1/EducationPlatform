@@ -10,10 +10,8 @@ from answer_service.application.queries.conversation.get_conversation import (
     GetConversationQueryHandler,
 )
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.conversation.get_conversation.schemas import (
-    ConversationResponse,
-    MessageResponse,
-)
+
+from .schemas import ConversationResponse, MessageResponse
 
 get_conversation_router: Final[APIRouter] = APIRouter(
     tags=["Conversation"],

@@ -5,9 +5,14 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Body, Path, status
 
-from answer_service.application.commands.lesson_index.index_lesson import IndexLessonCommand, IndexLessonCommandHandler
+from answer_service.application.commands.lesson_index.index_lesson import (
+    IndexLessonCommand,
+    IndexLessonCommandHandler,
+)
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.lesson_index.index_lesson.schemas import IndexLessonRequest
+from answer_service.presentation.http.v1.routes.lesson_index.index_lesson.schemas import (
+    IndexLessonRequest,
+)
 
 index_lesson_router: Final[APIRouter] = APIRouter(
     tags=["Lesson Index"],

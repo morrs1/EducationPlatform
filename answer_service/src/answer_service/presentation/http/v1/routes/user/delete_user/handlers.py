@@ -5,7 +5,10 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Path, status
 
-from answer_service.application.commands.user.delete_user import DeleteUserCommand, DeleteUserCommandHandler
+from answer_service.application.commands.user.delete_user import (
+    DeleteUserCommand,
+    DeleteUserCommandHandler,
+)
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
 
 delete_user_router: Final[APIRouter] = APIRouter(

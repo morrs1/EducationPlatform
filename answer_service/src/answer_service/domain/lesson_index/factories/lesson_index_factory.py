@@ -1,12 +1,12 @@
 from typing import final
 
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 from answer_service.domain.lesson_index.entities.document_chunk import DocumentChunk
 from answer_service.domain.lesson_index.entities.lesson_index import LessonIndex
 from answer_service.domain.lesson_index.ports.id_generator import ChunkIdGenerator
 from answer_service.domain.lesson_index.value_objects.chunk_content import ChunkContent
 from answer_service.domain.lesson_index.value_objects.embedding import Embedding
+from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 
 
 @final

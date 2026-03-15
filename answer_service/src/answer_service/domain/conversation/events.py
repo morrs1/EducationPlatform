@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 
 from answer_service.domain.common.events import Event
-from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
-from answer_service.domain.user.value_objects.user_id import UserId
 from answer_service.domain.conversation.value_objects.answer import Answer
-from answer_service.domain.conversation.value_objects.conversation_id import ConversationId
+from answer_service.domain.conversation.value_objects.conversation_id import (
+    ConversationId,
+)
 from answer_service.domain.conversation.value_objects.message_id import MessageId
 from answer_service.domain.conversation.value_objects.question import Question
+from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
+from answer_service.domain.user.value_objects.user_id import UserId
 
 
 @dataclass(frozen=True, kw_only=True)

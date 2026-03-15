@@ -10,14 +10,8 @@ from answer_service.domain.common.event_id import EventId
 class Event(Notification):
     """Базовый класс доменных событий."""
 
-    event_id: EventId | None = field(
-        init=False,
-        default=None
-    )
-    event_date: datetime | None = field(
-        default=None,
-        init=False
-    )
+    event_id: EventId | None = field(init=False, default=None)
+    event_date: datetime | None = field(default=None, init=False)
 
     @property
     def event_type(self) -> str:
@@ -29,11 +23,11 @@ class Event(Notification):
         if self.event_id:
             return
 
-        object.__setattr__(self, "event_id", event_id)
+        object.__setattr__(self, "event_id", event_id)  # noqa: PLC2801
 
     def set_event_date(self, event_date: datetime) -> None:
         """Установить дату и время создания события."""
         if self.event_date:
             return
 
-        object.__setattr__(self, "event_date", event_date)
+        object.__setattr__(self, "event_date", event_date)  # noqa: PLC2801

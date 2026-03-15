@@ -33,8 +33,11 @@ class SqlAlchemyOutboxRepository(OutboxRepository):
         try:
             self._session.add(record)
         except SQLAlchemyError as e:
-            raise RepoError("Failed to enqueue outbox message.") from e
-        logger.debug("Outbox message enqueued: %s (type=%s)", message.id, message.event_type)
+            msg = "Failed to enqueue outbox message."
+            raise RepoError(msg) from e
+        logger.debug(
+            "Outbox message enqueued: %s (type=%s)", message.id, message.event_type
+        )
 
     @override
     async def get_pending(self, limit: int = 100) -> list[OutboxMessage]:
@@ -48,7 +51,8 @@ class SqlAlchemyOutboxRepository(OutboxRepository):
             )
             records = result.scalars().all()
         except SQLAlchemyError as e:
-            raise RepoError("Failed to fetch pending outbox messages.") from e
+            msg = "Failed to fetch pending outbox messages."
+            raise RepoError(msg) from e
         return [
             OutboxMessage(
                 id=r.id,
@@ -69,5 +73,6 @@ class SqlAlchemyOutboxRepository(OutboxRepository):
                 .values(processed_at=datetime.now(UTC))
             )
         except SQLAlchemyError as e:
-            raise RepoError("Failed to mark outbox message as processed.") from e
+            msg = "Failed to mark outbox message as processed."
+            raise RepoError(msg) from e
         logger.debug("Outbox message marked as processed: %s", message_id)

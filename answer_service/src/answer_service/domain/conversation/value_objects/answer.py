@@ -14,7 +14,8 @@ class Answer(ValueObject):
 
     def _validate(self) -> None:
         if not self.content.strip():
-            raise EmptyAnswerError("Answer content cannot be empty.")
+            msg = "Answer content cannot be empty."
+            raise EmptyAnswerError(msg)
 
     def __str__(self) -> str:
         return self.content

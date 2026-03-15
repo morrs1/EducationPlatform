@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
 
-from answer_service.application.common.ports.conversation_repository import ConversationRepository
+from answer_service.application.common.ports.conversation_repository import (
+    ConversationRepository,
+)
 from answer_service.application.common.ports.event_bus import EventBus
 from answer_service.application.common.ports.transaction_manager import TransactionManager
 from answer_service.application.errors import ConversationNotFoundError
@@ -27,12 +29,16 @@ class CloseConversationCommandHandler:
         event_bus: EventBus,
     ) -> None:
         self._transaction_manager: Final[TransactionManager] = transaction_manager
-        self._conversation_repository: Final[ConversationRepository] = conversation_repository
+        self._conversation_repository: Final[ConversationRepository] = (
+            conversation_repository
+        )
         self._events_collection: Final[EventsCollection] = events_collection
         self._event_bus: Final[EventBus] = event_bus
 
     async def __call__(self, data: CloseConversationCommand) -> None:
-        logger.info("close_conversation: started. conversation_id='%s'.", data.conversation_id)
+        logger.info(
+            "close_conversation: started. conversation_id='%s'.", data.conversation_id
+        )
 
         conversation = await self._conversation_repository.get_by_id(data.conversation_id)
         if conversation is None:
@@ -46,4 +52,6 @@ class CloseConversationCommandHandler:
         await self._event_bus.publish(self._events_collection.pull_events())
         await self._transaction_manager.commit()
 
-        logger.info("close_conversation: done. conversation_id='%s'.", data.conversation_id)
+        logger.info(
+            "close_conversation: done. conversation_id='%s'.", data.conversation_id
+        )

@@ -12,7 +12,9 @@ tracer: Final[Tracer] = trace.get_tracer(__name__)
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     @override
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         logger.info("Request: method: %s, url: %s", request.method, request.url)
         response: Response = await call_next(request)
         logger.info("Response status %s", response.status_code)

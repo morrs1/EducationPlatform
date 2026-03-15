@@ -18,7 +18,7 @@ class TestChunkContentValidation:
 
     @pytest.mark.parametrize(
         "content",
-        [
+        (
             pytest.param("Simple chunk content", id="simple_content"),
             pytest.param(
                 "Chunk with technical content about Python programming",
@@ -36,7 +36,7 @@ class TestChunkContentValidation:
             pytest.param("Content with numbers: 12345", id="with_numbers"),
             pytest.param("Content with **markdown** formatting", id="with_markdown"),
             pytest.param("Content with <html> tags", id="with_html"),
-        ],
+        ),
     )
     def test_accepts_valid_chunk_content(self, content: str) -> None:
         # Arrange & Act
@@ -48,7 +48,7 @@ class TestChunkContentValidation:
 
     @pytest.mark.parametrize(
         ("content", "expected_error"),
-        [
+        (
             pytest.param("", EmptyChunkContentError, id="empty_string"),
             pytest.param("   ", EmptyChunkContentError, id="whitespace_only"),
             pytest.param("\n", EmptyChunkContentError, id="newline_only"),
@@ -63,7 +63,7 @@ class TestChunkContentValidation:
                 ChunkContentTooLongError,
                 id="exceeds_max_greatly",
             ),
-        ],
+        ),
     )
     def test_rejects_invalid_chunk_content(
         self,

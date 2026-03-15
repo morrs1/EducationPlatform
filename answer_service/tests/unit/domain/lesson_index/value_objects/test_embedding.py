@@ -12,7 +12,7 @@ class TestEmbeddingValidation:
 
     @pytest.mark.parametrize(
         "vector",
-        [
+        (
             pytest.param((0.1, 0.2, 0.3), id="small_vector"),
             pytest.param(tuple(range(100)), id="hundred_dimension"),
             pytest.param(tuple(range(1536)), id="openai_embedding_dim"),
@@ -20,7 +20,7 @@ class TestEmbeddingValidation:
             pytest.param((-0.5, 0.0, 0.5), id="negative_and_positive"),
             pytest.param((1e-10, 1e-5, 1e-2), id="very_small_floats"),
             pytest.param((1e10, 1e5, 1e2), id="very_large_floats"),
-        ],
+        ),
     )
     def test_accepts_valid_embedding(self, vector: tuple[float, ...]) -> None:
         # Arrange & Act
@@ -32,9 +32,7 @@ class TestEmbeddingValidation:
 
     @pytest.mark.parametrize(
         ("vector", "expected_error"),
-        [
-            pytest.param((), EmptyEmbeddingError, id="empty_tuple"),
-        ],
+        (pytest.param((), EmptyEmbeddingError, id="empty_tuple"),),
     )
     def test_rejects_invalid_embedding(
         self,

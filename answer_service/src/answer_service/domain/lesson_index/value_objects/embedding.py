@@ -15,7 +15,8 @@ class Embedding(ValueObject):
 
     def _validate(self) -> None:
         if not self.vector:
-            raise EmptyEmbeddingError("Embedding vector cannot be empty.")
+            msg = "Embedding vector cannot be empty."
+            raise EmptyEmbeddingError(msg)
 
     def __str__(self) -> str:
         return f"Embedding(dim={self.dimension})"

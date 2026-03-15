@@ -1,15 +1,15 @@
 from typing import final
 
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
-from answer_service.domain.user.value_objects.user_id import UserId
 from answer_service.domain.conversation.entities.conversation import Conversation
+from answer_service.domain.conversation.entities.message import Message
 from answer_service.domain.conversation.ports.id_generator import (
     ConversationIdGenerator,
     MessageIdGenerator,
 )
 from answer_service.domain.conversation.value_objects.question import Question
-from answer_service.domain.conversation.entities.message import Message
+from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
+from answer_service.domain.user.value_objects.user_id import UserId
 
 
 @final

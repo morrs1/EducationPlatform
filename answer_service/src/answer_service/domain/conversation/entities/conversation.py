@@ -3,10 +3,11 @@ from typing import Self, final
 
 from answer_service.domain.common.aggregate import Aggregate
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
-from answer_service.domain.user.value_objects.user_id import UserId
 from answer_service.domain.conversation.entities.message import Message
-from answer_service.domain.conversation.errors import ConversationClosedError, MessageNotFoundError
+from answer_service.domain.conversation.errors import (
+    ConversationClosedError,
+    MessageNotFoundError,
+)
 from answer_service.domain.conversation.events import (
     AnswerGenerated,
     AnswerGenerationFailed,
@@ -15,10 +16,14 @@ from answer_service.domain.conversation.events import (
     QuestionAsked,
 )
 from answer_service.domain.conversation.value_objects.answer import Answer
-from answer_service.domain.conversation.value_objects.conversation_id import ConversationId
+from answer_service.domain.conversation.value_objects.conversation_id import (
+    ConversationId,
+)
 from answer_service.domain.conversation.value_objects.message_id import MessageId
 from answer_service.domain.conversation.value_objects.question import Question
 from answer_service.domain.conversation.value_objects.statuses import ConversationStatus
+from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
+from answer_service.domain.user.value_objects.user_id import UserId
 
 
 @final

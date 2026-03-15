@@ -5,7 +5,16 @@ from answer_service.domain.lesson_index.value_objects.chunk_content import (
 )
 
 # Sentence-ending punctuation used to detect natural split boundaries.
-_SENTENCE_ENDINGS: tuple[str, ...] = (".\n", ".\t", ". ", "!\n", "! ", "?\n", "? ", "\n\n")
+_SENTENCE_ENDINGS: tuple[str, ...] = (
+    ".\n",
+    ".\t",
+    ". ",
+    "!\n",
+    "! ",
+    "?\n",
+    "? ",
+    "\n\n",
+)
 
 DEFAULT_CHUNK_SIZE: int = 1000
 DEFAULT_CHUNK_OVERLAP: int = 200
@@ -55,17 +64,20 @@ class TextSplitterService(BaseDomainService):
     @staticmethod
     def _validate_params(chunk_size: int, chunk_overlap: int) -> None:
         if chunk_size <= 0:
-            raise ValueError(f"chunk_size must be > 0, got {chunk_size}.")
+            msg = f"chunk_size must be > 0, got {chunk_size}."
+            raise ValueError(msg)
         if chunk_size > MAX_CHUNK_LENGTH:
-            raise ValueError(
-                f"chunk_size {chunk_size} exceeds domain maximum of {MAX_CHUNK_LENGTH}."
-            )
+            msg = f"chunk_size {chunk_size} exceeds domain maximum of {MAX_CHUNK_LENGTH}."
+            raise ValueError(msg)
         if chunk_overlap < 0:
-            raise ValueError(f"chunk_overlap must be >= 0, got {chunk_overlap}.")
+            msg = f"chunk_overlap must be >= 0, got {chunk_overlap}."
+            raise ValueError(msg)
         if chunk_overlap >= chunk_size:
-            raise ValueError(
-                f"chunk_overlap ({chunk_overlap}) must be less than chunk_size ({chunk_size})."
+            msg = (
+                f"chunk_overlap ({chunk_overlap}) must be less than"
+                f" chunk_size ({chunk_size})."
             )
+            raise ValueError(msg)
 
     @staticmethod
     def _find_sentence_boundary(text: str, ideal_end: int) -> int:

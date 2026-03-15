@@ -3,16 +3,19 @@ from typing import Final
 
 from dishka import FromDishka
 from dishka.integrations.taskiq import inject
-from taskiq import async_shared_broker, AsyncBroker
+from taskiq import AsyncBroker
 
-from answer_service.application.commands.outbox.relay_outbox import RelayOutboxCommand, RelayOutboxCommandHandler
+from answer_service.application.commands.outbox.relay_outbox import (
+    RelayOutboxCommand,
+    RelayOutboxCommandHandler,
+)
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
-@inject
+@inject(patch_module=True)
 async def relay_outbox_task(
-        handler: FromDishka[RelayOutboxCommandHandler],
+    handler: FromDishka[RelayOutboxCommandHandler],
 ) -> None:
     """Taskiq task: relay pending outbox messages to RabbitMQ (runs every minute)."""
     await handler(RelayOutboxCommand())

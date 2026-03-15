@@ -6,9 +6,14 @@ from fastapi import APIRouter, Query, status
 
 from answer_service.application.common.query_params.sorting import SortingOrder
 from answer_service.application.common.query_params.user_params import UserSortField
-from answer_service.application.queries.user.get_users import GetUsersQuery, GetUsersQueryHandler
+from answer_service.application.queries.user.get_users import (
+    GetUsersQuery,
+    GetUsersQueryHandler,
+)
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.user.get_users.schemas import UserListItemResponse
+from answer_service.presentation.http.v1.routes.user.get_users.schemas import (
+    UserListItemResponse,
+)
 
 get_users_router: Final[APIRouter] = APIRouter(
     tags=["User"],

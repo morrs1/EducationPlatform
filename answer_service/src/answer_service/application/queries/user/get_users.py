@@ -5,7 +5,10 @@ from typing import Final, final
 from answer_service.application.common.ports.user_repository import UserRepository
 from answer_service.application.common.query_params.pagination import Pagination
 from answer_service.application.common.query_params.sorting import SortingOrder
-from answer_service.application.common.query_params.user_params import UserListParams, UserSortField
+from answer_service.application.common.query_params.user_params import (
+    UserListParams,
+    UserSortField,
+)
 from answer_service.application.common.views.user_views import UserView
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)

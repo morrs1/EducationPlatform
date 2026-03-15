@@ -46,11 +46,11 @@ def test_rabbit_config_uri_contains_host_port_user() -> None:
 
 @pytest.mark.parametrize(
     "invalid_port",
-    [
+    (
         pytest.param(0, id="zero"),
         pytest.param(-1, id="negative"),
         pytest.param(65536, id="too_high"),
-    ],
+    ),
 )
 def test_rabbit_config_invalid_port_raises_validation_error(invalid_port: int) -> None:
     # Arrange & Act & Assert

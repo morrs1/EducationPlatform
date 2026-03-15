@@ -45,25 +45,25 @@ class TaskIQConfig(BaseModel):
     @classmethod
     def validate_default_retry_count(cls, v: int) -> int:
         if v < RETRY_COUNT_MIN:
-            raise ValueError(
-                f"default_retry_count must be at least {RETRY_COUNT_MIN}, got {v}."
-            )
+            msg = f"default_retry_count must be at least {RETRY_COUNT_MIN}, got {v}."
+            raise ValueError(msg)
         return v
 
     @field_validator("default_delay")
     @classmethod
     def validate_default_delay(cls, v: int) -> int:
         if v < DELAY_MIN:
-            raise ValueError(
-                f"default_delay must be at least {DELAY_MIN} seconds, got {v}."
-            )
+            msg = f"default_delay must be at least {DELAY_MIN} seconds, got {v}."
+            raise ValueError(msg)
         return v
 
     @field_validator("max_delay_component")
     @classmethod
     def validate_max_delay_component(cls, v: int) -> int:
         if v < MAX_DELAY_COMPONENT_MIN:
-            raise ValueError(
-                f"max_delay_component must be at least {MAX_DELAY_COMPONENT_MIN} seconds, got {v}."
+            msg = (
+                f"max_delay_component must be at least"
+                f" {MAX_DELAY_COMPONENT_MIN} seconds, got {v}."
             )
+            raise ValueError(msg)
         return v

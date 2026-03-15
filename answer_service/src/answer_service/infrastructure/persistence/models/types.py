@@ -17,10 +17,12 @@ class QuestionType(TypeDecorator[Question]):
     impl = Text
     cache_ok = True
 
-    def process_bind_param(self, value: Question | None, dialect: Dialect) -> str | None:
+    def process_bind_param(self, value: Question | None, _dialect: Dialect) -> str | None:
         return value.content if value is not None else None
 
-    def process_result_value(self, value: str | None, dialect: Dialect) -> Question | None:
+    def process_result_value(
+        self, value: str | None, _dialect: Dialect
+    ) -> Question | None:
         return Question(content=value) if value is not None else None
 
 
@@ -30,10 +32,14 @@ class ChunkContentType(TypeDecorator[ChunkContent]):
     impl = Text
     cache_ok = True
 
-    def process_bind_param(self, value: ChunkContent | None, dialect: Dialect) -> str | None:
+    def process_bind_param(
+        self, value: ChunkContent | None, _dialect: Dialect
+    ) -> str | None:
         return value.content if value is not None else None
 
-    def process_result_value(self, value: str | None, dialect: Dialect) -> ChunkContent | None:
+    def process_result_value(
+        self, value: str | None, _dialect: Dialect
+    ) -> ChunkContent | None:
         return ChunkContent(content=value) if value is not None else None
 
 
@@ -53,7 +59,7 @@ class AnswerType(TypeDecorator[Answer]):
     cache_ok = True
 
     def process_bind_param(
-        self, value: Answer | None, dialect: Dialect
+        self, value: Answer | None, _dialect: Dialect
     ) -> dict[str, Any] | None:
         if value is None:
             return None
@@ -65,7 +71,7 @@ class AnswerType(TypeDecorator[Answer]):
         }
 
     def process_result_value(
-        self, value: dict[str, Any] | None, dialect: Dialect
+        self, value: dict[str, Any] | None, _dialect: Dialect
     ) -> Answer | None:
         if value is None:
             return None

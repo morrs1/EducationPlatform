@@ -12,7 +12,7 @@ class TestModelNameValidation:
 
     @pytest.mark.parametrize(
         "value",
-        [
+        (
             pytest.param("gpt-4", id="simple_name"),
             pytest.param("gpt-4-turbo-preview", id="name_with_hyphens"),
             pytest.param("gpt-4o", id="name_with_letter_suffix"),
@@ -27,7 +27,7 @@ class TestModelNameValidation:
             pytest.param(
                 "very-long-model-name-with-many-parts-and-versions", id="long_name"
             ),
-        ],
+        ),
     )
     def test_accepts_valid_model_name(self, value: str) -> None:
         # Arrange & Act
@@ -39,12 +39,12 @@ class TestModelNameValidation:
 
     @pytest.mark.parametrize(
         ("value", "expected_error"),
-        [
+        (
             pytest.param("", EmptyModelNameError, id="empty_string"),
             pytest.param("   ", EmptyModelNameError, id="whitespace_only"),
             pytest.param("\n", EmptyModelNameError, id="newline_only"),
             pytest.param("\t", EmptyModelNameError, id="tab_only"),
-        ],
+        ),
     )
     def test_rejects_invalid_model_name(
         self,

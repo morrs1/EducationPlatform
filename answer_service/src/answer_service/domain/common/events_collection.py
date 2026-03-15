@@ -1,6 +1,6 @@
 from collections import deque
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from answer_service.domain.common.events import Event
 

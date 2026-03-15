@@ -3,8 +3,13 @@ from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
 
-from answer_service.application.common.ports.conversation_repository import ConversationRepository
-from answer_service.application.common.views.conversation_views import ConversationView, MessageView
+from answer_service.application.common.ports.conversation_repository import (
+    ConversationRepository,
+)
+from answer_service.application.common.views.conversation_views import (
+    ConversationView,
+    MessageView,
+)
 from answer_service.application.errors import ConversationNotFoundError
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
@@ -18,10 +23,14 @@ class GetConversationQuery:
 @final
 class GetConversationQueryHandler:
     def __init__(self, conversation_repository: ConversationRepository) -> None:
-        self._conversation_repository: Final[ConversationRepository] = conversation_repository
+        self._conversation_repository: Final[ConversationRepository] = (
+            conversation_repository
+        )
 
     async def __call__(self, data: GetConversationQuery) -> ConversationView:
-        logger.info("get_conversation: started. conversation_id='%s'.", data.conversation_id)
+        logger.info(
+            "get_conversation: started. conversation_id='%s'.", data.conversation_id
+        )
 
         conversation = await self._conversation_repository.get_by_id(data.conversation_id)
         if conversation is None:

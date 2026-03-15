@@ -7,7 +7,7 @@ from typing import Protocol
 class LLMMessage:
     """A single turn in the conversation passed to the LLM."""
 
-    role: str   # "user" | "assistant"
+    role: str  # "user" | "assistant"
     content: str
 
 
@@ -29,8 +29,10 @@ class LLMPort(Protocol):
         question: str,
         model_name: str,
     ) -> LLMResponse:
-        """Generate an answer given system prompt, conversation history,
-        retrieved context chunks and the current question.
+        """Generate an LLM answer for the given question.
+
+        Uses system prompt, conversation history, retrieved context chunks,
+        and the current question.
 
         :param system_prompt: Instruction that sets the assistant's behaviour.
         :param history: Ordered list of previous Q&A turns (oldest first).

@@ -3,6 +3,7 @@
 Run with:
     taskiq worker answer_service.worker:broker
 """
+
 import logging
 from typing import Final
 
@@ -28,12 +29,12 @@ from answer_service.setup.ioc import setup_worker_providers
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
-async def startup(state: TaskiqState) -> None:  # noqa: ARG001
+async def startup(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
     setup_map_tables()
     logger.info("Taskiq worker started")
 
 
-async def shutdown(state: TaskiqState) -> None:  # noqa: ARG001
+async def shutdown(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
     clear_mappers()
     logger.info("Taskiq worker stopped")
 
@@ -47,7 +48,9 @@ def create_worker_taskiq_app() -> AsyncBroker:
         rabbitmq_config=configs.rabbit,
         redis_config=configs.redis,
     )
-    worker_broker = setup_task_manager_middlewares(broker=worker_broker, taskiq_config=configs.taskiq)
+    worker_broker = setup_task_manager_middlewares(
+        broker=worker_broker, taskiq_config=configs.taskiq
+    )
     setup_task_manager_tasks(broker=worker_broker)
 
     worker_broker.on_event(TaskiqEvents.WORKER_STARTUP)(startup)
@@ -62,7 +65,9 @@ def create_worker_taskiq_app() -> AsyncBroker:
         RedisConfig: configs.redis,
     }
 
-    container: AsyncContainer = make_async_container(*setup_worker_providers(), context=context)
+    container: AsyncContainer = make_async_container(
+        *setup_worker_providers(), context=context
+    )
     setup_dishka(container, broker=worker_broker)
 
     return worker_broker

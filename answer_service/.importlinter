@@ -21,6 +21,7 @@ allowed_importers =
     answer_service.application
     answer_service.presentation
     answer_service.setup
+    answer_service.infrastructure.scheduler
 
 
 [importlinter:contract:protected_application_ports]

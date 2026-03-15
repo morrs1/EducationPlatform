@@ -13,7 +13,7 @@ class ASGIConfig(BaseModel):
 
     host: str = Field(
         alias="UVICORN_HOST",
-        default="0.0.0.0", # nosec B104
+        default="0.0.0.0",  # nosec B104  # noqa: S104
         description="Interface to bind the server to (e.g., '0.0.0.0' or 'localhost').",
         validate_default=True,
     )
@@ -36,13 +36,7 @@ class ASGIConfig(BaseModel):
         description="Enable fastapi allow credentials.",
         validate_default=True,
     )
-    allow_methods: list[str] = [
-        "GET",
-        "POST",
-        "PUT",
-        "PATCH",
-        "DELETE"
-    ]
+    allow_methods: list[str] = ["GET", "POST", "PUT", "PATCH", "DELETE"]
     allow_headers: list[str] = [
         "Authorization",
         "Content-Type",
@@ -56,7 +50,6 @@ class ASGIConfig(BaseModel):
     @classmethod
     def validate_port(cls, v: int) -> int:
         if not PORT_MIN <= v <= PORT_MAX:
-            raise ValueError(
-                f"UVICORN_PORT must be between {PORT_MIN} and {PORT_MAX}, got {v}."
-            )
+            msg = f"UVICORN_PORT must be between {PORT_MIN} and {PORT_MAX}, got {v}."
+            raise ValueError(msg)
         return v

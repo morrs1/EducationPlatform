@@ -31,7 +31,8 @@ class SqlAlchemyUserRepository(UserRepository):
         try:
             self._session.add(user)
         except SQLAlchemyError as e:
-            raise RepoError("Database query failed.") from e
+            msg = "Database query failed."
+            raise RepoError(msg) from e
 
     @override
     async def get_by_id(self, user_id: UUID) -> User | None:
@@ -39,7 +40,8 @@ class SqlAlchemyUserRepository(UserRepository):
         try:
             result = (await self._session.execute(stmt)).scalar_one_or_none()
         except SQLAlchemyError as e:
-            raise RepoError("Database query failed.") from e
+            msg = "Database query failed."
+            raise RepoError(msg) from e
         return self._inject(result) if result is not None else None
 
     @override
@@ -55,7 +57,8 @@ class SqlAlchemyUserRepository(UserRepository):
         try:
             results = (await self._session.execute(stmt)).scalars().all()
         except SQLAlchemyError as e:
-            raise RepoError("Database query failed.") from e
+            msg = "Database query failed."
+            raise RepoError(msg) from e
         return [self._inject(u) for u in results]
 
     @override
@@ -64,7 +67,8 @@ class SqlAlchemyUserRepository(UserRepository):
         try:
             await self._session.execute(stmt)
         except SQLAlchemyError as e:
-            raise RepoError("Database query failed.") from e
+            msg = "Database query failed."
+            raise RepoError(msg) from e
 
     def _inject(self, user: User) -> User:
         user.events_collection = self._events_collection

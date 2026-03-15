@@ -3,7 +3,6 @@ from typing import Self, final
 
 from answer_service.domain.common.aggregate import Aggregate
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 from answer_service.domain.lesson_index.entities.document_chunk import DocumentChunk
 from answer_service.domain.lesson_index.errors import (
     LessonAlreadyIndexingError,
@@ -16,6 +15,7 @@ from answer_service.domain.lesson_index.events import (
     LessonReindexRequested,
 )
 from answer_service.domain.lesson_index.value_objects.index_status import IndexStatus
+from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 
 
 @final
@@ -43,7 +43,10 @@ class LessonIndex(Aggregate[LessonId]):
         return index
 
     def start_indexing(self) -> None:
-        """Transition to INDEXING state. Called by the application layer before adding chunks."""
+        """Transition to INDEXING state.
+
+        Called by the application layer before adding chunks.
+        """
         self.status = IndexStatus.INDEXING
 
     def add_chunk(self, chunk: DocumentChunk) -> None:
@@ -64,7 +67,10 @@ class LessonIndex(Aggregate[LessonId]):
         )
 
     def reindex(self, new_title: str | None = None) -> None:
-        """Clear existing chunks and restart indexing (e.g. when lesson content changes)."""
+        """Clear existing chunks and restart indexing.
+
+        Used when lesson content changes.
+        """
         if self.status == IndexStatus.INDEXING:
             msg = f"Lesson '{self.id}' is already being indexed."
             raise LessonAlreadyIndexingError(msg)

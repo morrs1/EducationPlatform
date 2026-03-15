@@ -7,9 +7,9 @@ from typing import Final, final, override
 from bazario.asyncio import Publisher
 
 from answer_service.application.common.ports.event_bus import EventBus
+from answer_service.application.common.ports.event_serializer import EventSerializer
 from answer_service.application.common.ports.outbox_repository import OutboxRepository
 from answer_service.domain.common.events import Event
-from answer_service.infrastructure.outbox.event_serializer import EventSerializer
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -49,4 +49,6 @@ class BazarioEventBus(EventBus):
             background_tasks.add(task)
             task.add_done_callback(background_tasks.discard)
 
-        logger.debug("BazarioEventBus: %d event(s) enqueued to outbox", len(background_tasks))
+        logger.debug(
+            "BazarioEventBus: %d event(s) enqueued to outbox", len(background_tasks)
+        )

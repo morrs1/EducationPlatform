@@ -18,7 +18,7 @@ class TestQuestionValidation:
 
     @pytest.mark.parametrize(
         "content",
-        [
+        (
             pytest.param("What is Python?", id="simple_question"),
             pytest.param(
                 "How do I use FastAPI with dependency injection?", id="technical_question"
@@ -38,7 +38,7 @@ class TestQuestionValidation:
             pytest.param("日本語の質問", id="japanese"),
             pytest.param("Question with special chars: @#$%", id="special_chars"),
             pytest.param("Question with numbers: 12345", id="with_numbers"),
-        ],
+        ),
     )
     def test_accepts_valid_question(self, content: str) -> None:
         # Arrange & Act
@@ -50,7 +50,7 @@ class TestQuestionValidation:
 
     @pytest.mark.parametrize(
         ("content", "expected_error"),
-        [
+        (
             pytest.param("", EmptyQuestionError, id="empty_string"),
             pytest.param("   ", EmptyQuestionError, id="whitespace_only"),
             pytest.param("\n", EmptyQuestionError, id="newline_only"),
@@ -65,7 +65,7 @@ class TestQuestionValidation:
                 QuestionTooLongError,
                 id="exceeds_max_greatly",
             ),
-        ],
+        ),
     )
     def test_rejects_invalid_question(
         self, content: str, expected_error: type[DomainFieldError]

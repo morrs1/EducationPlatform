@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from typing import Final
 from uuid import UUID
 
-from adaptix.conversion import coercer
-from adaptix.conversion import get_converter
+from adaptix.conversion import coercer, get_converter
 from langchain_core.documents import Document
 
 from answer_service.application.common.ports.vector_search_port import VectorSearchResult

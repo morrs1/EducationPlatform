@@ -4,9 +4,14 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Body, status
 
-from answer_service.application.commands.user.create_user import CreateUserCommand, CreateUserCommandHandler
+from answer_service.application.commands.user.create_user import (
+    CreateUserCommand,
+    CreateUserCommandHandler,
+)
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.user.create_user.schemas import CreateUserRequest
+from answer_service.presentation.http.v1.routes.user.create_user.schemas import (
+    CreateUserRequest,
+)
 
 create_user_router: Final[APIRouter] = APIRouter(
     tags=["User"],

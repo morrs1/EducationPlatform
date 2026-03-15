@@ -1,18 +1,29 @@
 import logging
 from dataclasses import dataclass
-from typing import Final, final
+from typing import TYPE_CHECKING, Final, final
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from answer_service.domain.lesson_index.entities.document_chunk import DocumentChunk
 
 from answer_service.application.common.ports.embedding_port import EmbeddingPort
 from answer_service.application.common.ports.event_bus import EventBus
-from answer_service.application.common.ports.lesson_index_repository import LessonIndexRepository
+from answer_service.application.common.ports.lesson_index_repository import (
+    LessonIndexRepository,
+)
 from answer_service.application.common.ports.transaction_manager import TransactionManager
-from answer_service.application.common.ports.vector_search_port import ChunkVector, VectorSearchPort
+from answer_service.application.common.ports.vector_search_port import (
+    ChunkVector,
+    VectorSearchPort,
+)
 from answer_service.application.errors import LessonAlreadyIndexedError
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.lesson_index.entities.document_chunk import DocumentChunk
-from answer_service.domain.lesson_index.factories.lesson_index_factory import LessonIndexFactory
-from answer_service.domain.lesson_index.services.text_splitter_service import TextSplitterService
+from answer_service.domain.lesson_index.factories.lesson_index_factory import (
+    LessonIndexFactory,
+)
+from answer_service.domain.lesson_index.services.text_splitter_service import (
+    TextSplitterService,
+)
 from answer_service.domain.lesson_index.value_objects.embedding import Embedding
 from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 
@@ -40,7 +51,9 @@ class IndexLessonCommandHandler:
         event_bus: EventBus,
     ) -> None:
         self._transaction_manager: Final[TransactionManager] = transaction_manager
-        self._lesson_index_repository: Final[LessonIndexRepository] = lesson_index_repository
+        self._lesson_index_repository: Final[LessonIndexRepository] = (
+            lesson_index_repository
+        )
         self._vector_search_port: Final[VectorSearchPort] = vector_search_port
         self._lesson_index_factory: Final[LessonIndexFactory] = lesson_index_factory
         self._text_splitter_service: Final[TextSplitterService] = text_splitter_service
@@ -49,7 +62,11 @@ class IndexLessonCommandHandler:
         self._event_bus: Final[EventBus] = event_bus
 
     async def __call__(self, data: IndexLessonCommand) -> None:
-        logger.info("index_lesson: started. lesson_id='%s', title='%s'.", data.lesson_id, data.title)
+        logger.info(
+            "index_lesson: started. lesson_id='%s', title='%s'.",
+            data.lesson_id,
+            data.title,
+        )
 
         existing = await self._lesson_index_repository.get_by_lesson_id(data.lesson_id)
         if existing is not None:
@@ -66,9 +83,9 @@ class IndexLessonCommandHandler:
         chunk_contents = self._text_splitter_service.split(data.content)
         logger.debug("index_lesson: text split. chunks_count=%d.", len(chunk_contents))
 
-        raw_vectors = await self._embedding_port.embed_many(
-            [str(c) for c in chunk_contents]
-        )
+        raw_vectors = await self._embedding_port.embed_many([
+            str(c) for c in chunk_contents
+        ])
 
         # Build and attach DocumentChunk entities to the aggregate
         chunks: list[DocumentChunk] = []
@@ -88,17 +105,15 @@ class IndexLessonCommandHandler:
         await self._lesson_index_repository.save(lesson_index)
         await self._transaction_manager.flush()
 
-        await self._vector_search_port.upsert_chunks(
-            [
-                ChunkVector(
-                    chunk_id=chunk.id,
-                    lesson_id=data.lesson_id,
-                    content=str(chunk.content),
-                    vector=list(chunk.embedding.vector),
-                )
-                for chunk in chunks
-            ]
-        )
+        await self._vector_search_port.upsert_chunks([
+            ChunkVector(
+                chunk_id=chunk.id,
+                lesson_id=data.lesson_id,
+                content=str(chunk.content),
+                vector=list(chunk.embedding.vector),
+            )
+            for chunk in chunks
+        ])
 
         await self._event_bus.publish(self._events_collection.pull_events())
         await self._transaction_manager.commit()

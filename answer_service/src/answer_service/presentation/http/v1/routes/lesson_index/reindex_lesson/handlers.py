@@ -10,7 +10,8 @@ from answer_service.application.commands.lesson_index.reindex_lesson import (
     ReindexLessonCommandHandler,
 )
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.lesson_index.reindex_lesson.schemas import ReindexLessonRequest
+
+from .schemas import ReindexLessonRequest
 
 reindex_lesson_router: Final[APIRouter] = APIRouter(
     tags=["Lesson Index"],

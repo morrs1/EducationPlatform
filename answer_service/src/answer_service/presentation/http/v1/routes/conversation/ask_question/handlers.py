@@ -5,7 +5,10 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Body, Path, status
 
-from answer_service.application.commands.conversation.ask_question import AskQuestionCommand, AskQuestionCommandHandler
+from answer_service.application.commands.conversation.ask_question import (
+    AskQuestionCommand,
+    AskQuestionCommandHandler,
+)
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
 from answer_service.presentation.http.v1.routes.conversation.ask_question.schemas import (
     AnswerResponse,

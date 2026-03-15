@@ -10,7 +10,8 @@ class ModelName(ValueObject):
 
     def _validate(self) -> None:
         if not self.value.strip():
-            raise EmptyModelNameError("Model name cannot be empty.")
+            msg = "Model name cannot be empty."
+            raise EmptyModelNameError(msg)
 
     def __str__(self) -> str:
         return self.value

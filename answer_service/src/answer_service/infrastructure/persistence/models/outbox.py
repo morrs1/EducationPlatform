@@ -2,8 +2,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import UUID as SA_UUID
-from sqlalchemy import Column, DateTime, String, Table, Text
+from sqlalchemy import (
+    UUID as SA_UUID,
+    Column,
+    DateTime,
+    String,
+    Table,
+    Text,
+)
 
 from answer_service.infrastructure.persistence.models.base import mapper_registry
 

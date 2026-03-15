@@ -7,10 +7,10 @@ preview = true
 line-length = 90
 indent-width = 4
 
-target-version = "py310"
+target-version = "py312"
 
 include = [
-    "src/dishka_jobify/**/*.py",
+    "src/answer_service/**/*.py",
     "tests/**/*.py",
     "pyproject.toml",
 ]
@@ -56,73 +56,27 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
+# DI-heavy command/query handlers have many dependencies by design — cannot reduce without
+# breaking Clean Architecture (interactors must remain independent of each other).
+"src/answer_service/application/commands/**/*.py" = ["PLR0913", "PLR0917"]
+"src/answer_service/application/queries/**/*.py" = ["PLR0913", "PLR0917"]
+# FastAPI handlers receive all dependencies via DI injection — argument count is unavoidable.
+"src/answer_service/presentation/http/v1/routes/**/*.py" = ["PLR0913", "PLR0917"]
+# Alembic generates migration filenames with timestamps (e.g. 14_1957_52_...) that start
+# with digits — these are not valid Python identifiers but cannot be renamed.
+# Version subdirs (2026/, 03/) are not Python packages; __init__.py would break mypy.
+"src/answer_service/infrastructure/persistence/migrations/**/*.py" = ["N999", "INP001"]
+
 "tests/**/*.py" = [
-    "S101",     # assert statements (pytest uses them for assertions)
-    "S105",     # hardcoded password (test data often uses dummy passwords)
-    "S106",     # hardcoded password function argument (test fixtures)
-    "PLR0913",  # too many arguments (test functions with many fixtures)
-    "PLR0914",  # too many local variables (test setup code)
-    "PLR0904",  # too many public methods (test classes)
-    "PLC1901",  # compare to empty string (test assertions)
-    "RUF045",   # implicit classvar in dataclass (test factories)
-    "RUF029",   # function not using await (async test fixtures)
-    "PLR2004",  # magic value comparison (test data values)
-    "ARG001",   # unused function argument (pytest fixtures)
-    "FBT001",   # boolean positional argument (test helpers)
-    "FBT002",   # boolean default argument (test helpers)
-    "INP001",   # implicit namespace package (test __init__.py)
-    "PT004",    # fixture without return (pytest fixtures that yield)
-    "PT005",    # fixture with return (pytest fixtures that yield)
-    "PT007",    # parametrize values as list (both list and tuple are valid)
-    "E501",     # line too long (test parametrization often exceeds limit)
-    "C401",     # unnecessary generator (comprehensions are fine in tests)
-    "PT011",    # pytest.raises too broad (test exception checking)
-    "PT012",    # pytest.raises with multiple statements (test blocks)
-    "PT015",    # assertion always fails (test assertions)
-    "PT017",    # assert in except clause (test error handling)
-    "PT018",    # assertion with not operator (test assertions)
-    "TCH001",   # typing import in TYPE_CHECKING (test type hints)
-    "TCH002",   # typing import in TYPE_CHECKING (test type hints)
-    "TCH003",   # typing import in TYPE_CHECKING (test type hints)
-    "TID252",   # relative imports (test imports from src)
-    "SLF001",   # private member access (test accessing private methods)
-    "ARG002",   # unused method argument (test fixtures)
-    "ARG005",   # unused lambda argument (test helpers)
-    "B018",     # useless expression (test assertions)
-    "B017",     # assertRaises without context (test exception checking)
-    "DTZ001",   # datetime without tzinfo (test timestamps)
-    "DTZ002",   # datetime.today() (test timestamps)
-    "DTZ003",   # datetime.utcnow() (test timestamps)
-    "DTZ005",   # datetime.now() without tzinfo (test timestamps)
-    "N802",     # function name lowercase (test function names)
-    "N806",     # variable uppercase (test constants)
-    "PERF203",  # try-except in loop (test exception handling)
-    "BLE001",   # blind except (test exception handling)
-    "EM101",    # exception string in module (test error messages)
-    "EM102",    # exception string in function (test error messages)
-    "FBT003",   # boolean positional value (test data)
-    "PGH003",   # blanket type-ignore (test type workarounds)
-    "SIM117",   # multiple with statements (test setup)
-    "TRY003",   # exception with long message (test error messages)
-    "TRY301",   # raise within try (test error handling)
-    "UP037",    # quoted type annotation (test forward references)
-    "TC001",    # typing import in TYPE_CHECKING (test imports)
-    "TC002",    # typing import in TYPE_CHECKING (test imports)
-    "TC003",    # typing import in TYPE_CHECKING (test imports)
-    "D100",     # missing docstring in public module (tests don't need docs)
-    "D101",     # missing docstring in public class (test classes)
-    "D102",     # missing docstring in public method (test methods)
-    "D103",     # missing docstring in public function (test functions)
-    "D104",     # missing docstring in public package (test packages)
-    "D105",     # missing docstring in magic method (test magic methods)
-    "D106",     # missing docstring in public nested class (test classes)
-    "D107",     # missing docstring in __init__ (test __init__)
-    "ANN201",   # missing return type annotation (test functions)
-    "ANN202",   # missing return type annotation (test async functions)
-    "ANN001",   # missing type annotation for function argument (test fixtures)
-    "ANN002",   # missing type annotation for *args (test helpers)
-    "ANN003",   # missing type annotation for **kwargs (test helpers)
-    "ANN401",   # any type annotation (test fixtures)
+    "S101",     # assert — fundamental pytest assertion mechanism
+    "S105",     # hardcoded password string — dummy test credentials
+    "S106",     # hardcoded password argument — dummy test credentials
+    "PLR0913",  # too many arguments — many fixtures injected by pytest
+    "PLR0917",  # too many positional arguments — pytest fixture injection
+    "PLR2004",  # magic value comparison — literal values are readable in test assertions
+    "ARG001",   # unused function argument — fixture requested for side effects only
+    "E501",     # line too long — some import paths exceed 90 chars and cannot be shortened
+    "TRY003",   # long message outside exception class — impractical in tests without custom classes
 ]
 
 [lint.isort]

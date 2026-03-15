@@ -1,16 +1,20 @@
 import asyncio
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 from uuid import UUID
 
 from langchain_chroma import Chroma
-from langchain_core.documents import Document
+
+if TYPE_CHECKING:
+    from langchain_core.documents import Document
 
 from answer_service.application.common.ports.vector_search_port import (
     ChunkVector,
     VectorSearchPort,
     VectorSearchResult,
 )
-from answer_service.infrastructure.mappers.vector_search_mapper import VectorSearchResultMapper
+from answer_service.infrastructure.mappers.vector_search_mapper import (
+    VectorSearchResultMapper,
+)
 
 
 class ChromaVectorSearchPort(VectorSearchPort):

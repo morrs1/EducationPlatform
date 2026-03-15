@@ -4,25 +4,27 @@ from functools import lru_cache
 from types import TracebackType
 from typing import Final
 
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from taskiq import TaskiqScheduler
-from taskiq import async_shared_broker, ScheduleSource, AsyncBroker
+from taskiq import AsyncBroker, ScheduleSource, TaskiqScheduler, async_shared_broker
 from taskiq.middlewares import SmartRetryMiddleware
 from taskiq.schedule_sources.label_based import LabelScheduleSource
 from taskiq_aio_pika import AioPikaBroker
-from taskiq_redis import ListRedisScheduleSource
-from taskiq_redis import RedisAsyncResultBackend
+from taskiq_redis import ListRedisScheduleSource, RedisAsyncResultBackend
 
 from answer_service.infrastructure.persistence.models import (
-    map_users_table,
     map_conversations_tables,
     map_lesson_index_tables,
     map_outbox_table,
+    map_users_table,
 )
-from answer_service.infrastructure.taskiq.tasks.outbox_tasks import setup_outbox_tasks
-from answer_service.presentation.http.v1.common.exception_handler import setup_exception_handlers
-from answer_service.presentation.http.v1.common.routes.healthcheck import healthcheck_router
+from answer_service.infrastructure.scheduler.tasks.outbox_tasks import setup_outbox_tasks
+from answer_service.presentation.http.v1.common.exception_handler import (
+    setup_exception_handlers,
+)
+from answer_service.presentation.http.v1.common.routes.healthcheck import (
+    healthcheck_router,
+)
 from answer_service.presentation.http.v1.common.routes.index import index_router
 from answer_service.presentation.http.v1.middlewares.logging import LoggingMiddleware
 from answer_service.presentation.http.v1.routes.conversation import conversation_router
@@ -37,14 +39,14 @@ from answer_service.setup.configs.taskiq_config import TaskIQConfig
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
+
 @lru_cache(maxsize=1)
 def setup_configs() -> AppConfig:
     return AppConfig()
 
 
 def setup_map_tables() -> None:
-    """
-    Ensures imperative SQLAlchemy mappings are initialized at application startup.
+    """Ensures imperative SQLAlchemy mappings are initialized at application startup.
 
     ### Purpose:
     In Clean Architecture, domain entities remain agnostic of database
@@ -70,13 +72,13 @@ def setup_map_tables() -> None:
     map_lesson_index_tables()
     map_outbox_table()
 
+
 def setup_task_manager(
     taskiq_config: TaskIQConfig,
     rabbitmq_config: RabbitConfig,
     redis_config: RedisConfig,
 ) -> AsyncBroker:
     """Create and configure the taskiq AioPika broker with Redis result backend."""
-
     logger.debug("Creating taskiq broker...")
     broker: AsyncBroker = AioPikaBroker(
         url=rabbitmq_config.uri,
@@ -99,7 +101,6 @@ def setup_task_manager_middlewares(
     taskiq_config: TaskIQConfig,
 ) -> AsyncBroker:
     """Apply retry middleware to the taskiq broker."""
-
     return broker.with_middlewares(
         SmartRetryMiddleware(
             default_retry_count=taskiq_config.default_retry_count,
@@ -118,9 +119,7 @@ def setup_task_manager_tasks(broker: AsyncBroker) -> None:
 
 def setup_schedule_source(redis_config: RedisConfig) -> ScheduleSource:
     """Create a Redis-backed schedule source for the taskiq scheduler."""
-    return ListRedisScheduleSource(
-        url=redis_config.schedule_source_uri
-    )
+    return ListRedisScheduleSource(url=redis_config.schedule_source_uri)
 
 
 def setup_scheduler(
@@ -128,7 +127,6 @@ def setup_scheduler(
     schedule_source: ScheduleSource,
 ) -> TaskiqScheduler:
     """Create the taskiq scheduler with label + Redis schedule sources."""
-
     logger.debug("Creating taskiq scheduler...")
     return TaskiqScheduler(
         broker=broker,
@@ -140,8 +138,7 @@ def setup_scheduler(
 
 
 def setup_http_routes(app: FastAPI, /) -> None:
-    """
-    Registers all routers for FastAPI application
+    """Registers all routers for FastAPI application.
 
     Args:
         app: FastAPI application
@@ -162,9 +159,9 @@ def setup_http_routes(app: FastAPI, /) -> None:
 def setup_http_exc_handlers(app: FastAPI) -> None:
     setup_exception_handlers(app)
 
+
 def setup_http_middlewares(app: FastAPI, /, api_config: ASGIConfig) -> None:
-    """
-    Registers all middlewares for FastAPI application.
+    """Registers all middlewares for FastAPI application.
 
     Args:
         app: FastAPI application
@@ -185,6 +182,7 @@ def setup_http_middlewares(app: FastAPI, /, api_config: ASGIConfig) -> None:
         allow_headers=api_config.allow_headers,
     )
     app.add_middleware(LoggingMiddleware)  # type: ignore[arg-type, unused-ignore]
+
 
 def setup_logging(logger_config: LoggingConfig) -> None:
     configure_logging(logger_config)

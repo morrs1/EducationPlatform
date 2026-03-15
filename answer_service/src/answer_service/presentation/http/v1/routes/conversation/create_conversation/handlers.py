@@ -9,10 +9,8 @@ from answer_service.application.commands.conversation.create_conversation import
     CreateConversationCommandHandler,
 )
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.conversation.create_conversation.schemas import (
-    CreateConversationRequest,
-    CreateConversationResponse,
-)
+
+from .schemas import CreateConversationRequest, CreateConversationResponse
 
 create_conversation_router: Final[APIRouter] = APIRouter(
     tags=["Conversation"],

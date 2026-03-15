@@ -5,16 +5,17 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Query, status
 
-from answer_service.application.common.query_params.conversation_params import ConversationSortField
+from answer_service.application.common.query_params.conversation_params import (
+    ConversationSortField,
+)
 from answer_service.application.common.query_params.sorting import SortingOrder
 from answer_service.application.queries.conversation.get_conversations import (
     GetConversationsQuery,
     GetConversationsQueryHandler,
 )
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.conversation.get_conversations.schemas import (
-    ConversationListItemResponse,
-)
+
+from .schemas import ConversationListItemResponse
 
 get_conversations_router: Final[APIRouter] = APIRouter(
     tags=["Conversation"],
@@ -35,7 +36,9 @@ async def get_conversations_handler(
     user_id: Annotated[UUID, Query(description="Filter conversations by user ID")],
     limit: Annotated[int | None, Query(ge=1, le=200)] = None,
     offset: Annotated[int | None, Query(ge=0)] = None,
-    sorting_field: Annotated[ConversationSortField, Query()] = ConversationSortField.created_at,
+    sorting_field: Annotated[
+        ConversationSortField, Query()
+    ] = ConversationSortField.created_at,
     sorting_order: Annotated[SortingOrder, Query()] = SortingOrder.DESC,
 ) -> list[ConversationListItemResponse]:
     views = await interactor(

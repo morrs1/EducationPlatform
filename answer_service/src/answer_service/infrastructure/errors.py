@@ -3,11 +3,15 @@ from answer_service.domain.common.errors import AppError
 
 class InfrastructureError(AppError): ...
 
+
 class RepoError(InfrastructureError): ...
+
 
 class EntityAddError(InfrastructureError): ...
 
+
 class RollbackError(InfrastructureError): ...
+
 
 class OutboxPublishError(InfrastructureError):
     """Raised when an outbox message cannot be delivered to the message broker."""

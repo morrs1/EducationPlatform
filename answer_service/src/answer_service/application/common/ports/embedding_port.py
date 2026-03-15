@@ -11,6 +11,7 @@ class EmbeddingPort(Protocol):
     @abstractmethod
     async def embed_many(self, texts: list[str]) -> list[list[float]]:
         """Generate embedding vectors for multiple texts in one call.
+
         Preserves order: result[i] corresponds to texts[i].
         """
         raise NotImplementedError

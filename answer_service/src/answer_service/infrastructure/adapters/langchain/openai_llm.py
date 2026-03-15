@@ -2,8 +2,15 @@ from typing import Final, override
 
 from langchain_openai import ChatOpenAI
 
-from answer_service.application.common.ports.llm_port import LLMMessage, LLMPort, LLMResponse
-from answer_service.infrastructure.mappers.llm_mapper import LLMRequestMapper, LLMResponseMapper
+from answer_service.application.common.ports.llm_port import (
+    LLMMessage,
+    LLMPort,
+    LLMResponse,
+)
+from answer_service.infrastructure.mappers.llm_mapper import (
+    LLMRequestMapper,
+    LLMResponseMapper,
+)
 
 
 class LangChainOpenAILLMPort(LLMPort):

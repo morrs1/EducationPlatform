@@ -30,7 +30,10 @@ class TestGetEngine:
         mock_create_engine.return_value = mock_engine
 
         postgres_config = mock.Mock(spec=PostgresConfig)
-        postgres_config.uri = "postgresql+psycopg://user:pass@localhost:5432/db"  # pragma: allowlist secret  # pragma: allowlist secret
+        db_uri = (
+            "postgresql+psycopg://user:pass@localhost:5432/db"  # pragma: allowlist secret
+        )
+        postgres_config.uri = db_uri
 
         alchemy_config = mock.Mock(spec=SQLAlchemyConfig)
         alchemy_config.echo = False
@@ -46,7 +49,7 @@ class TestGetEngine:
 
         # Assert
         mock_create_engine.assert_called_once_with(
-            "postgresql+psycopg://user:pass@localhost:5432/db",  # pragma: allowlist secret
+            db_uri,
             echo=False,
             pool_size=10,
             max_overflow=20,

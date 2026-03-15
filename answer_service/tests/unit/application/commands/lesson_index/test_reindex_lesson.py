@@ -28,18 +28,21 @@ from tests.unit.factories.entities import make_lesson_index
 
 
 @pytest.fixture()
-def handler(  # noqa: PLR0917
+def text_splitter_service() -> TextSplitterService:
+    return cast("TextSplitterService", MagicMock(spec=TextSplitterService))
+
+
+@pytest.fixture()
+def handler(
     transaction_manager: TransactionManager,
     lesson_index_repository: LessonIndexRepository,
     lesson_index_factory: LessonIndexFactory,
+    text_splitter_service: TextSplitterService,
     embedding_port: EmbeddingPort,
     vector_search_port: VectorSearchPort,
     events_collection: EventsCollection,
     event_bus: EventBus,
 ) -> ReindexLessonCommandHandler:
-    text_splitter_service = cast(
-        "TextSplitterService", MagicMock(spec=TextSplitterService)
-    )
     return ReindexLessonCommandHandler(
         transaction_manager=transaction_manager,
         lesson_index_repository=lesson_index_repository,
@@ -65,8 +68,9 @@ async def test_reindex_lesson_raises_when_not_found(
         await handler(command)
 
 
-async def test_reindex_lesson_saves_and_commits(  # noqa: PLR0917
+async def test_reindex_lesson_saves_and_commits(
     handler: ReindexLessonCommandHandler,
+    text_splitter_service: TextSplitterService,
     lesson_index_repository: LessonIndexRepository,
     transaction_manager: TransactionManager,
     vector_search_port: VectorSearchPort,
@@ -78,7 +82,7 @@ async def test_reindex_lesson_saves_and_commits(  # noqa: PLR0917
     lesson_index.start_indexing()
     lesson_index.mark_indexed()
     lesson_index_repository.get_by_lesson_id = AsyncMock(return_value=lesson_index)
-    handler._text_splitter_service.split = MagicMock(
+    text_splitter_service.split = MagicMock(
         return_value=[ChunkContent(content="new content")]
     )
     embedding_port.embed_many = AsyncMock(return_value=[[0.3, 0.4]])

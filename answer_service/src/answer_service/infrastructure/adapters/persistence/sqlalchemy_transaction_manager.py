@@ -22,11 +22,13 @@ class SqlAlchemyTransactionManager(TransactionManager):
         except IntegrityError as e:
             logger.exception("Constraint violation on commit.")
             await self.rollback()
-            raise EntityAddError("Constraint violation.") from e
+            msg = "Constraint violation."
+            raise EntityAddError(msg) from e
         except SQLAlchemyError as e:
             logger.exception("SQLAlchemy error on commit.")
             await self.rollback()
-            raise RepoError("Database error on commit.") from e
+            msg = "Database error on commit."
+            raise RepoError(msg) from e
 
     @override
     async def rollback(self) -> None:
@@ -35,7 +37,8 @@ class SqlAlchemyTransactionManager(TransactionManager):
             logger.debug("Transaction rolled back.")
         except SQLAlchemyError as e:
             logger.exception("Rollback failed.")
-            raise RollbackError("Rollback failed.") from e
+            msg = "Rollback failed."
+            raise RollbackError(msg) from e
 
     @override
     async def flush(self) -> None:
@@ -44,6 +47,8 @@ class SqlAlchemyTransactionManager(TransactionManager):
             logger.debug("Session flushed.")
         except IntegrityError as e:
             logger.exception("Constraint violation on flush.")
-            raise EntityAddError("Constraint violation on flush.") from e
+            msg = "Constraint violation on flush."
+            raise EntityAddError(msg) from e
         except SQLAlchemyError as e:
-            raise RepoError("Database error on flush.") from e
+            msg = "Database error on flush."
+            raise RepoError(msg) from e

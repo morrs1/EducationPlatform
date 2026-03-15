@@ -3,12 +3,18 @@ from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
 
-from answer_service.application.common.ports.conversation_repository import ConversationRepository
+from answer_service.application.common.ports.conversation_repository import (
+    ConversationRepository,
+)
 from answer_service.application.common.ports.event_bus import EventBus
 from answer_service.application.common.ports.transaction_manager import TransactionManager
-from answer_service.application.common.views.conversation_views import ConversationCreatedView
+from answer_service.application.common.views.conversation_views import (
+    ConversationCreatedView,
+)
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.conversation.factories.conversation_factory import ConversationFactory
+from answer_service.domain.conversation.factories.conversation_factory import (
+    ConversationFactory,
+)
 from answer_service.domain.lesson_index.value_objects.lesson_id import LessonId
 from answer_service.domain.user.value_objects.user_id import UserId
 
@@ -32,7 +38,9 @@ class CreateConversationCommandHandler:
         event_bus: EventBus,
     ) -> None:
         self._transaction_manager: Final[TransactionManager] = transaction_manager
-        self._conversation_repository: Final[ConversationRepository] = conversation_repository
+        self._conversation_repository: Final[ConversationRepository] = (
+            conversation_repository
+        )
         self._conversation_factory: Final[ConversationFactory] = conversation_factory
         self._events_collection: Final[EventsCollection] = events_collection
         self._event_bus: Final[EventBus] = event_bus

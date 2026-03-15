@@ -4,7 +4,10 @@ from sqlalchemy.orm import relationship
 from answer_service.domain.conversation.entities.conversation import Conversation
 from answer_service.domain.conversation.entities.message import Message
 from answer_service.infrastructure.persistence.models.base import mapper_registry
-from answer_service.infrastructure.persistence.models.types import AnswerType, QuestionType
+from answer_service.infrastructure.persistence.models.types import (
+    AnswerType,
+    QuestionType,
+)
 
 conversations_table = Table(
     "conversations",

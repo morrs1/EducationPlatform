@@ -10,9 +10,8 @@ from answer_service.application.queries.lesson_index.get_lesson_index_status imp
     GetLessonIndexStatusQueryHandler,
 )
 from answer_service.presentation.http.v1.common.exception_handler import ExceptionSchema
-from answer_service.presentation.http.v1.routes.lesson_index.get_lesson_index_status.schemas import (
-    LessonIndexStatusResponse,
-)
+
+from .schemas import LessonIndexStatusResponse
 
 get_lesson_index_status_router: Final[APIRouter] = APIRouter(
     tags=["Lesson Index"],

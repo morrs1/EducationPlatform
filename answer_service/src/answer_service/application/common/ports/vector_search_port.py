@@ -8,7 +8,7 @@ from uuid import UUID
 class VectorSearchResult:
     chunk_id: UUID
     content: str
-    score: float    # cosine similarity [0, 1]
+    score: float  # cosine similarity [0, 1]
 
 
 @dataclass(frozen=True, slots=True)

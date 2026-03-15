@@ -10,7 +10,7 @@ class LessonAlreadyIndexingError(LessonIndexDomainError):
 
 
 class LessonNotInIndexingStateError(LessonIndexDomainError):
-    """Raised when an operation requires INDEXING state but the index is in another state."""
+    """Raised when an operation requires INDEXING state but index is in another state."""
 
 
 class EmptyChunkContentError(DomainFieldError):

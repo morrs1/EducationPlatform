@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from adaptix import Retort, dumper
 
 from answer_service.application.common.outbox_message import OutboxMessage
+from answer_service.application.common.ports.event_serializer import EventSerializer
 from answer_service.domain.common.event_id import EventId
 from answer_service.domain.common.events import Event
 
@@ -20,8 +21,8 @@ _retort: Final[Retort] = Retort(
 )
 
 
-class EventSerializer:
-    """Converts domain events to JSON-based OutboxMessage DTOs."""
+class RetortEventSerializer:
+    """Converts domain events to JSON-based OutboxMessage DTOs using adaptix Retort."""
 
     def serialize(self, event: Event) -> OutboxMessage:
         """Serialize *event* into an OutboxMessage ready to be persisted.
@@ -39,3 +40,7 @@ class EventSerializer:
             payload=payload,
             created_at=datetime.now(UTC),
         )
+
+
+# Structural conformance verified by mypy
+_: EventSerializer = RetortEventSerializer.__new__(RetortEventSerializer)

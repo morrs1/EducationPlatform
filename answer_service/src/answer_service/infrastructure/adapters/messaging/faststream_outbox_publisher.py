@@ -30,4 +30,3 @@ class FastStreamOutboxPublisher(OutboxPublisher):
             )
         except Exception as exc:
             raise OutboxPublishError(str(exc)) from exc
-

@@ -22,5 +22,7 @@ class ChromaConfig(BaseModel):
 
     def validate_port(self) -> None:
         if not PORT_MIN <= self.port <= PORT_MAX:
-            msg = f"CHROMA_PORT must be between {PORT_MIN} and {PORT_MAX}, got {self.port}."
+            msg = (
+                f"CHROMA_PORT must be between {PORT_MIN} and {PORT_MAX}, got {self.port}."
+            )
             raise ValueError(msg)

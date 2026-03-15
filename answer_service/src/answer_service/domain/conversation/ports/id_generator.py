@@ -1,7 +1,9 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from answer_service.domain.conversation.value_objects.conversation_id import ConversationId
+from answer_service.domain.conversation.value_objects.conversation_id import (
+    ConversationId,
+)
 from answer_service.domain.conversation.value_objects.message_id import MessageId
 
 

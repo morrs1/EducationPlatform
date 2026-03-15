@@ -3,6 +3,7 @@
 Run with:
     taskiq scheduler answer_service.scheduler:scheduler
 """
+
 import logging
 from typing import Final
 

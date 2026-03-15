@@ -37,7 +37,9 @@ class CreateUserCommandHandler:
 
         existing = await self._user_repository.get_by_id(data.user_id)
         if existing is not None:
-            logger.info("create_user: user already exists, skipping. user_id='%s'.", data.user_id)
+            logger.info(
+                "create_user: user already exists, skipping. user_id='%s'.", data.user_id
+            )
             return
 
         user = User.create(

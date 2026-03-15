@@ -12,14 +12,14 @@ class TestTokenUsageValidation:
 
     @pytest.mark.parametrize(
         ("input_tokens", "output_tokens"),
-        [
+        (
             pytest.param(0, 0, id="zero_tokens"),
             pytest.param(10, 5, id="small_counts"),
             pytest.param(100, 200, id="medium_counts"),
             pytest.param(1000000, 500000, id="large_counts"),
             pytest.param(0, 100, id="zero_input"),
             pytest.param(100, 0, id="zero_output"),
-        ],
+        ),
     )
     def test_accepts_valid_token_usage(
         self, input_tokens: int, output_tokens: int
@@ -34,7 +34,7 @@ class TestTokenUsageValidation:
 
     @pytest.mark.parametrize(
         ("input_tokens", "output_tokens", "expected_error"),
-        [
+        (
             pytest.param(-1, 0, NegativeTokenCountError, id="negative_input"),
             pytest.param(0, -1, NegativeTokenCountError, id="negative_output"),
             pytest.param(
@@ -44,7 +44,7 @@ class TestTokenUsageValidation:
                 50, -100, NegativeTokenCountError, id="positive_input_negative_output"
             ),
             pytest.param(-1, -1, NegativeTokenCountError, id="both_negative"),
-        ],
+        ),
     )
     def test_rejects_negative_token_counts(
         self,

@@ -14,7 +14,7 @@ class TestAnswerValidation:
 
     @pytest.mark.parametrize(
         ("content", "input_tokens", "output_tokens", "model_name"),
-        [
+        (
             pytest.param("42 is the answer.", 100, 10, "gpt-4", id="simple_answer"),
             pytest.param(
                 "Python is a high-level programming language.",
@@ -32,7 +32,7 @@ class TestAnswerValidation:
             ),
             pytest.param("Ответ на русском", 20, 10, "gpt-4", id="cyrillic_answer"),
             pytest.param("中文回答", 15, 8, "gemini-pro", id="chinese_answer"),
-        ],
+        ),
     )
     def test_accepts_valid_answer(
         self,
@@ -59,12 +59,12 @@ class TestAnswerValidation:
 
     @pytest.mark.parametrize(
         ("content", "expected_error"),
-        [
+        (
             pytest.param("", EmptyAnswerError, id="empty_string"),
             pytest.param("   ", EmptyAnswerError, id="whitespace_only"),
             pytest.param("\n", EmptyAnswerError, id="newline_only"),
             pytest.param("\t", EmptyAnswerError, id="tab_only"),
-        ],
+        ),
     )
     def test_rejects_invalid_answer_content(
         self,

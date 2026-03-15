@@ -1,10 +1,11 @@
-"""add_outbox_messages_table
+"""add_outbox_messages_table.
 
 Revision ID: a3b7c9d1e2f4
 Revises: d15f6bc208de
 Create Date: 2026-03-15 12:00:00.000000
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -28,8 +29,18 @@ def upgrade() -> None:
         sa.Column("processed_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_outbox_messages")),
     )
-    op.create_index(op.f("ix_outbox_messages_event_type"), "outbox_messages", ["event_type"], unique=False)
-    op.create_index(op.f("ix_outbox_messages_created_at"), "outbox_messages", ["created_at"], unique=False)
+    op.create_index(
+        op.f("ix_outbox_messages_event_type"),
+        "outbox_messages",
+        ["event_type"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_outbox_messages_created_at"),
+        "outbox_messages",
+        ["created_at"],
+        unique=False,
+    )
 
 
 def downgrade() -> None:

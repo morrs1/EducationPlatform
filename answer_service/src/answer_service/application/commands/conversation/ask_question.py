@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
 
-from answer_service.application.common.ports.conversation_repository import ConversationRepository
+from answer_service.application.common.ports.conversation_repository import (
+    ConversationRepository,
+)
 from answer_service.application.common.ports.embedding_port import EmbeddingPort
 from answer_service.application.common.ports.event_bus import EventBus
 from answer_service.application.common.ports.llm_port import LLMMessage, LLMPort
@@ -12,8 +14,12 @@ from answer_service.application.common.ports.vector_search_port import VectorSea
 from answer_service.application.common.views.conversation_views import AnswerView
 from answer_service.application.errors import ConversationNotFoundError
 from answer_service.domain.common.events_collection import EventsCollection
-from answer_service.domain.conversation.factories.conversation_factory import ConversationFactory
-from answer_service.domain.conversation.services.context_window_service import ContextWindowService
+from answer_service.domain.conversation.factories.conversation_factory import (
+    ConversationFactory,
+)
+from answer_service.domain.conversation.services.context_window_service import (
+    ContextWindowService,
+)
 from answer_service.domain.conversation.value_objects.answer import Answer
 from answer_service.domain.conversation.value_objects.message_id import MessageId
 from answer_service.domain.conversation.value_objects.model_name import ModelName
@@ -53,7 +59,9 @@ class AskQuestionCommandHandler:
         event_bus: EventBus,
     ) -> None:
         self._transaction_manager: Final[TransactionManager] = transaction_manager
-        self._conversation_repository: Final[ConversationRepository] = conversation_repository
+        self._conversation_repository: Final[ConversationRepository] = (
+            conversation_repository
+        )
         self._conversation_factory: Final[ConversationFactory] = conversation_factory
         self._context_window_service: Final[ContextWindowService] = context_window_service
         self._embedding_port: Final[EmbeddingPort] = embedding_port
@@ -87,7 +95,9 @@ class AskQuestionCommandHandler:
             top_k=_TOP_K_CHUNKS,
         )
         context_chunks = [r.content for r in search_results]
-        logger.debug("ask_question: retrieved chunks. chunks_count=%d.", len(context_chunks))
+        logger.debug(
+            "ask_question: retrieved chunks. chunks_count=%d.", len(context_chunks)
+        )
 
         # 4. Build conversation history for context window
         history_messages = self._context_window_service.select_within_token_budget(
@@ -118,7 +128,7 @@ class AskQuestionCommandHandler:
                 message_id=MessageId(message.id),
                 reason=str(exc),
             )
-            logger.error("ask_question: llm generation failed. error='%s'.", exc)
+            logger.exception("ask_question: llm generation failed.")
             await self._conversation_repository.save(conversation)
             await self._transaction_manager.flush()
             await self._event_bus.publish(self._events_collection.pull_events())

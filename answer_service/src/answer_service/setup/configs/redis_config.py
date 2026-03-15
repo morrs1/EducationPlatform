@@ -37,18 +37,19 @@ class RedisConfig(BaseModel):
     @classmethod
     def validate_port(cls, v: int) -> int:
         if not PORT_MIN <= v <= PORT_MAX:
-            raise ValueError(
-                f"REDIS_PORT must be between {PORT_MIN} and {PORT_MAX}, got {v}."
-            )
+            msg = f"REDIS_PORT must be between {PORT_MIN} and {PORT_MAX}, got {v}."
+            raise ValueError(msg)
         return v
 
     @field_validator("worker_db", "schedule_source_db")
     @classmethod
     def validate_redis_db(cls, v: int) -> int:
         if not REDIS_DB_MIN <= v <= REDIS_DB_MAX:
-            raise ValueError(
-                f"Redis DB index must be between {REDIS_DB_MIN} and {REDIS_DB_MAX}, got {v}."
+            msg = (
+                f"Redis DB index must be between {REDIS_DB_MIN}"
+                f" and {REDIS_DB_MAX}, got {v}."
             )
+            raise ValueError(msg)
         return v
 
     @property

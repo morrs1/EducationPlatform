@@ -2,7 +2,9 @@ from abc import abstractmethod
 from typing import Protocol
 from uuid import UUID
 
-from answer_service.application.common.query_params.conversation_params import ConversationListParams
+from answer_service.application.common.query_params.conversation_params import (
+    ConversationListParams,
+)
 from answer_service.domain.conversation.entities.conversation import Conversation
 
 

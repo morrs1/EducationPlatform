@@ -73,7 +73,7 @@ class TestUserCreation:
         # Assert
         assert len(users) == 5
         assert all(user.id in user_ids for user in users)
-        assert len(set(user.id for user in users)) == 5  # All IDs are unique
+        assert len({user.id for user in users}) == 5  # All IDs are unique
 
 
 class TestUserIdentity:

@@ -3,7 +3,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, PostgresDsn, field_validator
 
-from answer_service.setup.configs.consts import PORT_MIN, PORT_MAX
+from answer_service.setup.configs.consts import PORT_MAX, PORT_MIN
 
 POOL_SIZE_MIN: Final[int] = 1
 POOL_SIZE_MAX: Final[int] = 1000
@@ -62,9 +62,9 @@ class PostgresConfig(BaseModel):
     @classmethod
     def validate_port_range(cls, v: int) -> int:
         if not PORT_MIN <= v <= PORT_MAX:
-            raise ValueError(f"Port must be between {PORT_MIN} and {PORT_MAX}")
+            msg = f"Port must be between {PORT_MIN} and {PORT_MAX}"
+            raise ValueError(msg)
         return v
-
 
     @property
     def uri(self) -> str:
@@ -92,9 +92,8 @@ class PostgresConfig(BaseModel):
 
 
 class SQLAlchemyConfig(BaseModel):
-    """
-    Configuration container for SQLAlchemy.
-    """
+    """Configuration container for SQLAlchemy."""
+
     pool_pre_ping: bool = Field(
         alias="DB_POOL_PRE_PING",
         description="Enable database pool pre ping.",
@@ -116,28 +115,29 @@ class SQLAlchemyConfig(BaseModel):
     @classmethod
     def validate_pool_size(cls, v: int) -> int:
         if not POOL_SIZE_MIN <= v <= POOL_SIZE_MAX:
-            raise ValueError(
-                f"DB_POOL_SIZE must be between {POOL_SIZE_MIN} and {POOL_SIZE_MAX}, got {v}."
+            msg = (
+                f"DB_POOL_SIZE must be between {POOL_SIZE_MIN}"
+                f" and {POOL_SIZE_MAX}, got {v}."
             )
+            raise ValueError(msg)
         return v
 
     @field_validator("pool_recycle")
     @classmethod
     def validate_pool_recycle(cls, v: int) -> int:
         if v < POOL_RECYCLE_MIN:
-            raise ValueError(
-                f"DB_POOL_RECYCLE must be at least {POOL_RECYCLE_MIN} minutes, got {v}."
-            )
+            msg = f"DB_POOL_RECYCLE must be at least {POOL_RECYCLE_MIN} minutes, got {v}."
+            raise ValueError(msg)
         return v
 
     @field_validator("max_overflow")
     @classmethod
     def validate_max_overflow(cls, v: int) -> int:
         if v < POOL_OVERFLOW_MIN:
-            raise ValueError(
-                f"DB_POOL_MAX_OVERFLOW must be at least {POOL_OVERFLOW_MIN}, got {v}."
-            )
+            msg = f"DB_POOL_MAX_OVERFLOW must be at least {POOL_OVERFLOW_MIN}, got {v}."
+            raise ValueError(msg)
         return v
+
     echo: bool = Field(
         alias="DB_ECHO",
         description="Enable database echo mode for debugging.",

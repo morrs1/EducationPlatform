@@ -10,7 +10,7 @@ healthcheck_router: Final[APIRouter] = APIRouter(
 
 
 @healthcheck_router.get("/", status_code=status.HTTP_200_OK)
-async def get_status() -> dict[str, str]:
+async def get_status() -> dict[str, str]:  # noqa: RUF029
     """Healthcheck endpoint to verify service availability.
 
     Returns:

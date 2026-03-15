@@ -7,7 +7,7 @@ Follow this structure exactly:
 **File:** `src/answer_service/application/commands/{domain}/{snake_case_name}.py`
 
 ```python
-import structlog
+import logging
 from dataclasses import dataclass
 from typing import Final, final
 from uuid import UUID
@@ -16,7 +16,7 @@ from uuid import UUID
 from answer_service.application.common.ports.event_bus import EventBus
 from answer_service.application.common.ports.transaction_manager import TransactionManager
 
-logger: Final[structlog.BoundLogger] = structlog.get_logger()
+logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -44,7 +44,7 @@ class {Name}CommandHandler:
         # ...
 
     async def __call__(self, data: {Name}Command) -> {Name}View:
-        logger.info("{name}: started", ...)
+        logger.info("{name}: started.")
 
         # 1. Load / create aggregates
         # 2. Call domain methods
@@ -55,7 +55,7 @@ class {Name}CommandHandler:
         await self._event_bus.publish(...)
         await self._transaction_manager.commit()
 
-        logger.info("{name}: done", ...)
+        logger.info("{name}: done.")
         return {Name}View(...)
 ```
 
@@ -63,5 +63,5 @@ Rules:
 - Commands use primitive types (UUID, str, int) — convert to domain types inside the handler
 - Views return primitive types only
 - All dependencies are injected via `__init__`, stored as `Final`
-- Use `structlog` for logging, not stdlib `logging`
+- Use stdlib `logging`, not `structlog`
 - After creating the file, run `/check` to verify code quality

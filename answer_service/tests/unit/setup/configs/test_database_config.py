@@ -88,12 +88,12 @@ class TestPostgresConfig:
 
     @pytest.mark.parametrize(
         "invalid_port",
-        [
+        (
             pytest.param(-1, id="negative"),
             pytest.param(0, id="zero"),
             pytest.param(65536, id="too_high"),
             pytest.param(100000, id="way_too_high"),
-        ],
+        ),
     )
     def test_postgres_config_port_validation_invalid(
         self,
@@ -154,18 +154,17 @@ class TestSQLAlchemyConfig:
         assert config.pool_size == 50
 
     @pytest.mark.parametrize(
-        ("invalid_pool_size", "reason"),
-        [
-            pytest.param(0, "below_min"),
-            pytest.param(-1, "negative"),
-            pytest.param(POOL_SIZE_MAX + 1, "above_max"),
-            pytest.param(10000, "way_too_high"),
-        ],
+        "invalid_pool_size",
+        (
+            pytest.param(0, id="below_min"),
+            pytest.param(-1, id="negative"),
+            pytest.param(POOL_SIZE_MAX + 1, id="above_max"),
+            pytest.param(10000, id="way_too_high"),
+        ),
     )
     def test_sqlalchemy_config_pool_size_validation_invalid(
         self,
         invalid_pool_size: int,
-        reason: str,
     ) -> None:
         """Test that invalid pool_size raises ValidationError."""
         # Arrange & Act & Assert

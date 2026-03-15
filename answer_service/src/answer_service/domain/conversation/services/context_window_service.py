@@ -38,8 +38,7 @@ class ContextWindowService(BaseDomainService):
         :return: Ordered list (oldest first) of completed messages.
         """
         completed = [
-            m for m in conversation.messages
-            if m.status == MessageStatus.COMPLETED
+            m for m in conversation.messages if m.status == MessageStatus.COMPLETED
         ]
         return completed[-max_messages:]
 

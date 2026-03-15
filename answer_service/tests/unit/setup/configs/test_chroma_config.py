@@ -29,18 +29,18 @@ def test_chroma_config_custom_values() -> None:
 
 @pytest.mark.parametrize(
     "invalid_port",
-    [
+    (
         pytest.param(0, id="zero"),
         pytest.param(-1, id="negative"),
         pytest.param(65536, id="too_high"),
-    ],
+    ),
 )
 def test_chroma_config_validate_port_raises_for_invalid_ports(invalid_port: int) -> None:
     # Arrange
     config = ChromaConfig(CHROMA_PORT=invalid_port)
 
     # Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="CHROMA_PORT must be between"):
         config.validate_port()
 
 

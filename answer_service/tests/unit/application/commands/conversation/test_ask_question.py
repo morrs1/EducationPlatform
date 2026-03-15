@@ -29,7 +29,7 @@ from tests.unit.factories.entities import make_conversation
 
 
 @pytest.fixture()
-def handler(  # noqa: PLR0917
+def handler(
     transaction_manager: TransactionManager,
     conversation_repository: ConversationRepository,
     conversation_factory: ConversationFactory,
@@ -63,7 +63,7 @@ def llm_response() -> LLMResponse:
     )
 
 
-async def test_ask_question_returns_answer_view(  # noqa: PLR0917
+async def test_ask_question_returns_answer_view(
     handler: AskQuestionCommandHandler,
     conversation_repository: ConversationRepository,
     embedding_port: EmbeddingPort,
@@ -104,7 +104,7 @@ async def test_ask_question_raises_when_conversation_not_found(
         await handler(command)
 
 
-async def test_ask_question_saves_and_commits(  # noqa: PLR0917
+async def test_ask_question_saves_and_commits(
     handler: AskQuestionCommandHandler,
     conversation_repository: ConversationRepository,
     transaction_manager: TransactionManager,
