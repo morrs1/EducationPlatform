@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 import pytest
 from faststream.rabbit import RabbitBroker
 
-from answer_service.presentation.rabbitmq.v1.lesson_index.handlers import (
+from answer_service.presentation.rabbitmq.v1.routes.lesson_index.handlers import (
     on_lesson_created,
     on_lesson_updated,
 )

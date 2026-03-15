@@ -12,7 +12,7 @@ from faststream.rabbit import RabbitBroker
 
 from answer_service.application.common.ports.user_repository import UserRepository
 from answer_service.domain.user.entities.user import User
-from answer_service.presentation.rabbitmq.v1.user.handlers import (
+from answer_service.presentation.rabbitmq.v1.routes.user.handlers import (
     on_user_deleted,
     on_user_registered,
 )

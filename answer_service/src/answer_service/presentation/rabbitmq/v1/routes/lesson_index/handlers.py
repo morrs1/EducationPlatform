@@ -15,7 +15,7 @@ from answer_service.application.commands.lesson_index.schedule_reindex_lesson im
     ScheduleReindexLessonCommandHandler,
 )
 from answer_service.domain.common.errors import AppError
-from answer_service.presentation.rabbitmq.v1.lesson_index.schemas import (
+from answer_service.presentation.rabbitmq.v1.routes.lesson_index.schemas import (
     LessonCreatedMessage,
     LessonUpdatedMessage,
 )
