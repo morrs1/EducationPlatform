@@ -1,0 +1,14 @@
+/venv
+.venv
+/.venv
+/.idea
+.idea
+/.gitignore
+/.github
+LICENSE
+README.md
+/tests
+docker-compose.yaml
+deploy/prod/answer_service/Dockerfile
+./vscode
+/vscode
