@@ -34,8 +34,8 @@ async def test_handler_publishes_pending_and_marks_processed(
     transaction_manager: TransactionManager,
 ) -> None:
     # Arrange — seed two pending messages
-    msg1 = make_outbox_message(event_type="EventA", payload='"payload_a"')
-    msg2 = make_outbox_message(event_type="EventB", payload='"payload_b"')
+    msg1 = make_outbox_message(event_type="EventA", payload='{"name": "payload_a"}')
+    msg2 = make_outbox_message(event_type="EventB", payload='{"name": "payload_b"}')
     await outbox_repository.add(msg1)
     await outbox_repository.add(msg2)
     await transaction_manager.flush()
@@ -122,9 +122,10 @@ async def test_relay_outbox_task_executes_via_inmemory_broker(
 ) -> None:
     """Full task: InMemoryBroker kicks relay_outbox_task → handler reads DB → publishes."""
     # Arrange — seed a pending outbox message
-    await outbox_repository.add(
-        make_outbox_message(event_type="UserRegistered", payload='"seed"')
+    seed_message = make_outbox_message(
+        event_type="UserRegistered", payload='{"event": "seed"}'
     )
+    await outbox_repository.add(seed_message)
     await transaction_manager.commit()
 
     # Act — kick the registered task
@@ -133,5 +134,5 @@ async def test_relay_outbox_task_executes_via_inmemory_broker(
     result = await task.kicker().kiq()
     await result.wait_result(timeout=5)
 
-    # Assert — subscriber received the message
-    capture_subscriber.mock.assert_called_once_with('"seed"')
+    # Assert — subscriber received the parsed dict
+    capture_subscriber.mock.assert_called_once_with({"event": "seed"})

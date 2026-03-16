@@ -15,7 +15,7 @@ from answer_service.application.commands.user.delete_user import (
     DeleteUserCommandHandler,
 )
 from answer_service.domain.common.errors import AppError
-from answer_service.presentation.rabbitmq.v1.user.schemas import (
+from answer_service.presentation.rabbitmq.v1.routes.user.schemas import (
     UserDeletedMessage,
     UserRegisteredMessage,
 )
