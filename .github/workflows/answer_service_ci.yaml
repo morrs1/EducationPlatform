@@ -1,0 +1,87 @@
+name: Answer Service CI
+
+on:
+  push:
+    paths:
+      - "answer_service/**"
+      - ".github/workflows/answer_service-ci.yml"
+  pull_request:
+    paths:
+      - "answer_service/**"
+      - ".github/workflows/answer_service-ci.yml"
+    types:
+      - opened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: answer_service-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-answer_service:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: answer_service
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "answer_service/pyproject.toml"
+
+      - name: Install dev dependencies
+        run: uv sync --group "dev"
+
+      - name: Ruff import sort (check only)
+        run: uv run --active --frozen ruff check
+
+      - name: Ruff lint (check only)
+        run: uv run --active --frozen ruff check
+
+      - name: Ruff format (check only)
+        run: uv run --active --frozen ruff format
+
+      - name: Mypy type check
+        run: uv run --active --frozen mypy
+
+  test-answer_service:
+    runs-on: ubuntu-22.04
+    needs: [lint-answer_service]
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    defaults:
+      run:
+        working-directory: answer_service
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "answer_service/pyproject.toml"
+
+      - name: Install dev dependencies
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Run tests with coverage
+        run: coverage run -m pytest -x --ff
