@@ -41,7 +41,7 @@ jobs:
           cache-dependency-glob: "answer_service/pyproject.toml"
 
       - name: Install dev dependencies
-        run: uv sync --group "dev"
+        run: uv sync --group dev
 
       - name: Ruff import sort (check only)
         run: uv run --active --frozen ruff check
@@ -81,7 +81,7 @@ jobs:
           cache-dependency-glob: "answer_service/pyproject.toml"
 
       - name: Install dev dependencies
-        run: uv sync --group "dev"
+        run: uv sync --group dev
 
       - name: Run tests with coverage
         run: coverage run -m pytest -x --ff
