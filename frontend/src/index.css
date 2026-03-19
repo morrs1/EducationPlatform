@@ -63,4 +63,12 @@
   .side-catalog-course {
     @apply inline-block text-xs leading-tight transition duration-300 cursor-pointer w-fit hover:text-green-600 sm:text-sm;
   }
+
+  .account-sidebar-navlink {
+    @apply px-4 py-2 transition duration-300 rounded-lg whitespace-nowrap hover:bg-green-500/10;
+  }
+
+  .account-sidebar-navlink.active {
+    @apply text-green-600;
+  }
 }
