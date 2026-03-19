@@ -6,15 +6,15 @@ import CatalogSidebar from "../features/catalog/components/CatalogSidebar";
 
 function Layout() {
   return (
-    <>
+    <div className="flex flex-col w-full min-h-screen">
       <Header />
-      <main className="container flex-1 px-2 py-2 mx-auto sm:px-4 sm:py-4">
+      <main className="flex-1 w-full">
         <Outlet />
       </main>
       <Footer />
       <AuthModal />
       <CatalogSidebar />
-    </>
+    </div>
   );
 }
 

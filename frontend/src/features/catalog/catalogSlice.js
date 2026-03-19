@@ -1204,11 +1204,14 @@ const catalogSlice = createSlice({
 
     closeCatalog: (state) => {
       state.isCatalogOpen = false;
-      state.selectedCategoryId = 1;
     },
 
     selectCategory: (state, action) => {
       state.selectedCategoryId = action.payload;
+    },
+
+    resetSelectedCategory: (state) => {
+      state.selectedCategoryId = 1;
     },
   },
 });
@@ -1217,3 +1220,4 @@ export default catalogSlice.reducer;
 export const { openCatalog } = catalogSlice.actions;
 export const { closeCatalog } = catalogSlice.actions;
 export const { selectCategory } = catalogSlice.actions;
+export const { resetSelectedCategory } = catalogSlice.actions;

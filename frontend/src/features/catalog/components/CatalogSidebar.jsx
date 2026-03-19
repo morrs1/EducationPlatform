@@ -1,5 +1,9 @@
 import { useDispatch, useSelector } from "react-redux";
-import { closeCatalog, selectCategory } from "../catalogSlice";
+import {
+  closeCatalog,
+  resetSelectedCategory,
+  selectCategory,
+} from "../catalogSlice";
 import { useEffect, useState } from "react";
 
 function CatalogSidebar() {
@@ -27,10 +31,14 @@ function CatalogSidebar() {
       return () => clearTimeout(timer);
     } else {
       setIsAnimating(false);
-      const timer = setTimeout(() => setShouldRender(false), 300);
-      return () => clearTimeout(timer);
+      const hideTimer = setTimeout(() => {
+        setShouldRender(false);
+        dispatch(resetSelectedCategory());
+      }, 300);
+
+      return () => clearTimeout(hideTimer);
     }
-  }, [isCatalogOpen]);
+  }, [dispatch, isCatalogOpen]);
 
   if (!shouldRender) return false;
 
