@@ -115,7 +115,7 @@
   }
 
   .profile-activity-header {
-    @apply flex flex-col gap-3 pb-5 border-b border-gray-200 md:flex-row md:items-end md:justify-between;
+    @apply flex flex-col gap-3 pb-5 border-b border-gray-300 md:flex-row md:items-end md:justify-between;
   }
 
   .profile-activity-label {
@@ -218,7 +218,7 @@
   }
 
   .profile-activity-footer {
-    @apply grid gap-4 pt-6 mt-6 border-t border-gray-200 md:grid-cols-3;
+    @apply grid gap-4 pt-6 mt-6 border-t border-gray-300 md:grid-cols-3;
   }
 
   .profile-activity-metric {
@@ -247,5 +247,107 @@
 
   .profile-activity-legend .profile-activity-cell {
     @apply w-4 h-4 shrink-0;
+  }
+
+  /*Current courses section*/
+
+  .current-courses-section {
+    @apply flex flex-col gap-6;
+  }
+
+  .current-courses-header {
+    @apply flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between;
+  }
+
+  .current-courses-title {
+    @apply text-2xl font-bold text-center text-gray-900 sm:text-3xl md:text-left;
+  }
+
+  .current-courses-search {
+    @apply flex flex-col gap-3 sm:flex-row xl:w-full xl:max-w-xl;
+  }
+
+  .current-courses-search-input {
+    @apply w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-green-500 sm:text-base;
+  }
+
+  .current-courses-search-btn {
+    @apply rounded-2xl border border-green-500 px-5 py-3 text-sm font-medium text-green-600 transition hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+  }
+
+  .current-courses-list {
+    @apply flex flex-col gap-4 rounded-2xl bg-gray-100 p-4 shadow-md shadow-black/50 md:p-6;
+  }
+
+  .current-course-card {
+    @apply relative p-4 transition duration-300 bg-white border border-gray-200 shadow-sm rounded-2xl hover:-translate-y-1 hover:shadow-lg md:p-6;
+  }
+
+  .current-course-card-content {
+    @apply flex flex-col gap-5 sm:flex-row sm:items-start lg:gap-6;
+  }
+
+  .current-course-card-img {
+    @apply self-center object-cover w-24 h-24 shadow-md rounded-2xl shadow-black/20 sm:h-24 sm:w-24 sm:self-start md:h-26 md:w-26 lg:h-28 lg:w-40 lg:shrink-0;
+  }
+
+  .current-course-card-body {
+    @apply flex flex-col flex-1 min-w-0 gap-5;
+  }
+
+  .current-course-card-meta {
+    @apply flex flex-col gap-2;
+  }
+
+  .current-course-card-title {
+    @apply text-2xl font-bold text-gray-900 transition hover:text-green-600 hover:underline w-fit;
+  }
+
+  .current-course-card-author {
+    @apply text-sm font-medium text-gray-500 transition hover:text-gray-900 hover:underline sm:text-base w-fit;
+  }
+
+  .current-course-progress {
+    @apply flex flex-col gap-3;
+  }
+
+  .current-course-progress-row {
+    @apply flex flex-col gap-3 md:flex-row md:items-center;
+  }
+
+  .current-course-progress-head {
+    @apply flex flex-col items-start gap-1 text-sm text-gray-500;
+  }
+
+  .current-course-progressbar {
+    @apply w-full h-3 overflow-hidden bg-gray-200 rounded-full md:flex-1;
+  }
+
+  .current-course-progressbar-fill {
+    @apply h-full transition-all duration-300 bg-green-500 rounded-full;
+  }
+
+  .current-course-review-btn {
+    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
+  }
+
+  .current-course-menu-wrap {
+    @apply absolute top-4 right-4 md:top-6 md:right-6;
+  }
+
+  .current-course-menu-btn {
+    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+  }
+
+  .current-course-menu-btn span {
+    @apply w-1 h-1 bg-gray-900 rounded-full;
+  }
+
+  .current-course-menu {
+    @apply absolute right-0 z-20 p-2 bg-white border border-gray-200 shadow-lg top-13 min-w-52 rounded-xl;
+  }
+
+  .current-course-menu-item {
+    @apply w-full px-3 py-2 text-sm text-left text-gray-700 transition rounded-lg hover:bg-gray-100 hover:text-gray-900;
   }
 }
