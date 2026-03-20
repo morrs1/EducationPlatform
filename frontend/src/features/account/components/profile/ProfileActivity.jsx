@@ -30,7 +30,9 @@ function getMondayIndex(date) {
 }
 
 function getWeekIndex(startDate, currentDate) {
-  return Math.floor((currentDate.getTime() - startDate.getTime()) / MS_IN_DAY / 7);
+  return Math.floor(
+    (currentDate.getTime() - startDate.getTime()) / MS_IN_DAY / 7,
+  );
 }
 
 function getPlural(count, one, few, many) {
@@ -183,7 +185,8 @@ function ProfileActivity() {
         >
           <strong>{tooltip.day.dateLabel}</strong>
           <span>
-            {tooltip.day.solved} {getPlural(
+            {tooltip.day.solved}{" "}
+            {getPlural(
               tooltip.day.solved,
               "решённая задача",
               "решённые задачи",
@@ -191,13 +194,9 @@ function ProfileActivity() {
             )}
           </span>
           <span>
-            {tooltip.day.lessons} {getPlural(
-              tooltip.day.lessons,
-              "урок",
-              "урока",
-              "уроков",
-            )}{" "}
-            и {tooltip.day.minutes} мин практики
+            {tooltip.day.lessons}{" "}
+            {getPlural(tooltip.day.lessons, "урок", "урока", "уроков")} и{" "}
+            {tooltip.day.minutes} мин практики
           </span>
         </div>
       ) : null}

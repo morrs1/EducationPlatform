@@ -4,7 +4,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import AccountPage from "./pages/AccountPage";
 import ProfileSection from "./features/account/components/profile/ProfileSection";
-import CurrentCoursesSection from "./features/account/components/CurrentCoursesSection";
+import CurrentCoursesSection from "./features/account/components/currentCourses/CurrentCoursesSection";
 import CompletedCoursesSection from "./features/account/components/CompletedCoursesSection";
 import FavouriteCoursesSection from "./features/account/components/FavouriteCoursesSection";
 import CertificatesSection from "./features/account/components/CertificatesSection";
