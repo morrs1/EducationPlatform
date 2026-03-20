@@ -71,4 +71,181 @@
   .account-sidebar-navlink.active {
     @apply text-green-600;
   }
+
+  /*ProfileCard*/
+
+  .profile-card {
+    @apply w-full p-4 bg-gray-100 shadow-md rounded-2xl shadow-black/50 md:p-6;
+  }
+
+  .profile-card-content {
+    @apply flex flex-col items-center gap-4 md:flex-row md:items-center md:gap-12;
+  }
+
+  .profile-card-image {
+    @apply object-cover w-24 h-24 shadow-md rounded-2xl shadow-black/50 sm:h-32 sm:w-32 md:h-40 md:w-40;
+  }
+
+  .profile-card-body {
+    @apply flex flex-col items-center min-w-0 gap-5 md:items-start;
+  }
+
+  .profile-card-label {
+    @apply text-sm font-medium tracking-wide text-gray-500;
+  }
+
+  .profile-card-title {
+    @apply text-2xl font-bold text-center sm:text-3xl md:text-left md:text-4xl lg:text-5xl;
+  }
+
+  .profile-card-description {
+    @apply max-w-2xl text-center text-gray-600 md:text-left;
+  }
+
+  /*ProfileSection*/
+
+  .profile-section {
+    @apply flex flex-col gap-6;
+  }
+
+  /*ProfileActivity*/
+
+  .profile-activity {
+    @apply relative w-full p-4 overflow-visible bg-gray-100 shadow-md rounded-2xl shadow-black/50 md:p-6;
+  }
+
+  .profile-activity-header {
+    @apply flex flex-col gap-3 pb-5 border-b border-gray-200 md:flex-row md:items-end md:justify-between;
+  }
+
+  .profile-activity-label {
+    @apply block text-sm font-medium tracking-wide text-gray-500;
+  }
+
+  .profile-activity-title {
+    @apply mt-2 text-2xl font-bold text-gray-900 sm:text-3xl;
+  }
+
+  .profile-activity-summary {
+    @apply text-sm text-gray-500 md:text-base;
+  }
+
+  .profile-activity-board {
+    @apply pt-5 overflow-x-auto xl:overflow-x-hidden;
+  }
+
+  .profile-activity-calendar {
+    @apply relative box-border w-full min-w-[720px] xl:min-w-0;
+  }
+
+  .profile-activity-months {
+    @apply box-border grid w-full gap-1 pb-3 pl-12 text-xs font-medium text-gray-400;
+    grid-template-columns: repeat(53, minmax(0, 1fr));
+  }
+
+  .profile-activity-grid-wrap {
+    @apply box-border flex w-full gap-3;
+  }
+
+  .profile-activity-weekdays {
+    @apply grid grid-rows-7 pt-0.5 text-xs text-gray-400;
+  }
+
+  .profile-activity-grid {
+    @apply grid flex-1 w-full gap-1;
+  }
+
+  .profile-activity-column {
+    @apply grid gap-1 grid-rows-7;
+  }
+
+  .profile-activity-cell {
+    @apply aspect-square w-full rounded-[4px] bg-gray-100;
+  }
+
+  .profile-activity-cell-button {
+    @apply transition duration-200 border border-transparent cursor-pointer;
+  }
+
+  .profile-activity-cell-button:hover,
+  .profile-activity-cell-button:focus-visible,
+  .profile-activity-cell-button.is-active {
+    @apply scale-110 border-gray-900 outline-none;
+  }
+
+  .profile-activity-cell-placeholder {
+    @apply opacity-0 pointer-events-none;
+  }
+
+  .profile-activity-cell-button.is-today {
+    @apply border-red-500;
+  }
+
+  .profile-activity-cell.level-0 {
+    @apply bg-gray-300;
+  }
+
+  .profile-activity-cell.level-1 {
+    @apply bg-green-200;
+  }
+
+  .profile-activity-cell.level-2 {
+    @apply bg-green-400;
+  }
+
+  .profile-activity-cell.level-3 {
+    @apply bg-green-600;
+  }
+
+  .profile-activity-tooltip-popup {
+    @apply absolute z-50 px-3 py-2 text-xs text-white -translate-x-1/2 -translate-y-full bg-gray-900 shadow-lg pointer-events-none min-w-56 rounded-xl;
+  }
+
+  .profile-activity-tooltip-popup strong {
+    @apply block font-semibold text-white;
+  }
+
+  .profile-activity-tooltip-popup span {
+    @apply block text-white/80;
+  }
+
+  .profile-activity-board-meta {
+    @apply flex justify-end pt-5 text-sm text-gray-500;
+  }
+
+  .profile-activity-next-day {
+    @apply text-right text-gray-500 shrink-0;
+  }
+
+  .profile-activity-footer {
+    @apply grid gap-4 pt-6 mt-6 border-t border-gray-200 md:grid-cols-3;
+  }
+
+  .profile-activity-metric {
+    @apply flex flex-col gap-2;
+  }
+
+  .profile-activity-metric strong {
+    @apply text-4xl font-bold text-gray-900;
+  }
+
+  .profile-activity-metric span {
+    @apply text-xl text-gray-500;
+  }
+
+  .profile-activity-scale {
+    @apply flex items-center justify-end gap-2 pt-4 text-xs text-gray-400;
+  }
+
+  .profile-activity-footer-text {
+    @apply shrink-0;
+  }
+
+  .profile-activity-legend {
+    @apply flex gap-1;
+  }
+
+  .profile-activity-legend .profile-activity-cell {
+    @apply w-4 h-4 shrink-0;
+  }
 }
