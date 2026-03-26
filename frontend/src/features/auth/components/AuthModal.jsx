@@ -3,6 +3,7 @@ import {
   closeAuthModals,
   openLoginModal,
   openRegisterModal,
+  logIn,
 } from "../authSlice";
 import { closeCatalog } from "../../catalog/catalogSlice";
 import { useEffect, useState } from "react";
@@ -22,6 +23,15 @@ function AuthModal() {
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [modalView, setModalView] = useState(null);
+
+  useEffect(() => {
+    if (isLoginModalOpen) {
+      setModalView("login");
+    } else if (isRegisterModalOpen) {
+      setModalView("register");
+    }
+  }, [isLoginModalOpen, isRegisterModalOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -35,9 +45,13 @@ function AuthModal() {
     }
   }, [isOpen]);
 
-  if (!shouldRender) return false;
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(closeCatalog());
+    }
+  }, [dispatch, isOpen]);
 
-  if (isOpen) dispatch(closeCatalog());
+  if (!shouldRender) return false;
 
   return (
     <>
@@ -56,13 +70,13 @@ function AuthModal() {
           <div className="flex items-center justify-between p-2 border-b border-gray-500 sm:p-3">
             <div className="flex gap-2 mx-2 sm:gap-4 sm:mx-3">
               <button
-                className={`modal-up-btn text-base sm:text-lg ${isLoginModalOpen && "active"}`}
+                className={`modal-up-btn text-base sm:text-lg ${modalView === "login" ? "active" : ""}`}
                 onClick={() => dispatch(openLoginModal())}
               >
                 Вход
               </button>
               <button
-                className={`modal-up-btn text-base sm:text-lg ${isRegisterModalOpen && "active"}`}
+                className={`modal-up-btn text-base sm:text-lg ${modalView === "register" ? "active" : ""}`}
                 onClick={() => dispatch(openRegisterModal())}
               >
                 Регистрация
@@ -79,7 +93,7 @@ function AuthModal() {
 
           <div className="p-3 sm:p-4">
             <form>
-              {isLoginModalOpen && (
+              {modalView === "login" && (
                 <div className="grid gap-3 my-3 sm:gap-4 sm:my-4">
                   <input
                     type="text"
@@ -94,7 +108,7 @@ function AuthModal() {
                 </div>
               )}
 
-              {isRegisterModalOpen && (
+              {modalView === "register" && (
                 <div className="grid gap-3 my-3 sm:gap-4 sm:my-4">
                   <input
                     type="text"
@@ -115,8 +129,13 @@ function AuthModal() {
               )}
 
               <div className="flex justify-center">
-                <button className="text-base modal-submit-btn sm:text-lg">
-                  {isLoginModalOpen ? "Войти" : "Зарегистрироваться"}
+                <button
+                  className="text-base modal-submit-btn sm:text-lg"
+                  onClick={(e) => {
+                    (e.preventDefault(), dispatch(logIn()));
+                  }}
+                >
+                  {modalView === "login" ? "Войти" : "Зарегистрироваться"}
                 </button>
               </div>
             </form>
