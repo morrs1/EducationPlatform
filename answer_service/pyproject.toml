@@ -1,0 +1,101 @@
+[build-system]
+requires = [
+    "hatchling==1.29.0",
+    "hatch-vcs==0.5.0",
+]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+search_parent_directories = true
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/answer_service/_version.py"
+
+[project]
+name = "answer-service"
+dynamic = ["version"]
+description = "Answering service for Education Platform"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+
+authors = [
+    { name = "Danil Kovalev", email = "dan.kovalev2013@gmail.com" },
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+requires-python = ">=3.12"
+
+dependencies = [
+    "adaptix==3.0.0b11",
+    "alembic>=1.18.4",
+    "asyncpg==0.31.0",
+    "bazario==0.4.2",
+    "dishka==1.9.1",
+    "dishka-faststream==0.6.0",
+    "fastapi==0.135.1",
+    "faststream[rabbit]==0.6.7",
+    "langchain==1.2.12",
+    "langchain-chroma==1.1.0",
+    "langchain-openai==1.1.11",
+    "python-multipart==0.0.22",
+    "sqlalchemy[asyncio]==2.0.48",
+    "structlog==25.5.0",
+    "uvicorn==0.42.0",
+    "uvloop==0.22.1; sys_platform != 'win32'",
+    "taskiq>=0.11.0",
+    "taskiq-aio-pika>=0.4.0",
+    "taskiq-redis>=1.0.0",
+]
+
+[project.urls]
+Source = "https://github.com/morrs1/EducationPlatform"
+Homepage = "https://github.com/morrs1/EducationPlatform"
+Tracker = "https://github.com/morrs1/EducationPlatform/issues"
+
+[dependency-groups]
+dev = [
+    {include-group = "lint"},
+    {include-group = "test"},
+    "prek>=0.2.5",
+]
+lint = [
+    "bandit>=1.8.6",
+    "codespell>=2.4.1",
+    "mypy>=1.18.2",
+    "ruff>=0.14.0",
+    "semgrep>=1.139.0",
+    "zizmor>=1.14.2",
+    "import-linter>=2.10",
+]
+test = [
+    "httpx>=0.28.0",
+    "nox>=2025.5.1",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "pytest-mypy>=1.0.0",
+    "testcontainers[postgres]>=4.10.0",
+    "coverage>=7.13.4"
+]
+
+[tool.bandit]
+skips = ["B101"]
+
+[tool.typos.default.extend-words]
+selectin = "selectin"

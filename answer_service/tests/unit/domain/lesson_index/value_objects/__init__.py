@@ -1,0 +1,1 @@
+"""Tests for lesson_index domain value objects."""
