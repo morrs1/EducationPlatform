@@ -7,6 +7,8 @@ import lombok.ToString;
 import org.example.user_service.domain.base.BaseEntity;
 import org.example.user_service.domain.user.vo.*;
 
+import java.util.List;
+
 
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @Getter
@@ -21,8 +23,8 @@ public class User extends BaseEntity {
     private UserEmail email;
     private UserPassword password;
     private UserProfilePhotoLink profilePhotoLink;
-    private UserCurrentCourses currentCourses;
-    private UserFinishedCourses finishedCourses;
-    private UserCertificates certificates;
+    private List<UserCurrentCourse> currentCourses;
+    private List<UserFinishedCourse> finishedCourses;
+    private List<UserCertificate> certificates;
 
 }
