@@ -7,7 +7,10 @@ function CurrentCoursesSection() {
       <div className="current-courses-header">
         <h1 className="current-courses-title">Текущий прогресс по курсам</h1>
 
-        <form className="current-courses-search" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="current-courses-search"
+          onSubmit={(event) => event.preventDefault()}
+        >
           <input
             className="current-courses-search-input"
             type="search"
@@ -21,11 +24,7 @@ function CurrentCoursesSection() {
         </form>
       </div>
 
-      <CurrentCourseCard />
-      <CurrentCourseCard />
-      <CurrentCourseCard />
-      <CurrentCourseCard />
-      <CurrentCourseCard />
+      <CurrentCoursesList />
     </section>
   );
 }

@@ -1,7 +1,7 @@
 import Header from "./Header";
 import Footer from "./Footer";
 import { Outlet } from "react-router";
-import AuthModal from "../features/auth/components/authModal";
+import AuthModal from "../features/auth/components/AuthModal";
 import CatalogSidebar from "../features/catalog/components/CatalogSidebar";
 
 function Layout() {
