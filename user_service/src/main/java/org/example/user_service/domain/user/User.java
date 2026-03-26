@@ -1,18 +1,19 @@
 package org.example.user_service.domain.user;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.example.user_service.domain.base.BaseEntity;
 import org.example.user_service.domain.user.vo.*;
 
-import java.util.UUID;
 
-
-@EqualsAndHashCode(callSuper = true)
-@Data
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@Getter
+@Setter
+@ToString(exclude = "password")
 public class User extends BaseEntity {
 
-    private UUID id;
     private UserSurname surname;
     private UserName name;
     private UserPatronymic patronymic;
