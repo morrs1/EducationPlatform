@@ -1,7 +1,7 @@
 import { NavLink } from "react-router";
 function AccountSidebar() {
   return (
-    <nav className="flex gap-2 p-3 overflow-x-auto md:flex-col md:overflow-visible">
+    <nav className="account-sidebar">
       <NavLink to="/account" end className="account-sidebar-navlink">
         Профиль
       </NavLink>
