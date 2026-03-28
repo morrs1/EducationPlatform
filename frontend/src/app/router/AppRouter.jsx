@@ -18,6 +18,9 @@ import CompletedCoursesSection from "../../widgets/completed-courses-section/ui/
 import FavouriteCoursesSection from "../../widgets/favourite-courses-section/ui/FavouriteCoursesSection";
 import CertificatesSection from "../../widgets/certificates-section/ui/CertificatesSection";
 import { selectIsLogged } from "../../features/auth";
+import UpdateProfileSection from "../../widgets/update-profile-section/ui/UpdateProfileSection";
+import ChangePasswordSection from "../../widgets/change-password-section/ui/ChangePasswordSection";
+import ChangeEmailSection from "../../widgets/change-email-section/ui/ChangeEmailSection";
 
 function ProtectedRoute() {
   const isLogged = useSelector(selectIsLogged);
@@ -56,6 +59,11 @@ const router = createBrowserRouter([
           {
             path: "editProfile",
             element: <EditProfilePage />,
+            children: [
+              { index: true, element: <UpdateProfileSection /> },
+              { path: "password", element: <ChangePasswordSection /> },
+              { path: "email", element: <ChangeEmailSection /> },
+            ],
           },
         ],
       },
