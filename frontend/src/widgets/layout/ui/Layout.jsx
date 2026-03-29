@@ -1,6 +1,6 @@
+import { Outlet } from "react-router";
 import Header from "../../header/ui/Header";
 import Footer from "../../footer/ui/Footer";
-import { Outlet } from "react-router";
 import AuthModal from "../../auth-modal/ui/AuthModal";
 import CatalogSidebar from "../../catalog-sidebar/ui/CatalogSidebar";
 

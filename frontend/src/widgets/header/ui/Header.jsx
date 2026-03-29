@@ -37,12 +37,15 @@ function Header() {
   return (
     <header className="flex flex-col items-center justify-between gap-2 px-3 py-2 md:flex-row sm:px-4 md:px-6 sm:py-3 bg-gray-950 md:gap-0">
       <div className="flex items-center justify-between w-full gap-2 md:w-auto sm:gap-4">
-        <img
-          src="/logo.png"
-          alt="Логотип"
-          className="w-auto h-6 sm:h-6 md:h-10"
-        />
+        <NavLink
+          className="text-sm header-catalog-btn sm:text-base whitespace-nowrap"
+          to="/"
+          onClick={() => dispatch(closeCatalog())}
+        >
+          Главная
+        </NavLink>
         <button
+          data-catalog-toggle="true"
           className="text-sm header-catalog-btn sm:text-base whitespace-nowrap"
           onClick={() =>
             isCatalogOpen ? dispatch(closeCatalog()) : dispatch(openCatalog())
@@ -102,6 +105,7 @@ function Header() {
                 className="header-profile-menu-item"
                 role="menuitem"
                 onClick={() => {
+                  dispatch(closeCatalog());
                   setIsMenuOpen(false);
                 }}
               >
@@ -112,7 +116,10 @@ function Header() {
                 to="/editProfile"
                 className="header-profile-menu-item"
                 role="menuitem"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => {
+                  dispatch(closeCatalog());
+                  setIsMenuOpen(false);
+                }}
               >
                 Настройки
               </NavLink>
@@ -122,7 +129,9 @@ function Header() {
                 className="header-profile-menu-item danger"
                 role="menuitem"
                 onClick={() => {
-                  (dispatch(logOut()), setIsMenuOpen(false));
+                  dispatch(closeCatalog());
+                  dispatch(logOut());
+                  setIsMenuOpen(false);
                 }}
               >
                 Выйти

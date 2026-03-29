@@ -7,20 +7,17 @@ import {
   selectIsCatalogOpen,
   selectSelectedCategoryId,
 } from "../../../features/catalog";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function CatalogSidebar() {
   const dispatch = useDispatch();
   const isCatalogOpen = useSelector(selectIsCatalogOpen);
   const categories = useSelector(selectCategories);
   const selectedCategoryId = useSelector(selectSelectedCategoryId);
+  const sidebarRef = useRef(null);
   const currentCategory = categories.find(
     (category) => category.id === selectedCategoryId,
   );
-
-  function handleClose() {
-    dispatch(closeCatalog());
-  }
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -41,17 +38,41 @@ function CatalogSidebar() {
     }
   }, [dispatch, isCatalogOpen]);
 
+  useEffect(() => {
+    if (!isCatalogOpen) {
+      return undefined;
+    }
+
+    function handleOutsidePointerDown(event) {
+      if (sidebarRef.current?.contains(event.target)) {
+        return;
+      }
+
+      if (event.target.closest("[data-catalog-toggle='true']")) {
+        return;
+      }
+
+      dispatch(closeCatalog());
+    }
+
+    document.addEventListener("mousedown", handleOutsidePointerDown, true);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsidePointerDown, true);
+    };
+  }, [dispatch, isCatalogOpen]);
+
   if (!shouldRender) return false;
 
   return (
     <>
       <div
-        className={`fixed inset-0 top-[66px] z-40 bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-100" : "opacity-0"}`}
-        onClick={handleClose}
+        className={`pointer-events-none fixed inset-0 top-[60px] z-40 bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-100" : "opacity-0"}`}
       />
 
       <div
-        className={`fixed top-[109px] sm:top-[140px] md:top-[67px] bottom-3 left-0 w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-[1350px] bg-white shadow-black z-50 flex flex-col md:flex-row overflow-hidden rounded-br-2xl transition-all duration-300 ${isAnimating ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"}`}
+        ref={sidebarRef}
+        className={`fixed top-[123px] sm:top-[146px] md:top-[69px] bottom-3 left-0 w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-[1350px] bg-white shadow-black z-50 flex flex-col md:flex-row overflow-hidden rounded-br-2xl transition-all duration-300 ${isAnimating ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"}`}
       >
         <div className="w-full overflow-y-auto border-b md:w-1/4 md:border-b-0 md:border-r">
           {categories.map((category) => (
