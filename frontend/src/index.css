@@ -223,7 +223,7 @@
   }
 
   .settings-submit-btn {
-    @apply rounded-xl bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-green-700;
+    @apply rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-green-600 transition duration-300 hover:bg-green-500 hover:text-white  cursor-pointer border border-green-500;
   }
 
   /*ProfileCard*/
@@ -437,7 +437,7 @@
   }
 
   .current-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
   }
 
   .current-courses-list {
@@ -493,7 +493,7 @@
   }
 
   .current-course-review-btn {
-    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
+    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 cursor-pointer rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
   }
 
   .current-course-menu-wrap {
@@ -501,7 +501,7 @@
   }
 
   .current-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
   }
 
   .current-course-menu-btn span {
@@ -539,7 +539,7 @@
   }
 
   .completed-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
   }
 
   .completed-courses-list {
@@ -595,7 +595,7 @@
   }
 
   .completed-course-review-btn {
-    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
+    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 cursor-pointer rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
   }
 
   .completed-course-menu-wrap {
@@ -603,7 +603,7 @@
   }
 
   .completed-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
   }
 
   .completed-course-menu-btn span {
@@ -641,7 +641,7 @@
   }
 
   .favourite-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
   }
 
   .favourite-courses-list {
@@ -681,7 +681,7 @@
   }
 
   .favourite-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
   }
 
   .favourite-course-menu-btn span {
@@ -708,5 +708,200 @@
 
   .edit-profile-sidebar-navlink.active {
     @apply text-green-600;
+  }
+
+  /*Home page*/
+
+  .home-page {
+    @apply flex w-full max-w-7xl flex-col gap-10 px-4 py-6 mx-auto sm:px-6 md:gap-12;
+  }
+
+  .home-discovery-panel {
+    @apply rounded-[2rem] border border-gray-200 bg-gray-100 p-4 shadow-md shadow-black/10 md:p-5;
+  }
+
+  .home-discovery-form {
+    @apply flex flex-col gap-3 xl:flex-row xl:items-center;
+  }
+
+  .home-discovery-input-wrap {
+    @apply w-full xl:flex-1;
+  }
+
+  .home-discovery-input {
+    @apply w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-green-600;
+  }
+
+  .home-discovery-filters {
+    @apply flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:items-center;
+  }
+
+  .home-discovery-filter {
+    @apply inline-flex items-center gap-3 rounded-2xl px-1 py-1 text-sm font-medium text-gray-700 sm:text-base;
+  }
+
+  .home-discovery-filter input {
+    @apply h-5 w-5 cursor-pointer accent-green-600;
+  }
+
+  .home-discovery-submit {
+    @apply inline-flex items-center justify-center rounded-2xl bg-green-500 px-6 py-4 text-base font-semibold text-white transition duration-300 cursor-pointer hover:bg-green-600 xl:min-w-40;
+  }
+
+  .home-section {
+    @apply flex flex-col gap-6;
+  }
+
+  .home-section-header {
+    @apply flex flex-col gap-3 md:flex-row md:items-end md:justify-between;
+  }
+
+  .home-section-heading {
+    @apply flex flex-col gap-2;
+  }
+
+  .home-section-eyebrow {
+    @apply text-xs font-semibold tracking-[0.22em] text-green-600 uppercase sm:text-sm;
+  }
+
+  .home-section-title {
+    @apply text-3xl font-bold text-gray-900 sm:text-4xl lg:text-5xl;
+  }
+
+  .home-section-description {
+    @apply max-w-2xl text-sm leading-6 text-gray-500 sm:text-base;
+  }
+
+  .home-section-controls {
+    @apply flex items-center gap-3 self-start md:self-end;
+  }
+
+  .home-section-page-indicator {
+    @apply rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-500 sm:text-sm;
+  }
+
+  .home-section-nav {
+    @apply flex items-center gap-2;
+  }
+
+  .home-section-nav-btn {
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white text-lg font-semibold text-gray-900 transition duration-300 cursor-pointer hover:border-green-500 hover:text-green-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300 disabled:hover:text-gray-300;
+  }
+
+  .home-category-tabs {
+    @apply flex gap-1 overflow-x-auto border-b border-gray-200 pb-1 sm:gap-3;
+  }
+
+  .home-category-tab {
+    @apply shrink-0 border-b-4 border-transparent px-3 py-3 text-sm font-semibold text-gray-500 transition duration-300 cursor-pointer whitespace-nowrap hover:text-gray-900 sm:px-4 sm:text-base;
+  }
+
+  .home-category-tab.active {
+    @apply border-green-500 text-gray-900;
+  }
+
+  .home-courses-viewport {
+    @apply overflow-hidden;
+  }
+
+  .home-courses-grid {
+    @apply grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3;
+    animation-duration: 320ms;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-courses-grid.is-forward {
+    animation-name: home-courses-slide-forward;
+  }
+
+  .home-courses-grid.is-backward {
+    animation-name: home-courses-slide-backward;
+  }
+
+  .home-courses-grid.is-reset {
+    animation-name: home-courses-fade-up;
+  }
+
+  .course-preview-card {
+    @apply flex h-full flex-col gap-6 rounded-[2rem] border border-gray-200 bg-white p-5 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-28px_rgba(34,197,94,0.28)] sm:p-6;
+  }
+
+  .course-preview-card-head {
+    @apply flex items-start justify-between gap-4;
+  }
+
+  .course-preview-card-cover {
+    @apply flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-green-500/10 bg-gray-100 sm:h-24 sm:w-24;
+  }
+
+  .course-preview-card-image {
+    @apply h-full w-full object-cover;
+  }
+
+  .course-preview-card-placeholder {
+    @apply flex h-full w-full items-end justify-start bg-gradient-to-br from-green-500 via-emerald-400 to-lime-300 p-3;
+  }
+
+  .course-preview-card-category {
+    @apply rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-green-700;
+  }
+
+  .course-preview-card-body {
+    @apply flex min-w-0 flex-1 flex-col gap-3;
+  }
+
+  .course-preview-card-author {
+    @apply text-sm font-medium text-gray-500;
+  }
+
+  .course-preview-card-title {
+    @apply text-xl font-bold leading-tight text-gray-900 sm:text-2xl;
+  }
+
+  .course-preview-card-meta {
+    @apply mt-auto flex flex-wrap gap-x-4 gap-y-2 border-t border-gray-100 pt-4 text-sm font-medium text-gray-500;
+  }
+}
+
+@keyframes home-courses-slide-forward {
+  from {
+    opacity: 0;
+    transform: translateX(56px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes home-courses-slide-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-56px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes home-courses-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-courses-grid {
+    animation: none !important;
   }
 }
