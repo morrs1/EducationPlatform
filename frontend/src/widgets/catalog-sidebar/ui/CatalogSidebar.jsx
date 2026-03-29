@@ -9,7 +9,7 @@ import {
 } from "../../../features/catalog";
 import { useEffect, useRef, useState } from "react";
 
-function CatalogSidebar() {
+function CatalogSidebar({ headerHeight }) {
   const dispatch = useDispatch();
   const isCatalogOpen = useSelector(selectIsCatalogOpen);
   const categories = useSelector(selectCategories);
@@ -64,15 +64,22 @@ function CatalogSidebar() {
 
   if (!shouldRender) return false;
 
+  const sidebarOffset = `${headerHeight}px`;
+
   return (
     <>
       <div
-        className={`pointer-events-none fixed inset-0 top-[60px] z-40 bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+        className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+        style={{ top: sidebarOffset }}
       />
 
       <div
         ref={sidebarRef}
-        className={`fixed top-[123px] sm:top-[146px] md:top-[69px] bottom-3 left-0 w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-[1350px] bg-white shadow-black z-50 flex flex-col md:flex-row overflow-hidden rounded-br-2xl transition-all duration-300 ${isAnimating ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"}`}
+        className={`fixed left-0 z-50 flex h-auto w-full flex-col overflow-hidden rounded-br-2xl bg-white shadow-black transition-all duration-300 sm:w-4/5 md:w-3/4 md:flex-row lg:w-2/3 xl:w-[1350px] ${isAnimating ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"}`}
+        style={{
+          top: sidebarOffset,
+          height: `calc(100dvh - ${sidebarOffset})`,
+        }}
       >
         <div className="w-full overflow-y-auto border-b md:w-1/4 md:border-b-0 md:border-r">
           {categories.map((category) => (
