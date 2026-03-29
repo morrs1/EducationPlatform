@@ -223,7 +223,7 @@
   }
 
   .settings-submit-btn {
-    @apply rounded-xl bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-green-700;
+    @apply rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-green-600 transition duration-300 hover:bg-green-500 hover:text-white  cursor-pointer border border-green-500;
   }
 
   /*ProfileCard*/
@@ -437,7 +437,7 @@
   }
 
   .current-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
   }
 
   .current-courses-list {
@@ -493,7 +493,7 @@
   }
 
   .current-course-review-btn {
-    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
+    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 cursor-pointer rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
   }
 
   .current-course-menu-wrap {
@@ -501,7 +501,7 @@
   }
 
   .current-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
   }
 
   .current-course-menu-btn span {
@@ -539,7 +539,7 @@
   }
 
   .completed-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
   }
 
   .completed-courses-list {
@@ -595,7 +595,7 @@
   }
 
   .completed-course-review-btn {
-    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
+    @apply px-4 py-2 text-sm font-medium text-green-500 transition border border-green-500 cursor-pointer rounded-xl hover:bg-green-500 hover:text-white sm:w-fit sm:text-base;
   }
 
   .completed-course-menu-wrap {
@@ -603,7 +603,7 @@
   }
 
   .completed-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
   }
 
   .completed-course-menu-btn span {
@@ -641,7 +641,7 @@
   }
 
   .favourite-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
   }
 
   .favourite-courses-list {
@@ -681,7 +681,7 @@
   }
 
   .favourite-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
   }
 
   .favourite-course-menu-btn span {
