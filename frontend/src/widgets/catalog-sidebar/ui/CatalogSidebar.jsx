@@ -8,6 +8,7 @@ import {
   selectSelectedCategoryId,
 } from "../../../features/catalog";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 
 function CatalogSidebar({ headerHeight }) {
   const dispatch = useDispatch();
@@ -105,12 +106,16 @@ function CatalogSidebar({ headerHeight }) {
                 </span>
                 <div className="flex flex-col gap-2">
                   {subcategory.courses.map((course) => (
-                    <span
+                    <Link
                       key={course.id}
                       className="text-sm side-catalog-course sm:text-base"
+                      to={`/courses/${course.id}`}
+                      onClick={() => {
+                        dispatch(closeCatalog());
+                      }}
                     >
                       {course.title}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </div>
