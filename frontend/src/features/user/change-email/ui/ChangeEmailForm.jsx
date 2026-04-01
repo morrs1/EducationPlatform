@@ -1,6 +1,19 @@
-function ChangeEmailForm() {
+import { useEffect, useState } from "react";
+
+function ChangeEmailForm({ currentEmail, onSubmit }) {
+  const [nextEmail, setNextEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    setNextEmail("");
+    setPassword("");
+  }, [currentEmail]);
+
   function handleSubmit(event) {
     event.preventDefault();
+    onSubmit(nextEmail);
+    setNextEmail("");
+    setPassword("");
   }
 
   return (
@@ -12,9 +25,7 @@ function ChangeEmailForm() {
 
       <div className="settings-current-value">
         <span className="settings-current-value-label">Текущая почта</span>
-        <span className="settings-current-value-text">
-          pupa.zalupina@example.com
-        </span>
+        <span className="settings-current-value-text">{currentEmail}</span>
       </div>
 
       <label className="settings-field">
@@ -23,6 +34,8 @@ function ChangeEmailForm() {
           type="email"
           className="settings-input"
           placeholder="Введите новый email"
+          value={nextEmail}
+          onChange={(event) => setNextEmail(event.target.value)}
         />
       </label>
 
@@ -32,6 +45,8 @@ function ChangeEmailForm() {
           type="password"
           className="settings-input"
           placeholder="Введите текущий пароль"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
         />
       </label>
 

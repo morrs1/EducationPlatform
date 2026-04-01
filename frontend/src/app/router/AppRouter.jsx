@@ -9,6 +9,8 @@ import { useSelector } from "react-redux";
 
 import Layout from "../../widgets/layout/ui/Layout";
 import Home from "../../pages/home/ui/HomePage";
+import SearchPage from "../../pages/search/ui/SearchPage";
+import CoursePage from "../../pages/course/ui/CoursePage";
 import AccountPage from "../../pages/account/ui/AccountPage";
 import EditProfilePage from "../../pages/edit-profile/ui/EditProfilePage";
 import NotificationsPage from "../../pages/notifications/ui/NotificationsPage";
@@ -40,6 +42,8 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
+      { path: "search", element: <SearchPage /> },
+      { path: "courses/:courseId", element: <CoursePage /> },
       {
         element: <ProtectedRoute />,
         children: [

@@ -1,22 +1,20 @@
-function ProfileCard() {
+function ProfileCard({ viewer }) {
   return (
     <div className="profile-card">
       <div className="profile-card-content">
         <img
           className="profile-card-image"
-          src="https://www.shutterstock.com/image-photo/stylish-black-cat-wearing-sunglasses-260nw-2629842553.jpg"
-          alt="Фото профиля"
+          src={viewer.avatarUrl}
+          alt={`Фото профиля ${viewer.name}`}
         />
 
         <div className="profile-card-body">
           <span className="profile-card-label">ПРОФИЛЬ</span>
 
-          <h1 className="profile-card-title">
-            Пупа Залупина
-          </h1>
+          <h1 className="profile-card-title">{viewer.name}</h1>
 
           <p className="profile-card-description">
-            Описание профиля или краткая информация о пользователе.
+            <strong>{viewer.headline}</strong> {viewer.about}
           </p>
         </div>
       </div>

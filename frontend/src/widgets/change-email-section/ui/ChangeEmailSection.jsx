@@ -1,6 +1,11 @@
+import { useDispatch, useSelector } from "react-redux";
 import { ChangeEmailForm } from "../../../features/user/change-email";
+import { changeViewerEmail, selectViewerEmail } from "../../../features/viewer";
 
 function ChangeEmailSection() {
+  const dispatch = useDispatch();
+  const currentEmail = useSelector(selectViewerEmail);
+
   return (
     <section className="settings-section">
       <header className="settings-section-header">
@@ -14,7 +19,10 @@ function ChangeEmailSection() {
       </header>
 
       <div className="settings-card">
-        <ChangeEmailForm />
+        <ChangeEmailForm
+          currentEmail={currentEmail}
+          onSubmit={(email) => dispatch(changeViewerEmail(email))}
+        />
       </div>
     </section>
   );

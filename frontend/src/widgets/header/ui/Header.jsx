@@ -10,6 +10,10 @@ import {
   openCatalog,
   selectIsCatalogOpen,
 } from "../../../features/catalog";
+import {
+  selectViewerAvatarUrl,
+  selectViewerName,
+} from "../../../features/viewer";
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router";
 
@@ -19,6 +23,8 @@ function Header() {
   const dispatch = useDispatch();
   const isCatalogOpen = useSelector(selectIsCatalogOpen);
   const isLogged = useSelector(selectIsLogged);
+  const viewerAvatarUrl = useSelector(selectViewerAvatarUrl);
+  const viewerName = useSelector(selectViewerName);
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -91,8 +97,8 @@ function Header() {
               onClick={() => setIsMenuOpen((value) => !value)}
             >
               <img
-                src="https://www.shutterstock.com/image-photo/stylish-black-cat-wearing-sunglasses-260nw-2629842553.jpg"
-                alt="Профиль пользователя"
+                src={viewerAvatarUrl}
+                alt={viewerName || "Профиль пользователя"}
                 className="header-profile-avatar"
               />
             </button>
