@@ -4,21 +4,36 @@ import { catalogReducer } from "../../features/catalog";
 import { viewerReducer } from "../../features/viewer";
 import { mockViewer } from "../../features/viewer/model/mockViewer";
 
-const createDefaultAuthState = (savedIsLogged) => ({
-  isRegisterModalOpen: false,
-  isLoginModalOpen: false,
-  isLogged: savedIsLogged === "true",
-});
+function createDefaultAuthState(savedAuthState, legacySavedIsLogged) {
+  const persistedIsLogged =
+    savedAuthState?.isLogged ?? legacySavedIsLogged === "true";
+  const persistedViewerId =
+    savedAuthState?.currentViewerId ??
+    (persistedIsLogged ? mockViewer.id : null);
 
-const createDefaultViewerState = () => structuredClone(mockViewer);
+  return {
+    isRegisterModalOpen: false,
+    isLoginModalOpen: false,
+    isLogged: persistedIsLogged,
+    currentViewerId: persistedViewerId,
+    authStatus: persistedIsLogged ? "authenticated" : "idle",
+    loginError: null,
+  };
+}
 
-const loadPreloadedState = () => {
+function createDefaultViewerState() {
+  return structuredClone(mockViewer);
+}
+
+function loadPreloadedState() {
   try {
-    const savedIsLogged = localStorage.getItem("isLogged");
+    const savedAuth = localStorage.getItem("authState");
+    const legacySavedIsLogged = localStorage.getItem("isLogged");
     const savedViewer = localStorage.getItem("viewerState");
+    const parsedAuth = savedAuth ? JSON.parse(savedAuth) : null;
 
     return {
-      auth: createDefaultAuthState(savedIsLogged),
+      auth: createDefaultAuthState(parsedAuth, legacySavedIsLogged),
       viewer: savedViewer
         ? {
             ...createDefaultViewerState(),
@@ -28,11 +43,11 @@ const loadPreloadedState = () => {
     };
   } catch {
     return {
-      auth: createDefaultAuthState(null),
+      auth: createDefaultAuthState(null, null),
       viewer: createDefaultViewerState(),
     };
   }
-};
+}
 
 const store = configureStore({
   reducer: {
@@ -46,7 +61,14 @@ const store = configureStore({
 store.subscribe(() => {
   try {
     const state = store.getState();
-    localStorage.setItem("isLogged", String(state.auth.isLogged));
+
+    localStorage.setItem(
+      "authState",
+      JSON.stringify({
+        isLogged: state.auth.isLogged,
+        currentViewerId: state.auth.currentViewerId,
+      }),
+    );
     localStorage.setItem("viewerState", JSON.stringify(state.viewer));
   } catch {}
 });
