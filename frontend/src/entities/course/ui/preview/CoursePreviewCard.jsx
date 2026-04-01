@@ -1,6 +1,8 @@
+import { Link } from "react-router";
+
 function CoursePreviewCard({ course }) {
   return (
-    <article className="course-preview-card">
+    <Link className="course-preview-card" to={`/courses/${course.id}`}>
       <div className="course-preview-card-head">
         <div className="course-preview-card-body">
           <p className="course-preview-card-author">{course.authorName}</p>
@@ -29,7 +31,7 @@ function CoursePreviewCard({ course }) {
         <span>{course.studentsCount} студентов</span>
         <span>{course.durationLabel}</span>
       </div>
-    </article>
+    </Link>
   );
 }
 

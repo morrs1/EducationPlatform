@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
-const initialAvatarUrl =
-  "https://www.shutterstock.com/image-photo/stylish-black-cat-wearing-sunglasses-260nw-2629842553.jpg";
 const avatarInputId = "profile-avatar-upload";
 
-function UpdateProfileForm() {
-  const [previewSrc, setPreviewSrc] = useState(initialAvatarUrl);
+function UpdateProfileForm({ viewer, onSubmit }) {
+  const [previewSrc, setPreviewSrc] = useState(viewer.avatarUrl);
   const [selectedFileName, setSelectedFileName] = useState("Файл не выбран");
+  const [formState, setFormState] = useState({
+    firstName: viewer.firstName ?? "",
+    lastName: viewer.lastName ?? "",
+    about: viewer.about ?? "",
+  });
   const objectUrlRef = useRef(null);
+  const [avatarDataUrl, setAvatarDataUrl] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -16,6 +20,17 @@ function UpdateProfileForm() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    setPreviewSrc(viewer.avatarUrl);
+    setFormState({
+      firstName: viewer.firstName ?? "",
+      lastName: viewer.lastName ?? "",
+      about: viewer.about ?? "",
+    });
+    setAvatarDataUrl(null);
+    setSelectedFileName("Файл не выбран");
+  }, [viewer]);
 
   function handleAvatarChange(event) {
     const file = event.target.files?.[0];
@@ -33,10 +48,31 @@ function UpdateProfileForm() {
 
     setPreviewSrc(nextObjectUrl);
     setSelectedFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatarDataUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleFieldChange(event) {
+    const { name, value } = event.target;
+
+    setFormState((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   }
 
   function handleSubmit(event) {
     event.preventDefault();
+    onSubmit({
+      ...formState,
+      avatarUrl: avatarDataUrl,
+    });
   }
 
   return (
@@ -78,8 +114,10 @@ function UpdateProfileForm() {
           <input
             type="text"
             className="settings-input"
+            name="firstName"
             placeholder="Введите имя"
-            defaultValue="Пупа"
+            value={formState.firstName}
+            onChange={handleFieldChange}
           />
         </label>
 
@@ -88,8 +126,10 @@ function UpdateProfileForm() {
           <input
             type="text"
             className="settings-input"
+            name="lastName"
             placeholder="Введите фамилию"
-            defaultValue="Залупина"
+            value={formState.lastName}
+            onChange={handleFieldChange}
           />
         </label>
       </div>
@@ -98,8 +138,10 @@ function UpdateProfileForm() {
         <span className="settings-label">О себе</span>
         <textarea
           className="settings-textarea"
+          name="about"
           placeholder="Расскажите немного о себе"
-          defaultValue="Описание профиля или краткая информация о пользователе."
+          value={formState.about}
+          onChange={handleFieldChange}
           rows={5}
         />
       </label>

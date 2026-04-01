@@ -1,5 +1,14 @@
+import { useDispatch, useSelector } from "react-redux";
 import CompletedCoursesList from "../../../entities/course/ui/completed/CompletedCoursesList";
+import {
+  selectCompletedCourses,
+  toggleFavouriteCourse,
+} from "../../../features/viewer";
+
 function CompletedCoursesSection() {
+  const dispatch = useDispatch();
+  const courses = useSelector(selectCompletedCourses);
+
   return (
     <section className="completed-courses-section">
       <div className="completed-courses-header">
@@ -22,7 +31,12 @@ function CompletedCoursesSection() {
         </form>
       </div>
 
-      <CompletedCoursesList />
+      <CompletedCoursesList
+        courses={courses}
+        onToggleFavouriteCourse={(courseId) =>
+          dispatch(toggleFavouriteCourse(courseId))
+        }
+      />
     </section>
   );
 }

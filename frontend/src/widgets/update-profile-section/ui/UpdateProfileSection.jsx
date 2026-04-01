@@ -1,6 +1,11 @@
+import { useDispatch, useSelector } from "react-redux";
 import { UpdateProfileForm } from "../../../features/user/update-profile";
+import { selectViewer, updateViewerProfile } from "../../../features/viewer";
 
 function UpdateProfileSection() {
+  const dispatch = useDispatch();
+  const viewer = useSelector(selectViewer);
+
   return (
     <section className="settings-section">
       <header className="settings-section-header">
@@ -14,7 +19,10 @@ function UpdateProfileSection() {
       </header>
 
       <div className="settings-card">
-        <UpdateProfileForm />
+        <UpdateProfileForm
+          viewer={viewer}
+          onSubmit={(payload) => dispatch(updateViewerProfile(payload))}
+        />
       </div>
     </section>
   );

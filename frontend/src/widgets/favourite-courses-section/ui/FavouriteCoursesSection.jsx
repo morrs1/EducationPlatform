@@ -1,6 +1,14 @@
+import { useDispatch, useSelector } from "react-redux";
 import FavouriteCoursesList from "../../../entities/course/ui/favourite/FavouriteCoursesList";
+import {
+  selectFavouriteCourses,
+  toggleFavouriteCourse,
+} from "../../../features/viewer";
 
 function FavouriteCoursesSection() {
+  const dispatch = useDispatch();
+  const courses = useSelector(selectFavouriteCourses);
+
   return (
     <section className="favourite-courses-section">
       <div className="favourite-courses-header">
@@ -23,7 +31,12 @@ function FavouriteCoursesSection() {
         </form>
       </div>
 
-      <FavouriteCoursesList />
+      <FavouriteCoursesList
+        courses={courses}
+        onToggleFavouriteCourse={(courseId) =>
+          dispatch(toggleFavouriteCourse(courseId))
+        }
+      />
     </section>
   );
 }

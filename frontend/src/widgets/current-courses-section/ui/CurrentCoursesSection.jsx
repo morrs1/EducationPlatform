@@ -1,6 +1,15 @@
+import { useDispatch, useSelector } from "react-redux";
 import CurrentCoursesList from "../../../entities/course/ui/current/CurrentCoursesList";
+import {
+  leaveCourse,
+  selectCurrentCourses,
+  toggleFavouriteCourse,
+} from "../../../features/viewer";
 
 function CurrentCoursesSection() {
+  const dispatch = useDispatch();
+  const courses = useSelector(selectCurrentCourses);
+
   return (
     <section className="current-courses-section">
       <div className="current-courses-header">
@@ -23,7 +32,13 @@ function CurrentCoursesSection() {
         </form>
       </div>
 
-      <CurrentCoursesList />
+      <CurrentCoursesList
+        courses={courses}
+        onToggleFavouriteCourse={(courseId) =>
+          dispatch(toggleFavouriteCourse(courseId))
+        }
+        onLeaveCourse={(courseId) => dispatch(leaveCourse(courseId))}
+      />
     </section>
   );
 }
