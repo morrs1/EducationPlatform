@@ -8,10 +8,14 @@ function UpdateProfileForm({ viewer, onSubmit }) {
   const [formState, setFormState] = useState({
     firstName: viewer.firstName ?? "",
     lastName: viewer.lastName ?? "",
+    headline: viewer.headline ?? "",
     about: viewer.about ?? "",
   });
-  const objectUrlRef = useRef(null);
   const [avatarDataUrl, setAvatarDataUrl] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
+  const [submitSuccess, setSubmitSuccess] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const objectUrlRef = useRef(null);
 
   useEffect(() => {
     return () => {
@@ -22,15 +26,26 @@ function UpdateProfileForm({ viewer, onSubmit }) {
   }, []);
 
   useEffect(() => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
     setPreviewSrc(viewer.avatarUrl);
     setFormState({
       firstName: viewer.firstName ?? "",
       lastName: viewer.lastName ?? "",
+      headline: viewer.headline ?? "",
       about: viewer.about ?? "",
     });
     setAvatarDataUrl(null);
     setSelectedFileName("Файл не выбран");
   }, [viewer]);
+
+  function clearFeedback() {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+  }
 
   function handleAvatarChange(event) {
     const file = event.target.files?.[0];
@@ -38,6 +53,8 @@ function UpdateProfileForm({ viewer, onSubmit }) {
     if (!file) {
       return;
     }
+
+    clearFeedback();
 
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
@@ -61,18 +78,32 @@ function UpdateProfileForm({ viewer, onSubmit }) {
   function handleFieldChange(event) {
     const { name, value } = event.target;
 
+    clearFeedback();
     setFormState((prev) => ({
       ...prev,
       [name]: value,
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    onSubmit({
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    const result = await onSubmit({
       ...formState,
       avatarUrl: avatarDataUrl,
     });
+
+    if (!result?.ok) {
+      setSubmitError(result?.error ?? "Не удалось сохранить изменения.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    setSubmitSuccess(result.message ?? "Изменения сохранены.");
+    setIsSubmitting(false);
   }
 
   return (
@@ -135,6 +166,18 @@ function UpdateProfileForm({ viewer, onSubmit }) {
       </div>
 
       <label className="settings-field">
+        <span className="settings-label">Кратко о себе</span>
+        <input
+          type="text"
+          className="settings-input"
+          name="headline"
+          placeholder="Например: Изучает frontend и продуктовую разработку"
+          value={formState.headline}
+          onChange={handleFieldChange}
+        />
+      </label>
+
+      <label className="settings-field">
         <span className="settings-label">О себе</span>
         <textarea
           className="settings-textarea"
@@ -146,9 +189,18 @@ function UpdateProfileForm({ viewer, onSubmit }) {
         />
       </label>
 
+      {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
+      {submitSuccess ? (
+        <p className="text-sm text-green-600">{submitSuccess}</p>
+      ) : null}
+
       <div className="settings-actions">
-        <button type="submit" className="settings-submit-btn">
-          Сохранить изменения
+        <button
+          type="submit"
+          className="settings-submit-btn disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Сохраняем..." : "Сохранить изменения"}
         </button>
       </div>
     </form>

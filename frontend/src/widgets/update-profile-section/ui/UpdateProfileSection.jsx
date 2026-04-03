@@ -1,6 +1,9 @@
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateProfileForm } from "../../../features/user/update-profile";
-import { selectViewer, updateViewerProfile } from "../../../features/viewer";
+import {
+  selectViewer,
+  submitViewerProfileUpdate,
+} from "../../../features/viewer";
 
 function UpdateProfileSection() {
   const dispatch = useDispatch();
@@ -21,7 +24,7 @@ function UpdateProfileSection() {
       <div className="settings-card">
         <UpdateProfileForm
           viewer={viewer}
-          onSubmit={(payload) => dispatch(updateViewerProfile(payload))}
+          onSubmit={(payload) => dispatch(submitViewerProfileUpdate(payload))}
         />
       </div>
     </section>

@@ -1,5 +1,10 @@
 export { default as authReducer } from "./model/authSlice";
 export { loginWithMockCredentials } from "./model/loginWithMockCredentials";
+export {
+  submitLogin,
+  submitEmailChange,
+  submitPasswordChange,
+} from "./model/thunks";
 
 export {
   openLoginModal,
@@ -11,6 +16,8 @@ export {
   loginSuccess,
   loginFailure,
   clearLoginError,
+  updateAccountEmail,
+  updateAccountPassword,
 } from "./model/authSlice";
 
 export {
@@ -20,4 +27,6 @@ export {
   selectAuthStatus,
   selectCurrentViewerId,
   selectLoginError,
+  selectAccountViewerId,
+  selectAccountEmail,
 } from "./model/selectors";

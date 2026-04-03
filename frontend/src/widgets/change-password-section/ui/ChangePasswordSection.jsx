@@ -1,6 +1,10 @@
+import { useDispatch } from "react-redux";
+import { submitPasswordChange } from "../../../features/auth";
 import { ChangePasswordForm } from "../../../features/user/change-password";
 
 function ChangePasswordSection() {
+  const dispatch = useDispatch();
+
   return (
     <section className="settings-section">
       <header className="settings-section-header">
@@ -14,7 +18,9 @@ function ChangePasswordSection() {
       </header>
 
       <div className="settings-card">
-        <ChangePasswordForm />
+        <ChangePasswordForm
+          onSubmit={(payload) => dispatch(submitPasswordChange(payload))}
+        />
       </div>
     </section>
   );

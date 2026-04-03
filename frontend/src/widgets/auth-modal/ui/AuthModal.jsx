@@ -3,15 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   clearLoginError,
   closeAuthModals,
-  loginFailure,
-  loginSuccess,
-  loginWithMockCredentials,
   openLoginModal,
   openRegisterModal,
+  submitLogin,
   selectIsLoginModalOpen,
   selectIsRegisterModalOpen,
   selectLoginError,
-  startLogin,
 } from "../../../features/auth";
 import { closeCatalog } from "../../../features/catalog";
 
@@ -41,20 +38,16 @@ function AuthModal() {
       return;
     }
 
-    dispatch(startLogin());
-
-    const result = loginWithMockCredentials({
+    const result = dispatch(
+      submitLogin({
       email: emailInput,
       password: passwordInput,
-    });
+      }),
+    );
 
-    if (!result.ok) {
-      dispatch(loginFailure(result.error));
-      return;
+    if (result.ok) {
+      resetCredentials();
     }
-
-    resetCredentials();
-    dispatch(loginSuccess({ viewerId: result.viewerId }));
   }
 
   function handleClose() {

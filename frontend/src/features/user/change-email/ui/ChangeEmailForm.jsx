@@ -3,17 +3,41 @@ import { useEffect, useState } from "react";
 function ChangeEmailForm({ currentEmail, onSubmit }) {
   const [nextEmail, setNextEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [submitError, setSubmitError] = useState(null);
+  const [submitSuccess, setSubmitSuccess] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setNextEmail("");
     setPassword("");
   }, [currentEmail]);
 
-  function handleSubmit(event) {
+  function clearFeedback() {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    onSubmit(nextEmail);
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    const result = await onSubmit({
+      nextEmail,
+      currentPassword: password,
+    });
+
+    if (!result?.ok) {
+      setSubmitError(result?.error ?? "Не удалось изменить почту.");
+      setIsSubmitting(false);
+      return;
+    }
+
     setNextEmail("");
     setPassword("");
+    setSubmitSuccess(result.message ?? "Почта обновлена.");
+    setIsSubmitting(false);
   }
 
   return (
@@ -35,7 +59,10 @@ function ChangeEmailForm({ currentEmail, onSubmit }) {
           className="settings-input"
           placeholder="Введите новый email"
           value={nextEmail}
-          onChange={(event) => setNextEmail(event.target.value)}
+          onChange={(event) => {
+            clearFeedback();
+            setNextEmail(event.target.value);
+          }}
         />
       </label>
 
@@ -46,13 +73,25 @@ function ChangeEmailForm({ currentEmail, onSubmit }) {
           className="settings-input"
           placeholder="Введите текущий пароль"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            clearFeedback();
+            setPassword(event.target.value);
+          }}
         />
       </label>
 
+      {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
+      {submitSuccess ? (
+        <p className="text-sm text-green-600">{submitSuccess}</p>
+      ) : null}
+
       <div className="settings-actions">
-        <button type="submit" className="settings-submit-btn">
-          Изменить почту
+        <button
+          type="submit"
+          className="settings-submit-btn disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Сохраняем..." : "Изменить почту"}
         </button>
       </div>
     </form>
