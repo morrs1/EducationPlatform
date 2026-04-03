@@ -1,4 +1,5 @@
 export { default as viewerReducer } from "./model/viewerSlice";
+export { submitViewerProfileUpdate } from "./model/thunks";
 
 export {
   updateViewerProfile,

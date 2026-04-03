@@ -1,4 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { mockAccounts } from "./mockAccounts";
+
+const primaryMockAccount = mockAccounts[0] ?? {
+  viewerId: null,
+  email: "",
+  password: "",
+};
 
 const initialState = {
   isRegisterModalOpen: false,
@@ -7,6 +14,9 @@ const initialState = {
   currentViewerId: null,
   authStatus: "idle",
   loginError: null,
+  accountViewerId: primaryMockAccount.viewerId,
+  accountEmail: primaryMockAccount.email,
+  accountPassword: primaryMockAccount.password,
 };
 
 const authSlice = createSlice({
@@ -44,6 +54,7 @@ const authSlice = createSlice({
       state.isLogged = true;
       state.isLoginModalOpen = false;
       state.isRegisterModalOpen = false;
+      state.currentViewerId = state.accountViewerId;
       state.authStatus = "authenticated";
       state.loginError = null;
     },
@@ -84,6 +95,26 @@ const authSlice = createSlice({
         state.authStatus = "idle";
       }
     },
+
+    updateAccountEmail: (state, action) => {
+      const nextEmail = action.payload?.trim().toLowerCase();
+
+      if (!nextEmail) {
+        return;
+      }
+
+      state.accountEmail = nextEmail;
+    },
+
+    updateAccountPassword: (state, action) => {
+      const nextPassword = action.payload?.trim();
+
+      if (!nextPassword) {
+        return;
+      }
+
+      state.accountPassword = nextPassword;
+    },
   },
 });
 
@@ -97,6 +128,8 @@ export const {
   loginFailure,
   loginSuccess,
   clearLoginError,
+  updateAccountEmail,
+  updateAccountPassword,
 } = authSlice.actions;
 
 export default authSlice.reducer;

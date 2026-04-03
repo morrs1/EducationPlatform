@@ -30,6 +30,7 @@ const viewerSlice = createSlice({
       const {
         firstName = "",
         lastName = "",
+        headline = "",
         about = "",
         avatarUrl,
       } = action.payload;
@@ -41,6 +42,7 @@ const viewerSlice = createSlice({
       state.firstName = nextFirstName;
       state.lastName = nextLastName;
       state.name = nextFullName;
+      state.headline = headline.trim();
       state.about = about.trim();
 
       if (avatarUrl) {

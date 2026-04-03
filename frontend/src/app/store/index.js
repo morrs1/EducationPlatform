@@ -2,7 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../../features/auth";
 import { catalogReducer } from "../../features/catalog";
 import { viewerReducer } from "../../features/viewer";
+import { mockAccounts } from "../../features/auth/model/mockAccounts";
 import { mockViewer } from "../../features/viewer/model/mockViewer";
+
+const primaryMockAccount = mockAccounts[0] ?? {
+  viewerId: null,
+  email: "",
+  password: "",
+};
 
 function createDefaultAuthState(savedAuthState, legacySavedIsLogged) {
   const persistedIsLogged =
@@ -18,6 +25,11 @@ function createDefaultAuthState(savedAuthState, legacySavedIsLogged) {
     currentViewerId: persistedViewerId,
     authStatus: persistedIsLogged ? "authenticated" : "idle",
     loginError: null,
+    accountViewerId:
+      savedAuthState?.accountViewerId ?? primaryMockAccount.viewerId,
+    accountEmail: savedAuthState?.accountEmail ?? primaryMockAccount.email,
+    accountPassword:
+      savedAuthState?.accountPassword ?? primaryMockAccount.password,
   };
 }
 
@@ -67,6 +79,9 @@ store.subscribe(() => {
       JSON.stringify({
         isLogged: state.auth.isLogged,
         currentViewerId: state.auth.currentViewerId,
+        accountViewerId: state.auth.accountViewerId,
+        accountEmail: state.auth.accountEmail,
+        accountPassword: state.auth.accountPassword,
       }),
     );
     localStorage.setItem("viewerState", JSON.stringify(state.viewer));
