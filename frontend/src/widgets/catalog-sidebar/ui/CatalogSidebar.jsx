@@ -63,6 +63,34 @@ function CatalogSidebar({ headerHeight }) {
     };
   }, [dispatch, isCatalogOpen]);
 
+  useEffect(() => {
+    if (!shouldRender) {
+      return undefined;
+    }
+
+    const { body, documentElement } = document;
+    const previousHtmlOverflow = documentElement.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
+    const previousBodyPaddingRight = body.style.paddingRight;
+    const previousBodyTouchAction = body.style.touchAction;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+
+    documentElement.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.touchAction = "none";
+
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      documentElement.style.overflow = previousHtmlOverflow;
+      body.style.overflow = previousBodyOverflow;
+      body.style.paddingRight = previousBodyPaddingRight;
+      body.style.touchAction = previousBodyTouchAction;
+    };
+  }, [shouldRender]);
+
   if (!shouldRender) return false;
 
   const sidebarOffset = `${headerHeight}px`;
