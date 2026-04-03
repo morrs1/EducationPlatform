@@ -713,11 +713,11 @@
   /*Home page*/
 
   .home-page {
-    @apply flex w-full max-w-7xl flex-col gap-10 px-4 py-6 mx-auto sm:px-6 md:gap-12;
+    @apply flex flex-col w-full gap-10 px-4 py-6 mx-auto max-w-7xl sm:px-6 md:gap-12;
   }
 
   .search-page {
-    @apply flex w-full max-w-7xl flex-col gap-8 px-4 py-6 mx-auto sm:px-6 md:gap-10;
+    @apply flex flex-col w-full gap-8 px-4 py-6 mx-auto max-w-7xl sm:px-6 md:gap-10;
   }
 
   .home-discovery-panel {
@@ -733,7 +733,7 @@
   }
 
   .home-discovery-input {
-    @apply w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-green-600;
+    @apply w-full px-5 py-4 text-base text-gray-900 bg-white border border-gray-200 outline-none rounded-2xl placeholder:text-gray-400 focus:border-green-600;
   }
 
   .home-discovery-filters {
@@ -741,15 +741,15 @@
   }
 
   .home-discovery-filter {
-    @apply inline-flex items-center gap-3 rounded-2xl px-1 py-1 text-sm font-medium text-gray-700 sm:text-base;
+    @apply inline-flex items-center gap-3 px-1 py-1 text-sm font-medium text-gray-700 rounded-2xl sm:text-base;
   }
 
   .home-discovery-filter input {
-    @apply h-5 w-5 cursor-pointer accent-green-600;
+    @apply w-5 h-5 cursor-pointer accent-green-600;
   }
 
   .home-discovery-submit {
-    @apply inline-flex items-center justify-center rounded-2xl bg-green-500 px-6 py-4 text-base font-semibold text-white transition duration-300 cursor-pointer hover:bg-green-600 xl:min-w-40;
+    @apply inline-flex items-center justify-center px-6 py-4 text-base font-semibold text-white transition duration-300 bg-green-500 cursor-pointer rounded-2xl hover:bg-green-600 xl:min-w-40;
   }
 
   .home-section {
@@ -777,7 +777,7 @@
   }
 
   .home-section-controls {
-    @apply flex items-center gap-3 self-start md:self-end;
+    @apply flex items-center self-start gap-3 md:self-end;
   }
 
   .home-section-page-indicator {
@@ -789,19 +789,19 @@
   }
 
   .home-section-nav-btn {
-    @apply inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white text-lg font-semibold text-gray-900 transition duration-300 cursor-pointer hover:border-green-500 hover:text-green-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300 disabled:hover:text-gray-300;
+    @apply inline-flex items-center justify-center text-lg font-semibold text-gray-900 transition duration-300 bg-white border border-gray-200 cursor-pointer h-11 w-11 rounded-2xl hover:border-green-500 hover:text-green-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300 disabled:hover:text-gray-300;
   }
 
   .home-category-tabs {
-    @apply flex gap-1 overflow-x-auto border-b border-gray-200 pb-1 sm:gap-3;
+    @apply flex gap-1 pb-1 overflow-x-auto border-b border-gray-200 sm:gap-3;
   }
 
   .home-category-tab {
-    @apply shrink-0 border-b-4 border-transparent px-3 py-3 text-sm font-semibold text-gray-500 transition duration-300 cursor-pointer whitespace-nowrap hover:text-gray-900 sm:px-4 sm:text-base;
+    @apply px-3 py-3 text-sm font-semibold text-gray-500 transition duration-300 border-b-4 border-transparent cursor-pointer shrink-0 whitespace-nowrap hover:text-gray-900 sm:px-4 sm:text-base;
   }
 
   .home-category-tab.active {
-    @apply border-green-500 text-gray-900;
+    @apply text-gray-900 border-green-500;
   }
 
   .home-courses-viewport {
@@ -836,15 +836,15 @@
   }
 
   .course-preview-card-cover {
-    @apply flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-green-500/10 bg-gray-100 sm:h-24 sm:w-24;
+    @apply flex items-center justify-center w-20 h-20 overflow-hidden bg-gray-100 border shrink-0 rounded-3xl border-green-500/10 sm:h-24 sm:w-24;
   }
 
   .course-preview-card-image {
-    @apply h-full w-full object-cover;
+    @apply object-cover w-full h-full;
   }
 
   .course-preview-card-placeholder {
-    @apply flex h-full w-full items-end justify-start bg-gradient-to-br from-green-500 via-emerald-400 to-lime-300 p-3;
+    @apply flex items-end justify-start w-full h-full p-3 bg-gradient-to-br from-green-500 via-emerald-400 to-lime-300;
   }
 
   .course-preview-card-category {
@@ -852,7 +852,7 @@
   }
 
   .course-preview-card-body {
-    @apply flex min-w-0 flex-1 flex-col gap-3;
+    @apply flex flex-col flex-1 min-w-0 gap-3;
   }
 
   .course-preview-card-author {
@@ -864,7 +864,7 @@
   }
 
   .course-preview-card-meta {
-    @apply mt-auto flex flex-wrap gap-x-4 gap-y-2 border-t border-gray-100 pt-4 text-sm font-medium text-gray-500;
+    @apply flex flex-wrap pt-4 mt-auto text-sm font-medium text-gray-500 border-t border-gray-100 gap-x-4 gap-y-2;
   }
 
   .search-results {
@@ -896,7 +896,7 @@
   }
 
   .search-results-filter-chip {
-    @apply inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700;
+    @apply inline-flex items-center px-3 py-1 text-sm font-medium text-green-700 border border-green-200 rounded-full bg-green-50;
   }
 
   .search-results-empty-state {
@@ -914,7 +914,7 @@
   /*Course page*/
 
   .course-page {
-    @apply mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 xl:flex-row xl:items-start;
+    @apply flex flex-col w-full gap-6 px-4 py-6 mx-auto max-w-7xl sm:px-6 xl:flex-row xl:items-start;
   }
 
   .course-page-nav-rail {
@@ -922,7 +922,7 @@
   }
 
   .course-page-main {
-    @apply flex min-w-0 flex-1 flex-col gap-6;
+    @apply flex flex-col flex-1 min-w-0 gap-6;
   }
 
   .course-page-sidebar-rail {
@@ -950,7 +950,7 @@
   }
 
   .course-hero-meta {
-    @apply flex flex-wrap gap-x-4 gap-y-2 border-t border-gray-200 pt-4 text-sm font-medium text-gray-500;
+    @apply flex flex-wrap pt-4 text-sm font-medium text-gray-500 border-t border-gray-200 gap-x-4 gap-y-2;
   }
 
   .course-tabs {
@@ -974,11 +974,11 @@
   }
 
   .course-tab-btn {
-    @apply flex items-center justify-between rounded-2xl border border-transparent bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-700 transition duration-200 cursor-pointer hover:border-green-200 hover:bg-green-50 hover:text-gray-900;
+    @apply flex items-center justify-between px-4 py-3 text-sm font-medium text-left text-gray-700 transition duration-200 border border-transparent cursor-pointer rounded-2xl bg-gray-50 hover:border-green-200 hover:bg-green-50 hover:text-gray-900;
   }
 
   .course-tab-btn.active {
-    @apply border-green-500 bg-green-50 text-gray-900;
+    @apply text-gray-900 border-green-500 bg-green-50;
   }
 
   .course-tab-btn.locked {
@@ -1018,15 +1018,15 @@
   }
 
   .course-primary-btn {
-    @apply inline-flex items-center justify-center rounded-2xl bg-green-500 px-5 py-3 text-sm font-semibold text-white transition duration-300 cursor-pointer hover:bg-green-600;
+    @apply inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-white transition duration-300 bg-green-500 cursor-pointer rounded-2xl hover:bg-green-600;
   }
 
   .course-secondary-btn {
-    @apply inline-flex items-center justify-center rounded-2xl border border-green-500 px-5 py-3 text-sm font-semibold text-green-600 transition duration-300 cursor-pointer hover:bg-green-500 hover:text-white;
+    @apply inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-green-600 transition duration-300 border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white;
   }
 
   .course-secondary-btn.active {
-    @apply bg-green-50;
+    @apply text-black bg-green-50 hover:bg-green-500 hover:text-white;
   }
 
   .course-stats-grid {
@@ -1034,11 +1034,11 @@
   }
 
   .course-stat-item {
-    @apply flex flex-col gap-1 rounded-2xl bg-gray-50 px-4 py-3;
+    @apply flex flex-col gap-1 px-4 py-3 rounded-2xl bg-gray-50;
   }
 
   .course-stat-label {
-    @apply text-xs font-medium uppercase tracking-wide text-gray-500;
+    @apply text-xs font-medium tracking-wide text-gray-500 uppercase;
   }
 
   .course-stat-value {
@@ -1050,7 +1050,7 @@
   }
 
   .course-panel-header {
-    @apply flex flex-col gap-3 border-b border-gray-100 pb-5 md:flex-row md:items-end md:justify-between;
+    @apply flex flex-col gap-3 pb-5 border-b border-gray-100 md:flex-row md:items-end md:justify-between;
   }
 
   .course-panel-label {
@@ -1091,7 +1091,7 @@
   }
 
   .course-markdown-list {
-    @apply flex list-disc flex-col gap-2 pl-5 text-sm leading-7 text-gray-600 sm:text-base;
+    @apply flex flex-col gap-2 pl-5 text-sm leading-7 text-gray-600 list-disc sm:text-base;
   }
 
   .course-gate {
@@ -1107,7 +1107,7 @@
   }
 
   .course-syllabus {
-    @apply mt-6 flex flex-col gap-4;
+    @apply flex flex-col gap-4 mt-6;
   }
 
   .course-module-card {
@@ -1131,7 +1131,7 @@
   }
 
   .course-module-summary-count {
-    @apply rounded-full border border-gray-200 bg-white px-3 py-1 text-sm font-medium text-gray-500;
+    @apply px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-full;
   }
 
   .course-lessons-list {
@@ -1139,7 +1139,7 @@
   }
 
   .course-lesson-row {
-    @apply flex flex-col gap-2 rounded-2xl border border-white bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between;
+    @apply flex flex-col gap-2 px-4 py-3 bg-white border border-white rounded-2xl sm:flex-row sm:items-center sm:justify-between;
   }
 
   .course-lesson-meta {
@@ -1159,7 +1159,7 @@
   }
 
   .course-reviews-list {
-    @apply mt-6 flex flex-col gap-4;
+    @apply flex flex-col gap-4 mt-6;
   }
 
   .course-review-card {
@@ -1175,7 +1175,7 @@
   }
 
   .course-review-avatar {
-    @apply h-12 w-12 rounded-2xl object-cover;
+    @apply object-cover w-12 h-12 rounded-2xl;
   }
 
   .course-review-author-meta {
