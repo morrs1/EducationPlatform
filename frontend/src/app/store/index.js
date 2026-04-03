@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../../features/auth";
 import { catalogReducer } from "../../features/catalog";
+import { lessonSessionReducer } from "../../features/lesson-session";
 import { viewerReducer } from "../../features/viewer";
 import { mockAccounts } from "../../features/auth/model/mockAccounts";
 import { mockViewer } from "../../features/viewer/model/mockViewer";
@@ -65,6 +66,7 @@ const store = configureStore({
   reducer: {
     auth: authReducer,
     catalog: catalogReducer,
+    lessonSession: lessonSessionReducer,
     viewer: viewerReducer,
   },
   preloadedState: loadPreloadedState(),
