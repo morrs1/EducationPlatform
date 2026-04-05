@@ -2,11 +2,13 @@ export { default as authReducer } from "./model/authSlice";
 export { loginWithMockCredentials } from "./model/loginWithMockCredentials";
 export {
   submitLogin,
+  submitRegister,
   submitEmailChange,
   submitPasswordChange,
 } from "./model/thunks";
 
 export {
+  createInitialAuthState,
   openLoginModal,
   openRegisterModal,
   closeAuthModals,
@@ -19,6 +21,16 @@ export {
   updateAccountEmail,
   updateAccountPassword,
 } from "./model/authSlice";
+
+export {
+  createDefaultAccountsMap,
+  loadAccountsMap,
+  saveAccountsMap,
+  getPrimaryAccount,
+  getAccountByViewerId,
+  findAccountByEmail,
+  upsertAccount,
+} from "./model/persistence";
 
 export {
   selectIsLogged,

@@ -14,6 +14,7 @@ import CoursePage from "../../pages/course/ui/CoursePage";
 import AccountPage from "../../pages/account/ui/AccountPage";
 import EditProfilePage from "../../pages/edit-profile/ui/EditProfilePage";
 import NotificationsPage from "../../pages/notifications/ui/NotificationsPage";
+import LessonPage from "../../pages/lesson/ui/LessonPage";
 
 import ProfileSection from "../../widgets/profile-section/ui/ProfileSection";
 import CurrentCoursesSection from "../../widgets/current-courses-section/ui/CurrentCoursesSection";
@@ -73,6 +74,10 @@ const router = createBrowserRouter([
           {
             path: "notifications",
             element: <NotificationsPage />,
+          },
+          {
+            path: "courses/:courseId/lessons/:lessonId",
+            element: <LessonPage />,
           },
         ],
       },

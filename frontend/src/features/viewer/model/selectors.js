@@ -1,4 +1,5 @@
 import { createSelector } from "@reduxjs/toolkit";
+import { getCourseProgressByCourseId } from "../../../entities/course/model/progress";
 import {
   enrichCourse,
   getCourseById,
@@ -25,12 +26,18 @@ export const selectProgressByCourseId = (state) =>
 
 const selectViewerSessionActive = (state) => state.auth?.isLogged ?? false;
 const selectViewerState = (state) => state.viewer;
+const selectCompletedStepIds = (state) =>
+  state.lessonSession?.completedStepIds ?? [];
 const selectCourseIdParam = (_state, courseId) => courseId;
 
-function attachViewerState(course, viewer, sessionIsActive) {
+function attachViewerState(course, viewer, sessionIsActive, completedStepIds) {
   const enrichedCourse = enrichCourse(course);
   const progress = sessionIsActive
-    ? viewer.progressByCourseId[course.id] ?? null
+    ? getCourseProgressByCourseId({
+        courseId: course.id,
+        viewerProgress: viewer.progressByCourseId[course.id] ?? null,
+        completedStepIds,
+      })
     : null;
 
   return {
@@ -64,47 +71,64 @@ export const selectCanViewCourseContent = (state, courseId) =>
 
 export const selectViewerCourseProgress = (state, courseId) =>
   selectViewerSessionActive(state)
-    ? state.viewer.progressByCourseId[courseId] ?? null
+    ? getCourseProgressByCourseId({
+        courseId,
+        viewerProgress: state.viewer.progressByCourseId[courseId] ?? null,
+        completedStepIds: selectCompletedStepIds(state),
+      })
     : null;
 
 export const selectCurrentCourses = createSelector(
-  [selectViewerSessionActive, selectViewerState],
-  (sessionIsActive, viewer) =>
+  [selectViewerSessionActive, selectViewerState, selectCompletedStepIds],
+  (sessionIsActive, viewer, completedStepIds) =>
     !sessionIsActive
       ? []
       : viewer.enrolledCourseIds
           .map(getCourseById)
           .filter(Boolean)
-          .map((course) => attachViewerState(course, viewer, sessionIsActive)),
+          .map((course) =>
+            attachViewerState(course, viewer, sessionIsActive, completedStepIds),
+          ),
 );
 
 export const selectFavouriteCourses = createSelector(
-  [selectViewerSessionActive, selectViewerState],
-  (sessionIsActive, viewer) =>
+  [selectViewerSessionActive, selectViewerState, selectCompletedStepIds],
+  (sessionIsActive, viewer, completedStepIds) =>
     !sessionIsActive
       ? []
       : viewer.favouriteCourseIds
           .map(getCourseById)
           .filter(Boolean)
-          .map((course) => attachViewerState(course, viewer, sessionIsActive)),
+          .map((course) =>
+            attachViewerState(course, viewer, sessionIsActive, completedStepIds),
+          ),
 );
 
 export const selectCompletedCourses = createSelector(
-  [selectViewerSessionActive, selectViewerState],
-  (sessionIsActive, viewer) =>
+  [selectViewerSessionActive, selectViewerState, selectCompletedStepIds],
+  (sessionIsActive, viewer, completedStepIds) =>
     !sessionIsActive
       ? []
       : viewer.completedCourseIds
           .map(getCourseById)
           .filter(Boolean)
-          .map((course) => attachViewerState(course, viewer, sessionIsActive)),
+          .map((course) =>
+            attachViewerState(course, viewer, sessionIsActive, completedStepIds),
+          ),
 );
 
 export const selectViewerCourseById = createSelector(
-  [selectViewerSessionActive, selectViewerState, selectCourseIdParam],
-  (sessionIsActive, viewer, courseId) => {
+  [
+    selectViewerSessionActive,
+    selectViewerState,
+    selectCompletedStepIds,
+    selectCourseIdParam,
+  ],
+  (sessionIsActive, viewer, completedStepIds, courseId) => {
     const course = getCourseById(courseId);
 
-    return course ? attachViewerState(course, viewer, sessionIsActive) : null;
+    return course
+      ? attachViewerState(course, viewer, sessionIsActive, completedStepIds)
+      : null;
   },
 );

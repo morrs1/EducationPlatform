@@ -1,20 +1,23 @@
-import { mockAccounts } from "./mockAccounts";
-
-const fallbackAccount = mockAccounts[0] ?? null;
+import { findAccountByEmail } from "./persistence";
 
 export function loginWithMockCredentials({
   email,
   password,
-  accountEmail = fallbackAccount?.email ?? "",
-  accountPassword = fallbackAccount?.password ?? "",
-  viewerId = fallbackAccount?.viewerId ?? null,
+  accountEmail = "",
+  accountPassword = "",
+  viewerId = null,
 }) {
   const normalizedEmail = email?.trim().toLowerCase();
+  const account =
+    (accountEmail && accountPassword && viewerId
+      ? {
+          email: accountEmail.trim().toLowerCase(),
+          password: accountPassword,
+          viewerId,
+        }
+      : findAccountByEmail(normalizedEmail)) ?? null;
 
-  if (
-    normalizedEmail !== accountEmail.toLowerCase() ||
-    password !== accountPassword
-  ) {
+  if (!account || normalizedEmail !== account.email || password !== account.password) {
     return {
       ok: false,
       error: "Неверная почта или пароль",
@@ -23,6 +26,6 @@ export function loginWithMockCredentials({
 
   return {
     ok: true,
-    viewerId,
+    viewerId: account.viewerId,
   };
 }

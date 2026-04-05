@@ -14,9 +14,11 @@ export {
   saveCodeDraft,
   setRunResult,
   setSubmissionResult,
+  restoreLessonSession,
   resetStepSession,
   resetLessonSession,
   resetAllLessonSessions,
+  createInitialLessonSessionState,
 } from "./model/lessonSessionSlice";
 
 export {
@@ -35,3 +37,8 @@ export {
   selectIsStepCompleted,
   selectLessonCompletedStepsCount,
 } from "./model/selectors";
+
+export {
+  loadLessonSessionByViewerId,
+  saveLessonSessionByViewerId,
+} from "./model/persistence";

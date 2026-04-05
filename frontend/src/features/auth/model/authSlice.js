@@ -7,17 +7,30 @@ const primaryMockAccount = mockAccounts[0] ?? {
   password: "",
 };
 
-const initialState = {
-  isRegisterModalOpen: false,
-  isLoginModalOpen: false,
-  isLogged: false,
-  currentViewerId: null,
-  authStatus: "idle",
-  loginError: null,
-  accountViewerId: primaryMockAccount.viewerId,
-  accountEmail: primaryMockAccount.email,
-  accountPassword: primaryMockAccount.password,
-};
+export function createInitialAuthState({
+  savedSession = null,
+  fallbackAccount = primaryMockAccount,
+  account = fallbackAccount,
+} = {}) {
+  const nextAccount = account ?? fallbackAccount ?? primaryMockAccount;
+  const nextViewerId =
+    savedSession?.currentViewerId ?? nextAccount?.viewerId ?? null;
+  const isLogged = Boolean(savedSession?.isLogged && nextViewerId);
+
+  return {
+    isRegisterModalOpen: false,
+    isLoginModalOpen: false,
+    isLogged,
+    currentViewerId: isLogged ? nextViewerId : null,
+    authStatus: isLogged ? "authenticated" : "idle",
+    loginError: null,
+    accountViewerId: nextAccount?.viewerId ?? null,
+    accountEmail: nextAccount?.email ?? "",
+    accountPassword: nextAccount?.password ?? "",
+  };
+}
+
+const initialState = createInitialAuthState();
 
 const authSlice = createSlice({
   name: "auth",
@@ -74,8 +87,21 @@ const authSlice = createSlice({
     },
 
     loginSuccess: (state, action) => {
+      const nextViewerId =
+        action.payload?.viewerId ?? action.payload?.accountViewerId ?? null;
+
       state.isLogged = true;
-      state.currentViewerId = action.payload.viewerId;
+      state.currentViewerId = nextViewerId;
+      state.accountViewerId = action.payload?.accountViewerId ?? nextViewerId;
+
+      if (typeof action.payload?.email === "string") {
+        state.accountEmail = action.payload.email.trim().toLowerCase();
+      }
+
+      if (typeof action.payload?.password === "string") {
+        state.accountPassword = action.payload.password.trim();
+      }
+
       state.authStatus = "authenticated";
       state.loginError = null;
       state.isLoginModalOpen = false;

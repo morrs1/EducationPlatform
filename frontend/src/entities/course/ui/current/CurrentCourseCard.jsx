@@ -13,7 +13,8 @@ function CurrentCourseCard({
   const completedLessons = course.progress?.completedLessons ?? 0;
   const totalLessons = course.lessonsCount;
   const progressPercent =
-    totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    course.progress?.progressPercent ??
+    (totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0);
 
   useEffect(() => {
     function handlePointerDown(event) {

@@ -8,8 +8,22 @@ export {
   toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
+  restoreViewer,
   resetDemoState,
 } from "./model/viewerSlice";
+
+export {
+  buildAvatarUrl,
+  createInitialViewerState,
+  createViewerProfileFromRegistration,
+} from "./model/factory";
+
+export {
+  loadViewerProfilesMap,
+  saveViewerProfilesMap,
+  loadViewerProfileByViewerId,
+  saveViewerProfile,
+} from "./model/persistence";
 
 export {
   selectViewer,

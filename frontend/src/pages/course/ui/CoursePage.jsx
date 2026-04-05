@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import { selectIsLogged, openLoginModal } from "../../../features/auth";
+import { selectCompletedStepIds } from "../../../features/lesson-session";
 import {
   enrollInCourse,
   selectCanViewCourseContent,
   selectViewerCourseById,
   toggleFavouriteCourse,
 } from "../../../features/viewer";
+import { getLessonProgressMap } from "../../../entities/lesson/model/progress";
 import CourseTabs from "../../../widgets/course-tabs/ui/CourseTabs";
 import CourseSidebar from "../../../widgets/course-sidebar/ui/CourseSidebar";
 import CourseDescriptionTab from "../../../widgets/course-description/ui/CourseDescriptionTab";
@@ -40,6 +42,7 @@ function CoursePage() {
       ? selectCanViewCourseContent(state, numericCourseId)
       : false,
   );
+  const completedStepIds = useSelector(selectCompletedStepIds);
 
   const [descriptionStatus, setDescriptionStatus] = useState("loading");
   const [descriptionMarkdown, setDescriptionMarkdown] = useState("");
@@ -89,6 +92,10 @@ function CoursePage() {
   const descriptionBlocks = useMemo(
     () => parseCourseDescriptionMarkdown(descriptionMarkdown),
     [descriptionMarkdown],
+  );
+  const lessonProgressByLessonId = useMemo(
+    () => getLessonProgressMap(completedStepIds),
+    [completedStepIds],
   );
 
   if (!pageData || !course) {
@@ -186,6 +193,9 @@ function CoursePage() {
             syllabus={pageData.syllabus}
             isLogged={isLogged}
             canViewContent={canViewContent}
+            lessonProgressByLessonId={
+              canViewContent ? lessonProgressByLessonId : {}
+            }
             onLogin={() => dispatch(openLoginModal())}
             onEnroll={handlePrimaryAction}
           />
