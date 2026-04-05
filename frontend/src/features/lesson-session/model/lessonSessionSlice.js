@@ -9,6 +9,17 @@ const initialState = {
   runResultsByStepId: {},
 };
 
+export function createInitialLessonSessionState() {
+  return {
+    currentStepIdByLessonId: {},
+    viewedStepIds: [],
+    completedStepIds: [],
+    draftsByStepId: {},
+    submissionsByStepId: {},
+    runResultsByStepId: {},
+  };
+}
+
 function createTimestamp() {
   return new Date().toISOString();
 }
@@ -148,6 +159,23 @@ const lessonSessionSlice = createSlice({
       };
     },
 
+    restoreLessonSession: (_state, action) => {
+      const payload = action.payload ?? null;
+
+      if (!payload) {
+        return createInitialLessonSessionState();
+      }
+
+      return {
+        currentStepIdByLessonId: payload.currentStepIdByLessonId ?? {},
+        viewedStepIds: payload.viewedStepIds ?? [],
+        completedStepIds: payload.completedStepIds ?? [],
+        draftsByStepId: payload.draftsByStepId ?? {},
+        submissionsByStepId: payload.submissionsByStepId ?? {},
+        runResultsByStepId: payload.runResultsByStepId ?? {},
+      };
+    },
+
     resetStepSession: (state, action) => {
       const { stepId } = action.payload ?? {};
 
@@ -185,6 +213,7 @@ export const {
   saveCodeDraft,
   setRunResult,
   setSubmissionResult,
+  restoreLessonSession,
   resetStepSession,
   resetLessonSession,
   resetAllLessonSessions,

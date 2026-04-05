@@ -1,14 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { mockCourses } from "../../../entities/course/model/mockCourses";
-import { mockViewer } from "./mockViewer";
-
-function buildAvatarUrl(seed) {
-  return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
-}
-
-function createInitialState() {
-  return structuredClone(mockViewer);
-}
+import {
+  buildAvatarUrl,
+  createInitialViewerState,
+  normalizeViewerProfile,
+} from "./factory";
 
 function getCourseById(courseId) {
   return mockCourses.find((course) => course.id === courseId) ?? null;
@@ -24,7 +20,7 @@ function isGeneratedViewerAvatar(avatarUrl) {
 
 const viewerSlice = createSlice({
   name: "viewer",
-  initialState: createInitialState(),
+  initialState: createInitialViewerState(),
   reducers: {
     updateViewerProfile: (state, action) => {
       const {
@@ -53,7 +49,7 @@ const viewerSlice = createSlice({
     },
 
     changeViewerEmail: (state, action) => {
-      const nextEmail = action.payload?.trim();
+      const nextEmail = action.payload?.trim().toLowerCase();
 
       if (!nextEmail) {
         return;
@@ -61,6 +57,9 @@ const viewerSlice = createSlice({
 
       state.email = nextEmail;
     },
+
+    restoreViewer: (_state, action) =>
+      normalizeViewerProfile(action.payload ?? createInitialViewerState()),
 
     enrollInCourse: (state, action) => {
       const courseId = action.payload;
@@ -139,7 +138,7 @@ const viewerSlice = createSlice({
       };
     },
 
-    resetDemoState: () => createInitialState(),
+    resetDemoState: () => createInitialViewerState(),
   },
 });
 
@@ -150,6 +149,7 @@ export const {
   toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
+  restoreViewer,
   resetDemoState,
 } = viewerSlice.actions;
 

@@ -6,6 +6,7 @@ import {
   openLoginModal,
   openRegisterModal,
   submitLogin,
+  submitRegister,
   selectIsLoginModalOpen,
   selectIsRegisterModalOpen,
   selectLoginError,
@@ -20,6 +21,9 @@ function AuthModal() {
 
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [registerNameInput, setRegisterNameInput] = useState("");
+  const [registerEmailInput, setRegisterEmailInput] = useState("");
+  const [registerPasswordInput, setRegisterPasswordInput] = useState("");
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [modalView, setModalView] = useState(null);
@@ -29,21 +33,29 @@ function AuthModal() {
   function resetCredentials() {
     setEmailInput("");
     setPasswordInput("");
+    setRegisterNameInput("");
+    setRegisterEmailInput("");
+    setRegisterPasswordInput("");
   }
 
   function handleSubmit(event) {
     event.preventDefault();
 
-    if (modalView !== "login") {
-      return;
-    }
-
-    const result = dispatch(
-      submitLogin({
-      email: emailInput,
-      password: passwordInput,
-      }),
-    );
+    const result =
+      modalView === "login"
+        ? dispatch(
+            submitLogin({
+              email: emailInput,
+              password: passwordInput,
+            }),
+          )
+        : dispatch(
+            submitRegister({
+              fullName: registerNameInput,
+              email: registerEmailInput,
+              password: registerPasswordInput,
+            }),
+          );
 
     if (result.ok) {
       resetCredentials();
@@ -80,6 +92,30 @@ function AuthModal() {
     }
 
     setPasswordInput(event.target.value);
+  }
+
+  function handleRegisterNameChange(event) {
+    if (loginError) {
+      dispatch(clearLoginError());
+    }
+
+    setRegisterNameInput(event.target.value);
+  }
+
+  function handleRegisterEmailChange(event) {
+    if (loginError) {
+      dispatch(clearLoginError());
+    }
+
+    setRegisterEmailInput(event.target.value);
+  }
+
+  function handleRegisterPasswordChange(event) {
+    if (loginError) {
+      dispatch(clearLoginError());
+    }
+
+    setRegisterPasswordInput(event.target.value);
   }
 
   useEffect(() => {
@@ -181,23 +217,32 @@ function AuthModal() {
                     type="text"
                     placeholder="Имя и фамилия"
                     className="modal-input w-full text-sm sm:text-base"
+                    value={registerNameInput}
+                    onChange={handleRegisterNameChange}
                   />
                   <input
                     type="text"
                     placeholder="Email"
                     className="modal-input w-full text-sm sm:text-base"
+                    value={registerEmailInput}
+                    onChange={handleRegisterEmailChange}
                   />
                   <input
-                    type="text"
+                    type="password"
                     placeholder="Пароль"
                     className="modal-input w-full text-sm sm:text-base"
+                    value={registerPasswordInput}
+                    onChange={handleRegisterPasswordChange}
                   />
+                  {loginError ? (
+                    <span className="text-red-600">{loginError}</span>
+                  ) : null}
                 </div>
               )}
 
               <div className="flex justify-center">
                 <button
-                  type={modalView === "login" ? "submit" : "button"}
+                  type="submit"
                   className="modal-submit-btn text-base sm:text-lg"
                 >
                   {modalView === "login" ? "Войти" : "Зарегистрироваться"}

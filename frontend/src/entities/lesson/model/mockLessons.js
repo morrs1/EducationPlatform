@@ -4,7 +4,7 @@ export const mockLessons = [
     courseId: 1001,
     moduleId: "python-beginners-module-1",
     moduleTitle: "Основы Python",
-    title: "Переменные и вывод",
+    title: "Переменные, строки и вывод",
     position: 1,
     stepIds: [
       "python-beginners-m1-l1-step-1",

@@ -1,8 +1,11 @@
+import { Link } from "react-router";
+
 function CourseContentTab({
   course,
   syllabus,
   isLogged,
   canViewContent,
+  lessonProgressByLessonId = {},
   onLogin,
   onEnroll,
 }) {
@@ -27,13 +30,18 @@ function CourseContentTab({
     return (
       <section className="course-panel">
         <div className="course-gate">
-          <h2 className="course-gate-title">Содержание откроется после записи</h2>
+          <h2 className="course-gate-title">
+            Содержание откроется после записи
+          </h2>
           <p className="course-gate-text">
-            Курс «{course.title}» уже можно изучить по описанию и отзывам.
-            Чтобы увидеть полную программу с уроками и модулями, запишитесь на
-            курс.
+            Курс «{course.title}» уже можно изучить по описанию и отзывам. Чтобы
+            увидеть полную программу с уроками и модулями, запишитесь на курс.
           </p>
-          <button type="button" className="course-inline-btn" onClick={onEnroll}>
+          <button
+            type="button"
+            className="course-inline-btn"
+            onClick={onEnroll}
+          >
             Записаться на курс
           </button>
         </div>
@@ -72,20 +80,51 @@ function CourseContentTab({
             <p className="course-module-summary">{module.summary}</p>
 
             <div className="course-lessons-list">
-              {module.lessons.map((lesson, lessonIndex) => (
-                <div key={lesson.id} className="course-lesson-row">
-                  <div className="course-lesson-meta">
-                    <span className="course-lesson-index">
-                      {index + 1}.{lessonIndex + 1}
-                    </span>
-                    <span className="course-lesson-title">{lesson.title}</span>
-                  </div>
+              {module.lessons.map((lesson, lessonIndex) => {
+                const lessonProgress = lesson.lessonId
+                  ? lessonProgressByLessonId[lesson.lessonId] ?? null
+                  : null;
+                const totalStepsCount =
+                  lesson.stepsCount ?? lessonProgress?.totalStepsCount ?? 0;
+                const completedStepsCount =
+                  lessonProgress?.completedStepsCount ?? 0;
+                const stepsCountLabel =
+                  totalStepsCount > 0
+                    ? `${completedStepsCount}/${totalStepsCount} шагов`
+                    : null;
 
-                  <span className="course-lesson-duration">
-                    {lesson.durationLabel}
-                  </span>
-                </div>
-              ))}
+                return (
+                  <div key={lesson.id} className="course-lesson-row">
+                    <div className="course-lesson-meta">
+                      <span className="course-lesson-index">
+                        {index + 1}.{lessonIndex + 1}
+                      </span>
+                      {index === 0 && lessonIndex === 0 && lesson.lessonId ? (
+                        <Link
+                          to={`/courses/${course.id}/lessons/${lesson.lessonId}`}
+                          className="course-lesson-title"
+                        >
+                          {lesson.title}
+                        </Link>
+                      ) : (
+                        <span className="course-lesson-title">{lesson.title}</span>
+                      )}
+                    </div>
+
+                    <div className="course-lesson-trailing">
+                      {stepsCountLabel ? (
+                        <span className="course-lesson-steps-count">
+                          {stepsCountLabel}
+                        </span>
+                      ) : null}
+
+                      <span className="course-lesson-duration">
+                        {lesson.durationLabel}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </article>
         ))}
