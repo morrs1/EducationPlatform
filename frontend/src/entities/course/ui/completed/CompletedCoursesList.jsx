@@ -1,10 +1,14 @@
 import CompletedCourseCard from "./CompletedCourseCard";
 
-function CompletedCoursesList({ courses, onToggleFavouriteCourse }) {
+function CompletedCoursesList({
+  courses,
+  emptyMessage,
+  onToggleFavouriteCourse,
+}) {
   if (courses.length === 0) {
     return (
       <p className="rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500">
-        Пока нет завершенных курсов.
+        {emptyMessage ?? "Пока нет завершенных курсов."}
       </p>
     );
   }
