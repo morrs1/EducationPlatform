@@ -94,6 +94,32 @@
 
   /*AccountSidebar*/
 
+  .profile-layout {
+    @apply flex flex-col w-full min-h-full md:flex-row;
+  }
+
+  .profile-layout-sidebar-rail {
+    @apply w-full shrink-0 border-b border-gray-300 bg-gray-300/30 md:w-64 md:min-h-0 md:overflow-y-auto md:border-b-0 md:border-r;
+    scrollbar-gutter: stable;
+  }
+
+  .profile-layout-main-rail {
+    @apply flex-1 min-w-0 px-4 py-4 md:min-h-0 md:overflow-y-auto md:px-6 md:py-6;
+    scrollbar-gutter: stable;
+  }
+
+  @media (min-width: 768px) {
+    .profile-layout {
+      height: calc(100dvh - var(--app-header-height));
+      overflow: hidden;
+    }
+
+    .profile-layout-sidebar-rail,
+    .profile-layout-main-rail {
+      overscroll-behavior: contain;
+    }
+  }
+
   .account-sidebar {
     @apply flex gap-2 p-3 overflow-x-auto md:flex-col md:overflow-visible;
   }
