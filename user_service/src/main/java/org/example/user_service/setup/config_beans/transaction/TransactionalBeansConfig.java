@@ -2,7 +2,7 @@ package org.example.user_service.setup.config_beans.transaction;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.example.user_service.application.ports.TransactionManager;
-import org.example.user_service.infrastructure.transactions.SpringTransactionManagerAdapter;
+import org.example.user_service.infrastructure.adapters.transactions.SpringTransactionManagerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.JpaTransactionManager;
