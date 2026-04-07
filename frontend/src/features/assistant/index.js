@@ -1,0 +1,22 @@
+export { default as assistantReducer } from "./model/assistantSlice";
+
+export {
+  openAssistant,
+  closeAssistant,
+  toggleAssistant,
+  setActiveAssistantContext,
+  startAssistantReply,
+  assistantReplyFailed,
+  addAssistantMessage,
+  setAssistantThreadId,
+  resetAssistantThread,
+} from "./model/assistantSlice";
+
+export {
+  selectAssistant,
+  selectAssistantIsOpen,
+  selectActiveAssistantContextKey,
+  selectAssistantThreadsByContextKey,
+  selectAssistantThreadByContextKey,
+  selectActiveAssistantThread,
+} from "./model/selectors";
