@@ -1,4 +1,5 @@
 export { default as assistantReducer } from "./model/assistantSlice";
+export { submitAssistantMessage } from "./model/thunks";
 
 export {
   openAssistant,
