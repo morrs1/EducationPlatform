@@ -5,7 +5,7 @@ import java.util.List;
 
 public class BaseDomainService {
 
-    protected LinkedList<BaseDomainEvent> events;
+    protected final LinkedList<BaseDomainEvent> events = new LinkedList<>();
 
     protected void recordEvent(BaseDomainEvent event) {
         events.add(event);
