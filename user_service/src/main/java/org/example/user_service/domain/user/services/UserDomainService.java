@@ -13,29 +13,29 @@ public class UserDomainService extends BaseDomainService {
 //TODO    private final PasswordHasher hasher;
 
     public User createUser(
-            UserSurname surname,
-            UserName name,
-            UserPatronymic patronymic,
-            UserStatus userStatus,
-            UserEmail email,
-            UserPassword password,
-            UserProfilePhotoLink profilePhotoLink,
-            List<UserCurrentCourse> currentCourses,
-            List<UserFinishedCourse> finishedCourses,
-            List<UserCertificate> certificates
+            String surname,
+            String name,
+            String patronymic,
+            String userStatus,
+            String email,
+            String password,
+            String profilePhotoLink,
+            List<String> currentCourses,
+            List<String> finishedCourses,
+            List<String> certificates
     ) {
         var user = new User(
                 UUID.randomUUID(),
-                surname,
-                name,
-                patronymic,
-                userStatus,
-                email,
-                password,
-                profilePhotoLink,
-                currentCourses,
-                finishedCourses,
-                certificates
+                new UserSurname(surname),
+                new UserName(name),
+                new UserPatronymic(patronymic),
+                new UserStatus(userStatus),
+                new UserEmail(email),
+                new UserPassword(password),
+                new UserProfilePhotoLink(profilePhotoLink),
+                currentCourses.stream().map(UserCurrentCourse::new).toList(),
+                finishedCourses.stream().map(UserFinishedCourse::new).toList(),
+                certificates.stream().map(UserCertificate::new).toList()
         );
         //TODO разобраться с getEmail().getEmail()
         this.events.add(new CreateUserDomainEvent(user.getId(), user.getEmail().getEmail()));

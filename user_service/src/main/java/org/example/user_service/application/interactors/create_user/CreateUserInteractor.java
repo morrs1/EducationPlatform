@@ -19,27 +19,26 @@ public class CreateUserInteractor {
     private final UserRepo userRepo;
     private final UserDomainService userService;
     private final EventBus eventBus;
-    //TODO добавить ивент бас через реализацию от спринга
 
     public UUID create(CreateUserCommand command) {
         //TODO сделать так, чтобы передавались сырые данные в фабричный метод
         return transactionManager.inTransaction(() -> {
-            userService.createUser(
-                    new UserSurname(command.surname()),
-                    new UserName(command.name()),
-                    new UserPatronymic(command.patronymic()),
-                    new UserStatus(command.userStatus()),
-                    new UserEmail(command.userEmail()),
-                    new UserPassword(command.userPassword()),
-                    new UserProfilePhotoLink(command.userProfilePhotoLink()),
-                    command.currentCourses().stream().map(UserCurrentCourse::new).toList(),
-                    command.finishedCourses().stream().map(UserFinishedCourse::new).toList(),
-                    command.certificates().stream().map(UserCertificate::new).toList()
+           var user = userService.createUser(
+                    command.surname(),
+                    command.name(),
+                    command.patronymic(),
+                    command.userStatus(),
+                    command.userEmail(),
+                    command.userPassword(),
+                    command.userProfilePhotoLink(),
+                    command.currentCourses(),
+                    command.finishedCourses(),
+                    command.certificates()
             );
             System.out.println(((CreateUserDomainEvent) userService.getEvents().getFirst()).getUserEmail());
             eventBus.publish(userService.pull_events());
             //TODO передавать пользователя, а не команду
-            return userRepo.createUser(command);
+            return userRepo.createUser(user);
         });
     }
 
