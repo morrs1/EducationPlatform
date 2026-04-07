@@ -25,6 +25,8 @@ import {
   saveViewerProfilesMap,
 } from "../../features/viewer";
 
+import { assistantReducer } from "../../features/assistant";
+
 function readStoredJson(key) {
   try {
     const savedValue = localStorage.getItem(key);
@@ -92,9 +94,9 @@ function migrateLegacyViewerState(
 ) {
   const hasPersistedViewerProfile = Boolean(
     persistedViewerProfiles &&
-      typeof persistedViewerProfiles === "object" &&
-      !Array.isArray(persistedViewerProfiles) &&
-      persistedViewerProfiles[viewerId],
+    typeof persistedViewerProfiles === "object" &&
+    !Array.isArray(persistedViewerProfiles) &&
+    persistedViewerProfiles[viewerId],
   );
 
   if (!savedViewerState || !viewerId || hasPersistedViewerProfile) {
@@ -143,10 +145,10 @@ function loadPreloadedState() {
 
     const primaryAccount = getPrimaryAccount(accountsMap);
     const persistedViewerId = savedAuthSession.isLogged
-      ? savedAuthSession.currentViewerId ??
+      ? (savedAuthSession.currentViewerId ??
         savedAuthSession.accountViewerId ??
         primaryAccount?.viewerId ??
-        null
+        null)
       : null;
     const activeAccount =
       getAccountByViewerId(persistedViewerId, accountsMap) ??
@@ -204,6 +206,7 @@ const store = configureStore({
     catalog: catalogReducer,
     lessonSession: lessonSessionReducer,
     viewer: viewerReducer,
+    assistant: assistantReducer,
   },
   preloadedState: loadPreloadedState(),
 });
