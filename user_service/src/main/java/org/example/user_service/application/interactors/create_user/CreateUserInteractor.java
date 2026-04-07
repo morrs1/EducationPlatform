@@ -4,12 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.ports.EventBus;
 import org.example.user_service.application.ports.TransactionManager;
 import org.example.user_service.application.ports.UserRepo;
-import org.example.user_service.domain.base.BaseDomainEvent;
 import org.example.user_service.domain.user.events.CreateUserDomainEvent;
 import org.example.user_service.domain.user.services.UserDomainService;
-import org.example.user_service.domain.user.vo.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -21,7 +18,7 @@ public class CreateUserInteractor {
     private final EventBus eventBus;
 
     public UUID create(CreateUserCommand command) {
-        //TODO сделать так, чтобы передавались сырые данные в фабричный метод
+
         return transactionManager.inTransaction(() -> {
            var user = userService.createUser(
                     command.surname(),
@@ -37,7 +34,6 @@ public class CreateUserInteractor {
             );
             System.out.println(((CreateUserDomainEvent) userService.getEvents().getFirst()).getUserEmail());
             eventBus.publish(userService.pull_events());
-            //TODO передавать пользователя, а не команду
             return userRepo.createUser(user);
         });
     }
