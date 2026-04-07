@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.ports.UserRepo;
 import org.example.user_service.domain.user.User;
 import org.example.user_service.infrastructure.mappers.UserMapperHibernate;
+import org.example.user_service.infrastructure.persistence.models.HibernateUser;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -21,5 +23,17 @@ public class HibernateUserRepo implements UserRepo {
         var hibernateUser = mapper.toHibernateUser(user);
         entityManager.merge(hibernateUser);
         return hibernateUser.getId();
+    }
+
+    @Override
+    public Optional<User> readUserByEmail(String userEmail) {
+        return entityManager.createQuery(
+                        "select u from HibernateUser u where u.email = :email",
+                        HibernateUser.class
+                )
+                .setParameter("email", userEmail)
+                .getResultStream()
+                .findFirst()
+                .map(mapper::toDomainUser);
     }
 }
