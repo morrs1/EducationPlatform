@@ -1,11 +1,11 @@
 package org.example.user_service.domain.user;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.example.user_service.domain.base.BaseEntity;
 import org.example.user_service.domain.user.vo.*;
+
+import java.util.List;
+import java.util.UUID;
 
 
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
@@ -21,8 +21,33 @@ public class User extends BaseEntity {
     private UserEmail email;
     private UserPassword password;
     private UserProfilePhotoLink profilePhotoLink;
-    private UserCurrentCourses currentCourses;
-    private UserFinishedCourses finishedCourses;
-    private UserCertificates certificates;
+    private List<UserCurrentCourse> currentCourses;
+    private List<UserFinishedCourse> finishedCourses;
+    private List<UserCertificate> certificates;
 
+    public User(
+            UUID id,
+            UserSurname surname,
+            UserName name,
+            UserPatronymic patronymic,
+            UserStatus userStatus,
+            UserEmail email,
+            UserPassword password,
+            UserProfilePhotoLink profilePhotoLink,
+            List<UserCurrentCourse> currentCourses,
+            List<UserFinishedCourse> finishedCourses,
+            List<UserCertificate> certificates
+    ) {
+        super(id);
+        this.surname = surname;
+        this.name = name;
+        this.patronymic = patronymic;
+        this.userStatus = userStatus;
+        this.email = email;
+        this.password = password;
+        this.profilePhotoLink = profilePhotoLink;
+        this.currentCourses = currentCourses;
+        this.finishedCourses = finishedCourses;
+        this.certificates = certificates;
+    }
 }
