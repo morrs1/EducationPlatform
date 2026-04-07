@@ -32,7 +32,6 @@ public class CreateUserInteractor {
                     command.finishedCourses(),
                     command.certificates()
             );
-            System.out.println(((CreateUserDomainEvent) userService.getEvents().getFirst()).getUserEmail());
             eventBus.publish(userService.pull_events());
             return userRepo.createUser(user);
         });
