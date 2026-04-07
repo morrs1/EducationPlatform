@@ -1,0 +1,11 @@
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+  application:
+    name: user_service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_EXTERNAL_PORT:5435}/${POSTGRES_DB:user_service_db}
+    username: ${POSTGRES_USER:morrs}
+    password: ${POSTGRES_PASSWORD:123}
+    driver-class-name: org.postgresql.Driver

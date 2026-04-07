@@ -1,0 +1,165 @@
+import { useDispatch, useSelector } from "react-redux";
+import {
+  openLoginModal,
+  openRegisterModal,
+  selectIsLogged,
+  logOut,
+} from "../../../features/auth";
+import {
+  closeCatalog,
+  openCatalog,
+  selectIsCatalogOpen,
+} from "../../../features/catalog";
+import {
+  selectViewerAvatarUrl,
+  selectViewerName,
+} from "../../../features/viewer";
+import { useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router";
+
+function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const dispatch = useDispatch();
+  const isCatalogOpen = useSelector(selectIsCatalogOpen);
+  const isLogged = useSelector(selectIsLogged);
+  const viewerAvatarUrl = useSelector(selectViewerAvatarUrl);
+  const viewerName = useSelector(selectViewerName);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
+
+  return (
+    <header className="flex flex-col items-center justify-between gap-2 px-3 py-2 md:flex-row sm:px-4 md:px-6 sm:py-3 bg-gray-950 md:gap-0">
+      <div className="flex items-center justify-between w-full gap-2 md:w-auto sm:gap-4">
+        <NavLink
+          className="text-sm header-catalog-btn sm:text-base whitespace-nowrap"
+          to="/"
+          onClick={() => dispatch(closeCatalog())}
+        >
+          Главная
+        </NavLink>
+        <button
+          data-catalog-toggle="true"
+          className="text-sm header-catalog-btn sm:text-base whitespace-nowrap"
+          onClick={() =>
+            isCatalogOpen ? dispatch(closeCatalog()) : dispatch(openCatalog())
+          }
+        >
+          Каталог
+        </button>
+      </div>
+
+      <div className="w-full md:flex-1 md:mx-4">
+        <input
+          type="text"
+          placeholder="Поиск..."
+          className="w-full header-search"
+        />
+      </div>
+
+      <div className="flex justify-center w-full gap-2 md:w-auto sm:gap-3">
+        {!isLogged ? (
+          <>
+            <button
+              className="flex-1 header-btn md:flex-none"
+              onClick={() => dispatch(openLoginModal())}
+            >
+              Войти
+            </button>
+            <button
+              className="flex-1 header-btn md:flex-none"
+              onClick={() => dispatch(openRegisterModal())}
+            >
+              Зарегистрироваться
+            </button>
+          </>
+        ) : null}
+
+        <div className="header-profile-menu-wrap" ref={menuRef}>
+          {isLogged && (
+            <button
+              type="button"
+              className={`header-profile-trigger ${isMenuOpen ? "is-open" : ""}`}
+              aria-haspopup="menu"
+              aria-expanded={isMenuOpen}
+              onClick={() => setIsMenuOpen((value) => !value)}
+            >
+              <img
+                src={viewerAvatarUrl}
+                alt={viewerName || "Профиль пользователя"}
+                className="header-profile-avatar"
+              />
+            </button>
+          )}
+
+          {isMenuOpen ? (
+            <div className="header-profile-menu" role="menu">
+              <NavLink
+                to="/account"
+                className="header-profile-menu-item"
+                role="menuitem"
+                onClick={() => {
+                  dispatch(closeCatalog());
+                  setIsMenuOpen(false);
+                }}
+              >
+                Профиль
+              </NavLink>
+
+              <NavLink
+                to="/editProfile"
+                className="header-profile-menu-item"
+                role="menuitem"
+                onClick={() => {
+                  dispatch(closeCatalog());
+                  setIsMenuOpen(false);
+                }}
+              >
+                Настройки
+              </NavLink>
+
+              <NavLink
+                to="/notifications"
+                className="header-profile-menu-item"
+                role="menuitem"
+                onClick={() => {
+                  dispatch(closeCatalog());
+                  setIsMenuOpen(false);
+                }}
+              >
+                Уведомления
+              </NavLink>
+
+              <button
+                type="button"
+                className="header-profile-menu-item danger"
+                role="menuitem"
+                onClick={() => {
+                  dispatch(closeCatalog());
+                  dispatch(logOut());
+                  setIsMenuOpen(false);
+                }}
+              >
+                Выйти
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export default Header;

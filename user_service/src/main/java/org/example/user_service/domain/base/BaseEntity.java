@@ -1,10 +1,16 @@
 package org.example.user_service.domain.base;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.util.UUID;
 
 @EqualsAndHashCode(of = "id")
+@Getter
 public abstract class BaseEntity {
-    private UUID id;
+    protected UUID id;
+
+    public BaseEntity(UUID id) {
+        this.id = id;
+    }
 }
