@@ -18,7 +18,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class HibernateUser {
     @Id
     private UUID id;
     private String surname;

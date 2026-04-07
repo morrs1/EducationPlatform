@@ -2,15 +2,17 @@ package org.example.user_service.infrastructure.adapters.persistence;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.example.user_service.application.interactors.create_user.CreateUserCommand;
 import org.example.user_service.application.ports.UserRepo;
-import org.example.user_service.infrastructure.persistence.models.User;
-import org.springframework.stereotype.Service;
+import org.example.user_service.domain.user.User;
+import org.example.user_service.domain.user.vo.UserCertificate;
+import org.example.user_service.domain.user.vo.UserCurrentCourse;
+import org.example.user_service.domain.user.vo.UserFinishedCourse;
+import org.example.user_service.infrastructure.persistence.models.HibernateUser;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.UUID;
 
-@Service
+@Repository
 @RequiredArgsConstructor
 public class HibernateUserRepo implements UserRepo {
 
@@ -18,21 +20,21 @@ public class HibernateUserRepo implements UserRepo {
 
 
     @Override
-    public UUID createUser(CreateUserCommand userCommand) {
-        var newUser = new User(
+    public UUID createUser(User user) {
+        var hibernateUser = new HibernateUser(
                 UUID.randomUUID(),
-                userCommand.surname(),
-                userCommand.name(),
-                userCommand.patronymic(),
-                userCommand.userStatus(),
-                userCommand.userEmail(),
-                userCommand.userPassword(),
-                userCommand.userProfilePhotoLink(),
-                userCommand.currentCourses(),
-                userCommand.finishedCourses(),
-                userCommand.certificates()
+                user.getSurname().getSurname(),
+                user.getName().getName(),
+                user.getPatronymic().getPatronymic(),
+                user.getUserStatus().getStatus(),
+                user.getEmail().getEmail(),
+                user.getPassword().getPassword(),
+                user.getProfilePhotoLink().getProfilePhotoLink(),
+                user.getCurrentCourses().stream().map(UserCurrentCourse::getCurrentCourse).toList(),
+                user.getFinishedCourses().stream().map(UserFinishedCourse::getFinishedCourse).toList(),
+                user.getCertificates().stream().map(UserCertificate::getCertificate).toList()
         );
-        entityManager.merge(newUser);
-        return newUser.getId();
+        entityManager.merge(hibernateUser);
+        return hibernateUser.getId();
     }
 }
