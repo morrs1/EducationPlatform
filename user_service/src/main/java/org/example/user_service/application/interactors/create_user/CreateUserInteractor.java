@@ -1,8 +1,11 @@
 package org.example.user_service.application.interactors.create_user;
 
 import lombok.RequiredArgsConstructor;
+import org.example.user_service.application.ports.EventBus;
 import org.example.user_service.application.ports.TransactionManager;
 import org.example.user_service.application.ports.UserRepo;
+import org.example.user_service.domain.base.BaseDomainEvent;
+import org.example.user_service.domain.user.events.CreateUserDomainEvent;
 import org.example.user_service.domain.user.services.UserDomainService;
 import org.example.user_service.domain.user.vo.*;
 
@@ -15,9 +18,11 @@ public class CreateUserInteractor {
     private final TransactionManager transactionManager;
     private final UserRepo userRepo;
     private final UserDomainService userService;
+    private final EventBus eventBus;
     //TODO добавить ивент бас через реализацию от спринга
 
     public UUID create(CreateUserCommand command) {
+        //TODO сделать так, чтобы передавались сырые данные в фабричный метод
         return transactionManager.inTransaction(() -> {
             userService.createUser(
                     new UserSurname(command.surname()),
@@ -31,6 +36,8 @@ public class CreateUserInteractor {
                     command.finishedCourses().stream().map(UserFinishedCourse::new).toList(),
                     command.certificates().stream().map(UserCertificate::new).toList()
             );
+            System.out.println(((CreateUserDomainEvent) userService.getEvents().getFirst()).getUserEmail());
+            eventBus.publish(userService.pull_events());
             //TODO передавать пользователя, а не команду
             return userRepo.createUser(command);
         });
