@@ -9,6 +9,15 @@ import { getCourseSyllabus } from "../../../entities/course/model/mockCourseSyll
 import { getLessonProgressMap } from "../../../entities/lesson/model/progress";
 import CourseOutline from "../../../widgets/course-outline/ui/CourseOutline";
 import LessonStepSection from "../../../widgets/lesson-step-section/ui/LessonStepSection";
+import AssistantPanel from "../../../widgets/assistant-panel/ui/AssistantPanel";
+import {
+  closeAssistant,
+  openAssistant,
+  selectAssistantIsOpen,
+  selectAssistantThreadByContextKey,
+  setActiveAssistantContext,
+  submitAssistantMessage,
+} from "../../../features/assistant";
 
 import {
   openLessonStep,
@@ -51,7 +60,8 @@ function LessonPage() {
     [steps, currentStepId],
   );
   const currentStepIndex = useMemo(
-    () => (currentStep ? steps.findIndex((step) => step.id === currentStep.id) : -1),
+    () =>
+      currentStep ? steps.findIndex((step) => step.id === currentStep.id) : -1,
     [steps, currentStep],
   );
   const previousStep =
@@ -116,6 +126,27 @@ function LessonPage() {
     () => parseLessonMarkdown(contentMarkdown),
     [contentMarkdown],
   );
+  const assistantContextKey =
+    lesson && currentStep ? `${lesson.id}:${currentStep.id}` : null;
+  const isAssistantOpen = useSelector(selectAssistantIsOpen);
+  const assistantThread = useSelector((state) =>
+    assistantContextKey
+      ? selectAssistantThreadByContextKey(state, assistantContextKey)
+      : {
+          messages: [],
+          status: "idle",
+          error: null,
+          threadId: null,
+        },
+  );
+  const assistantMessages = assistantThread.messages;
+  const assistantStatus = assistantThread.status;
+  const assistantError = assistantThread.error;
+  const assistantThreadId = assistantThread.threadId;
+  const assistantTitle = "Ассистент";
+  const assistantSubtitle = currentStep
+    ? `${lesson?.title ?? ""} · ${currentStep.title}`
+    : lesson?.title ?? "";
 
   useEffect(() => {
     if (!lesson || !steps.length || currentStepId) {
@@ -132,6 +163,14 @@ function LessonPage() {
       }),
     );
   }, [dispatch, lesson, steps, currentStepId]);
+
+  useEffect(() => {
+    if (!assistantContextKey) {
+      return;
+    }
+
+    dispatch(setActiveAssistantContext(assistantContextKey));
+  }, [dispatch, assistantContextKey]);
 
   useEffect(() => {
     if (!currentStep) {
@@ -217,6 +256,19 @@ function LessonPage() {
     }
   }
 
+  function handleOpenAssistant() {
+    if (!assistantContextKey) {
+      return;
+    }
+
+    dispatch(setActiveAssistantContext(assistantContextKey));
+    dispatch(openAssistant());
+  }
+
+  function handleCloseAssistant() {
+    dispatch(closeAssistant());
+  }
+
   function handleChoiceChange(optionId) {
     if (!currentStep || currentStep.type !== "quiz_choice") {
       return;
@@ -293,6 +345,27 @@ function LessonPage() {
     }
   }
 
+  async function handleSubmitAssistantMessage(messageText) {
+    if (!course || !lesson || !currentStep || !assistantContextKey) {
+      return;
+    }
+
+    await dispatch(
+      submitAssistantMessage({
+        contextKey: assistantContextKey,
+        threadId: assistantThreadId,
+        courseId: course.id,
+        lessonId: lesson.id,
+        stepId: currentStep.id,
+        userMessage: messageText,
+        lessonTitle: lesson.title,
+        stepTitle: currentStep.title,
+        stepType: currentStep.type,
+        stepMarkdown: contentMarkdown,
+      }),
+    );
+  }
+
   if (!pageData || !course || !lesson) {
     return (
       <div className="lesson-page">
@@ -334,7 +407,11 @@ function LessonPage() {
   }
 
   return (
-    <div className="lesson-layout">
+    <div
+      className={`lesson-layout ${
+        isAssistantOpen ? "lesson-layout-assistant-open" : ""
+      }`}
+    >
       <CourseOutline
         course={course}
         syllabus={syllabus}
@@ -346,33 +423,61 @@ function LessonPage() {
         showLessonProgress={canViewContent}
       />
 
-      <LessonStepSection
-        lesson={lesson}
-        steps={steps}
-        currentStep={currentStep}
-        onOpenStep={handleOpenStep}
-        onOpenPreviousStep={handleOpenPreviousStep}
-        onOpenNextStep={handleOpenNextStep}
-        previousStep={previousStep}
-        nextStep={nextStep}
-        contentStatus={contentStatus}
-        contentBlocks={contentBlocks}
-        contentError={contentError}
-        viewedStepIds={viewedStepIds}
-        completedStepIds={completedStepIds}
-        completedStepsCount={completedStepsCount}
-        isCurrentStepCompleted={isCurrentStepCompleted}
-        stepDraft={stepDraft}
-        stepSubmission={stepSubmission}
-        stepRunResult={stepRunResult}
-        onChoiceChange={handleChoiceChange}
-        onTextChange={handleTextChange}
-        onCodeChange={handleCodeChange}
-        onRunCode={handleRunCode}
-        onSubmitStep={handleSubmitStep}
-        isSubmitting={isSubmitting}
-        isRunning={isRunning}
-      />
+      <div className="lesson-workspace">
+        <LessonStepSection
+          lesson={lesson}
+          steps={steps}
+          currentStep={currentStep}
+          onOpenStep={handleOpenStep}
+          onOpenPreviousStep={handleOpenPreviousStep}
+          onOpenNextStep={handleOpenNextStep}
+          previousStep={previousStep}
+          nextStep={nextStep}
+          contentStatus={contentStatus}
+          contentBlocks={contentBlocks}
+          contentError={contentError}
+          viewedStepIds={viewedStepIds}
+          completedStepIds={completedStepIds}
+          completedStepsCount={completedStepsCount}
+          isCurrentStepCompleted={isCurrentStepCompleted}
+          stepDraft={stepDraft}
+          stepSubmission={stepSubmission}
+          stepRunResult={stepRunResult}
+          onChoiceChange={handleChoiceChange}
+          onTextChange={handleTextChange}
+          onCodeChange={handleCodeChange}
+          onRunCode={handleRunCode}
+          onSubmitStep={handleSubmitStep}
+          isSubmitting={isSubmitting}
+          isRunning={isRunning}
+        />
+      </div>
+
+      {isAssistantOpen ? (
+        <div className="lesson-assistant-rail">
+          <AssistantPanel
+            title={assistantTitle}
+            subtitle={assistantSubtitle}
+            messages={assistantMessages}
+            status={assistantStatus}
+            error={assistantError}
+            onSubmitMessage={handleSubmitAssistantMessage}
+            onClose={handleCloseAssistant}
+          />
+        </div>
+      ) : null}
+
+      {!isAssistantOpen && currentStep ? (
+        <button
+          type="button"
+          className="assistant-launcher-btn"
+          onClick={handleOpenAssistant}
+          aria-label="Открыть чат с ассистентом"
+        >
+          <span className="assistant-launcher-icon">AI</span>
+          <span className="assistant-launcher-text">Спросить ассистента</span>
+        </button>
+      ) : null}
     </div>
   );
 }
