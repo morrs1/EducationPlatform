@@ -5,7 +5,7 @@ import org.example.user_service.presentation.http.v1.user.create.dto.CreateUserR
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface UserMapperCommand {
 
     CreateUserCommand toCreateUserCommand(CreateUserRequest userRequest);
 

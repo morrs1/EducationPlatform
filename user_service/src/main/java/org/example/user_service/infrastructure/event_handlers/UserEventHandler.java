@@ -9,6 +9,6 @@ public class UserEventHandler {
 
     @EventListener
     public void createUserEventHandler(CreateUserDomainEvent event) {
-        System.out.println(event.toString());
+
     }
 }
