@@ -36,4 +36,16 @@ public class HibernateUserRepo implements UserRepo {
                 .findFirst()
                 .map(mapper::toDomainUser);
     }
+
+    @Override
+    public Optional<User> readUserById(UUID id) {
+        return entityManager.createQuery(
+                "select u from HibernateUser u where u.id = :id",
+                HibernateUser.class
+                )
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst()
+                .map(mapper::toDomainUser);
+    }
 }

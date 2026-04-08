@@ -9,4 +9,6 @@ public interface UserRepo {
     UUID createUser(User user);
 
     Optional<User> readUserByEmail(String userEmail);
+
+    Optional<User> readUserById(UUID id);
 }
