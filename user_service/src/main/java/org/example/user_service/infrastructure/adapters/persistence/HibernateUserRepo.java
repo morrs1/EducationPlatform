@@ -4,12 +4,11 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.ports.UserRepo;
 import org.example.user_service.domain.user.User;
-import org.example.user_service.domain.user.vo.UserCertificate;
-import org.example.user_service.domain.user.vo.UserCurrentCourse;
-import org.example.user_service.domain.user.vo.UserFinishedCourse;
+import org.example.user_service.infrastructure.mappers.UserMapperHibernate;
 import org.example.user_service.infrastructure.persistence.models.HibernateUser;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -17,24 +16,36 @@ import java.util.UUID;
 public class HibernateUserRepo implements UserRepo {
 
     private final EntityManager entityManager;
-
+    private final UserMapperHibernate mapper;
 
     @Override
     public UUID createUser(User user) {
-        var hibernateUser = new HibernateUser(
-                UUID.randomUUID(),
-                user.getSurname().getSurname(),
-                user.getName().getName(),
-                user.getPatronymic().getPatronymic(),
-                user.getUserStatus().getStatus(),
-                user.getEmail().getEmail(),
-                user.getPassword().getPassword(),
-                user.getProfilePhotoLink().getProfilePhotoLink(),
-                user.getCurrentCourses().stream().map(UserCurrentCourse::getCurrentCourse).toList(),
-                user.getFinishedCourses().stream().map(UserFinishedCourse::getFinishedCourse).toList(),
-                user.getCertificates().stream().map(UserCertificate::getCertificate).toList()
-        );
+        var hibernateUser = mapper.toHibernateUser(user);
         entityManager.merge(hibernateUser);
         return hibernateUser.getId();
+    }
+
+    @Override
+    public Optional<User> readUserByEmail(String userEmail) {
+        return entityManager.createQuery(
+                        "select u from HibernateUser u where u.email = :email",
+                        HibernateUser.class
+                )
+                .setParameter("email", userEmail)
+                .getResultStream()
+                .findFirst()
+                .map(mapper::toDomainUser);
+    }
+
+    @Override
+    public Optional<User> readUserById(UUID id) {
+        return entityManager.createQuery(
+                "select u from HibernateUser u where u.id = :id",
+                HibernateUser.class
+                )
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst()
+                .map(mapper::toDomainUser);
     }
 }

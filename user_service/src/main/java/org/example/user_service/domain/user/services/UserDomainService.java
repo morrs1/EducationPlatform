@@ -1,16 +1,19 @@
 package org.example.user_service.domain.user.services;
 
+import lombok.RequiredArgsConstructor;
 import org.example.user_service.domain.base.BaseDomainService;
 import org.example.user_service.domain.user.User;
 import org.example.user_service.domain.user.events.CreateUserDomainEvent;
+import org.example.user_service.domain.user.ports.PasswordHasher;
 import org.example.user_service.domain.user.vo.*;
 
 import java.util.List;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public class UserDomainService extends BaseDomainService {
 
-//TODO    private final PasswordHasher hasher;
+    private final PasswordHasher passwordHasher;
 
     public User createUser(
             String surname,
@@ -31,13 +34,12 @@ public class UserDomainService extends BaseDomainService {
                 new UserPatronymic(patronymic),
                 new UserStatus(userStatus),
                 new UserEmail(email),
-                new UserPassword(password),
+                new UserPassword(passwordHasher.hash(password)),
                 new UserProfilePhotoLink(profilePhotoLink),
                 currentCourses.stream().map(UserCurrentCourse::new).toList(),
                 finishedCourses.stream().map(UserFinishedCourse::new).toList(),
                 certificates.stream().map(UserCertificate::new).toList()
         );
-        //TODO разобраться с getEmail().getEmail()
         this.events.add(new CreateUserDomainEvent(user.getId(), user.getEmail().getEmail()));
         return user;
     }
