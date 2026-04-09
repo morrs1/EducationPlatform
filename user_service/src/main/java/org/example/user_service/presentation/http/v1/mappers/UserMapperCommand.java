@@ -1,4 +1,4 @@
-package org.example.user_service.presentation.http.v1.user.mappers;
+package org.example.user_service.presentation.http.v1.mappers;
 
 import org.example.user_service.application.interactors.create_user.CreateUserCommand;
 import org.example.user_service.presentation.http.v1.user.create.dto.CreateUserRequest;

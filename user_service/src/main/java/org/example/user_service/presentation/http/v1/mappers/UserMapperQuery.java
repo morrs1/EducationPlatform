@@ -1,4 +1,4 @@
-package org.example.user_service.presentation.http.v1.user.mappers;
+package org.example.user_service.presentation.http.v1.mappers;
 
 import org.example.user_service.application.interactors.read_user_by_id.ReadUserByIdQuery;
 import org.example.user_service.application.interactors.read_user_by_id.ReadUserByIdView;
