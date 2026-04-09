@@ -8,14 +8,17 @@ import org.example.user_service.domain.user.vo.UserCertificate;
 import org.example.user_service.domain.user.vo.UserCurrentCourse;
 import org.example.user_service.domain.user.vo.UserFinishedCourse;
 
+import java.util.UUID;
+
 @RequiredArgsConstructor
 public class ReadUserByIdInteractor {
 
     private final TransactionManager transactionManager;
     private final UserRepo userRepo;
-//TODO подумать как сделать маппер или спрятать логику маппинга
-    public ReadUserByIdView readUserById(ReadUserByIdQuery userQuery) {
-        var user = transactionManager.inTransaction(() -> userRepo.readUserById(userQuery.id()));
+
+    //TODO подумать как сделать маппер или спрятать логику маппинга
+    public ReadUserByIdView readUserById(UUID id) {
+        var user = transactionManager.inTransaction(() -> userRepo.readUserById(id));
         if (user.isEmpty()) throw new BaseException("ff", 409);
         return new ReadUserByIdView(user.get().getSurname().getSurname(),
                 user.get().getName().getName(),
