@@ -19,7 +19,6 @@ public class ReadByIdHandler {
     private final ReadUserByIdInteractor readUserByIdInteractor;
     private final UserMapperQuery mapper;
 
-    //TODO разобраться с маппингом id
     @GetMapping()
     public ReadUserByIdResponse readUserById(@RequestParam("id") UUID id) {
         return mapper.toReadUserByIdResponse(readUserByIdInteractor.readUserById(id));
