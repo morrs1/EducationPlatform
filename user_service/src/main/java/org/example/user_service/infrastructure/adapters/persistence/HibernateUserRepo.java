@@ -4,7 +4,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.ports.UserRepo;
 import org.example.user_service.domain.user.User;
-import org.example.user_service.infrastructure.mappers.UserMapperHibernate;
+import org.example.user_service.infrastructure.persistence.mappers.UserMapperHibernate;
 import org.example.user_service.infrastructure.persistence.models.HibernateUser;
 import org.springframework.stereotype.Repository;
 

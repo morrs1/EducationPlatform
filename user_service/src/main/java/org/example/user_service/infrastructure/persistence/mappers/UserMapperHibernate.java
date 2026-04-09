@@ -1,4 +1,4 @@
-package org.example.user_service.infrastructure.mappers;
+package org.example.user_service.infrastructure.persistence.mappers;
 
 import org.example.user_service.domain.user.User;
 import org.example.user_service.domain.user.vo.*;
