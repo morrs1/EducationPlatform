@@ -40,8 +40,12 @@ public class UserDomainService extends BaseDomainService {
                 finishedCourses.stream().map(UserFinishedCourse::new).toList(),
                 certificates.stream().map(UserCertificate::new).toList()
         );
-        this.events.add(new CreateUserDomainEvent(user.getId(), user.getEmail().getEmail()));
+        this.recordEvent(new CreateUserDomainEvent(user.getId(), user.getEmail().getEmail()));
         return user;
     }
 
+
+    public void changeName(User user, String newName) {
+        user.setName(new UserName(newName));
+    }
 }

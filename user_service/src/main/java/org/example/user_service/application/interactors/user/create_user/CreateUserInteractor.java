@@ -16,7 +16,7 @@ public class CreateUserInteractor {
     private final UserRepo userRepo;
     private final UserDomainService userService;
     private final EventBus eventBus;
-
+//TODO проверить работу транзакций
     public UUID create(CreateUserCommand command) {
 
         return transactionManager.inTransaction(() -> {
