@@ -1,7 +1,7 @@
 package org.example.user_service.presentation.http.v1.user.read_by_id.handlers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.user_service.application.interactors.read_user_by_id.ReadUserByIdInteractor;
+import org.example.user_service.application.interactors.user.read_user_by_id.ReadUserByIdInteractor;
 import org.example.user_service.presentation.http.v1.mappers.UserMapperQuery;
 import org.example.user_service.presentation.http.v1.user.read_by_id.dto.ReadUserByIdResponse;
 import org.springframework.web.bind.annotation.GetMapping;

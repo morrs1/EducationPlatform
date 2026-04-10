@@ -1,6 +1,6 @@
 package org.example.user_service.application.interactors.mappers;
 
-import org.example.user_service.application.interactors.read_user_by_id.ReadUserByIdView;
+import org.example.user_service.application.interactors.user.read_user_by_id.ReadUserByIdView;
 import org.example.user_service.domain.user.User;
 import org.example.user_service.domain.user.vo.UserCertificate;
 import org.example.user_service.domain.user.vo.UserCurrentCourse;

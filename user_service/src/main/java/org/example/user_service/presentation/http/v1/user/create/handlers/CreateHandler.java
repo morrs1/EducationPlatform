@@ -1,7 +1,7 @@
 package org.example.user_service.presentation.http.v1.user.create.handlers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.user_service.application.interactors.create_user.CreateUserInteractor;
+import org.example.user_service.application.interactors.user.create_user.CreateUserInteractor;
 import org.example.user_service.presentation.http.v1.user.create.dto.CreateUserRequest;
 import org.example.user_service.presentation.http.v1.user.create.dto.CreateUserResponse;
 import org.example.user_service.presentation.http.v1.mappers.UserMapperCommand;

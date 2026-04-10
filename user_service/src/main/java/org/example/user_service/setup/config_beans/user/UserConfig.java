@@ -1,8 +1,8 @@
 package org.example.user_service.setup.config_beans.user;
 
-import org.example.user_service.application.interactors.create_user.CreateUserInteractor;
+import org.example.user_service.application.interactors.user.create_user.CreateUserInteractor;
 import org.example.user_service.application.interactors.mappers.UserViewMapper;
-import org.example.user_service.application.interactors.read_user_by_id.ReadUserByIdInteractor;
+import org.example.user_service.application.interactors.user.read_user_by_id.ReadUserByIdInteractor;
 import org.example.user_service.application.ports.EventBus;
 import org.example.user_service.application.ports.TransactionManager;
 import org.example.user_service.application.ports.UserRepo;
