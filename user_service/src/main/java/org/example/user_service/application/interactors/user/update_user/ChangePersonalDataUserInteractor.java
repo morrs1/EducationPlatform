@@ -22,4 +22,36 @@ public class ChangePersonalDataUserInteractor {
 
     }
 
+    public void changeUserSurname(ChangeUserSurnameCommand changeUserSurnameCommand) {
+        transactionManager.inTransaction(() -> {
+            var user = repo.readUserById(changeUserSurnameCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.changeSurname(user, changeUserSurnameCommand.newSurname());
+            repo.update(user);
+        });
+    }
+
+    public void changeUserPatronymic(ChangeUserPatronymicCommand changeUserPatronymicCommand) {
+        transactionManager.inTransaction(() -> {
+            var user = repo.readUserById(changeUserPatronymicCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.changePatronymic(user, changeUserPatronymicCommand.newPatronymic());
+            repo.update(user);
+        });
+    }
+
+    public void changeUserStatus(ChangeUserStatusCommand changeUserStatusCommand) {
+        transactionManager.inTransaction(() -> {
+            var user = repo.readUserById(changeUserStatusCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.changeStatus(user, changeUserStatusCommand.newStatus());
+            repo.update(user);
+        });
+    }
+
+    public void changeUserProfilePhotoLink(ChangeUserProfilePhotoLinkCommand changeUserProfilePhotoLinkCommand) {
+        transactionManager.inTransaction(() -> {
+            var user = repo.readUserById(changeUserProfilePhotoLinkCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.changeProfilePhotoLink(user, changeUserProfilePhotoLinkCommand.newProfilePhotoLink());
+            repo.update(user);
+        });
+    }
+
 }

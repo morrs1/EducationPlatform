@@ -48,4 +48,20 @@ public class UserDomainService extends BaseDomainService {
     public void changeName(User user, String newName) {
         user.setName(new UserName(newName));
     }
+
+    public void changeSurname(User user, String newSurname) {
+        user.setSurname(new UserSurname(newSurname));
+    }
+
+    public void changePatronymic(User user, String newPatronymic) {
+        user.setPatronymic(new UserPatronymic(newPatronymic));
+    }
+
+    public void changeStatus(User user, String newStatus) {
+        user.setUserStatus(new UserStatus(newStatus));
+    }
+
+    public void changeProfilePhotoLink(User user, String newProfilePhotoLink) {
+        user.setProfilePhotoLink(new UserProfilePhotoLink(newProfilePhotoLink));
+    }
 }
