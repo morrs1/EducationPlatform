@@ -21,6 +21,7 @@ public class User extends BaseEntity {
     private UserEmail email;
     private UserPassword password;
     private UserProfilePhotoLink profilePhotoLink;
+    //TODO сделать курсы UUID, а не String
     private List<UserCurrentCourse> currentCourses;
     private List<UserFinishedCourse> finishedCourses;
     private List<UserCertificate> certificates;

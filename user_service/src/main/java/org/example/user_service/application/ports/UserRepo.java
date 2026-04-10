@@ -11,4 +11,6 @@ public interface UserRepo {
     Optional<User> readUserByEmail(String userEmail);
 
     Optional<User> readUserById(UUID id);
+
+    void update(User user);
 }
