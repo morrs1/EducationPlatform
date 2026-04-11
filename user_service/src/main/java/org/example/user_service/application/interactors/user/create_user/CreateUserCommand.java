@@ -1,4 +1,4 @@
-package org.example.user_service.application.interactors.create_user;
+package org.example.user_service.application.interactors.user.create_user;
 
 import java.util.List;
 

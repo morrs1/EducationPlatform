@@ -1,4 +1,4 @@
-package org.example.user_service.application.interactors.create_user;
+package org.example.user_service.application.interactors.user.create_user;
 
 import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.exceptions.UserAlreadyExistsException;
@@ -16,7 +16,7 @@ public class CreateUserInteractor {
     private final UserRepo userRepo;
     private final UserDomainService userService;
     private final EventBus eventBus;
-
+//TODO проверить работу транзакций
     public UUID create(CreateUserCommand command) {
 
         return transactionManager.inTransaction(() -> {
