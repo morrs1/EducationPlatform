@@ -2,9 +2,10 @@ package org.example.user_service.infrastructure.adapters.persistence;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.example.user_service.application.exceptions.UserNotFoundException;
 import org.example.user_service.application.ports.UserRepo;
 import org.example.user_service.domain.user.User;
-import org.example.user_service.infrastructure.mappers.UserMapperHibernate;
+import org.example.user_service.infrastructure.persistence.mappers.UserMapperHibernate;
 import org.example.user_service.infrastructure.persistence.models.HibernateUser;
 import org.springframework.stereotype.Repository;
 
@@ -48,4 +49,16 @@ public class HibernateUserRepo implements UserRepo {
                 .findFirst()
                 .map(mapper::toDomainUser);
     }
+
+    @Override
+    public void update(User user) {
+        var existingUser = entityManager.find(HibernateUser.class, user.getId());
+        if (existingUser == null) {
+            throw new UserNotFoundException(String.format("User with id %s was not found", user.getId()));
+        }
+
+        entityManager.merge(mapper.toHibernateUser(user));
+    }
+
+
 }

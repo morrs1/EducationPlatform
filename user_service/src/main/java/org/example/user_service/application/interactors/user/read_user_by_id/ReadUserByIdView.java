@@ -1,4 +1,4 @@
-package org.example.user_service.application.interactors.read_user_by_id;
+package org.example.user_service.application.interactors.user.read_user_by_id;
 
 import java.util.List;
 
