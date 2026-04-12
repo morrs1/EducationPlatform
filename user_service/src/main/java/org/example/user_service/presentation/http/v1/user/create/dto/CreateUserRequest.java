@@ -1,6 +1,7 @@
 package org.example.user_service.presentation.http.v1.user.create.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 public record CreateUserRequest(String surname,
                                 String name,
@@ -9,7 +10,7 @@ public record CreateUserRequest(String surname,
                                 String userEmail,
                                 String userPassword,
                                 String userProfilePhotoLink,
-                                List<String> currentCourses,
-                                List<String> finishedCourses,
-                                List<String> certificates) {
+                                List<UUID> currentCourses,
+                                List<UUID> finishedCourses,
+                                List<UUID> certificates) {
 }

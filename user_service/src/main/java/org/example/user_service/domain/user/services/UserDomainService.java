@@ -23,9 +23,9 @@ public class UserDomainService extends BaseDomainService {
             String email,
             String password,
             String profilePhotoLink,
-            List<String> currentCourses,
-            List<String> finishedCourses,
-            List<String> certificates
+            List<UUID> currentCourses,
+            List<UUID> finishedCourses,
+            List<UUID> certificates
     ) {
         var user = new User(
                 UUID.randomUUID(),
