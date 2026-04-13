@@ -42,25 +42,25 @@ classifiers = [
 requires-python = ">=3.12"
 
 dependencies = [
-    "adaptix==3.0.0b11",
+    "adaptix==3.0.0b12",
     "alembic>=1.18.4",
     "asyncpg==0.31.0",
     "bazario==0.4.2",
     "dishka==1.9.1",
     "dishka-faststream==0.6.0",
-    "fastapi==0.135.1",
+    "fastapi==0.135.3",
     "faststream[rabbit]==0.6.7",
-    "langchain==1.2.12",
+    "langchain==1.2.15",
     "langchain-chroma==1.1.0",
-    "langchain-openai==1.1.11",
-    "python-multipart==0.0.22",
-    "sqlalchemy[asyncio]==2.0.48",
+    "langchain-openai==1.1.12",
+    "python-multipart==0.0.26",
+    "sqlalchemy[asyncio]==2.0.49",
     "structlog==25.5.0",
-    "uvicorn==0.42.0",
+    "uvicorn==0.44.0",
     "uvloop==0.22.1; sys_platform != 'win32'",
-    "taskiq>=0.11.0",
-    "taskiq-aio-pika>=0.4.0",
-    "taskiq-redis>=1.0.0",
+    "taskiq>=0.12.1",
+    "taskiq-aio-pika>=0.6.0",
+    "taskiq-redis>=1.2.2",
 ]
 
 [project.urls]
@@ -72,26 +72,26 @@ Tracker = "https://github.com/morrs1/EducationPlatform/issues"
 dev = [
     {include-group = "lint"},
     {include-group = "test"},
-    "prek>=0.2.5",
+    "prek>=0.3.8",
 ]
 lint = [
-    "bandit>=1.8.6",
-    "codespell>=2.4.1",
-    "mypy>=1.18.2",
-    "ruff>=0.14.0",
-    "semgrep>=1.139.0",
-    "zizmor>=1.14.2",
-    "import-linter>=2.10",
+    "bandit>=1.9.4",
+    "codespell>=2.4.2",
+    "mypy>=1.20.1",
+    "ruff>=0.15.10",
+    "semgrep>=1.159.0",
+    "zizmor>=1.24.0",
+    "import-linter>=2.11",
 ]
 test = [
-    "httpx>=0.28.0",
-    "nox>=2025.5.1",
-    "pytest>=8.4.2",
-    "pytest-asyncio>=1.2.0",
-    "pytest-cov>=7.0.0",
-    "pytest-mypy>=1.0.0",
-    "testcontainers[postgres]>=4.10.0",
-    "coverage>=7.13.4"
+    "httpx>=0.28.1",
+    "nox>=2026.4.10",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.1.0",
+    "pytest-mypy>=1.0.1",
+    "testcontainers[postgres]>=4.14.2",
+    "coverage>=7.13.5"
 ]
 
 [tool.bandit]
