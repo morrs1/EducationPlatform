@@ -22,6 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.security:spring-security-crypto")
     implementation("software.amazon.awssdk:s3:2.42.14")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")

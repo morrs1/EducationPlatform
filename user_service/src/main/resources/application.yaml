@@ -10,6 +10,14 @@ spring:
     password: ${POSTGRES_PASSWORD:123}
     driver-class-name: org.postgresql.Driver
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
 temp:
   s3:
     enabled: ${TEMP_S3_ENABLED:false}

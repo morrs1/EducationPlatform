@@ -1,5 +1,7 @@
 package org.example.user_service.presentation.http.v1.user.update_user;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.interactors.user.update_user.ChangePersonalDataUserInteractor;
 import org.example.user_service.presentation.http.v1.mappers.UserMapperCommand;
@@ -17,30 +19,35 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("user")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "Operations for user management")
 public class UpdateUserHandler {
 
     private final ChangePersonalDataUserInteractor interactor;
     private final UserMapperCommand mapper;
 //TODO сделать по rest api, чтобы id передавался в строке запроса, а не в теле
     @PatchMapping("/change_name")
+    @Operation(summary = "Change user name")
     public ResponseEntity<String> changeUserName(@RequestBody ChangeUserNameRequest changeUserNameRequest) {
         interactor.changeUserName(mapper.toChangeUserNameCommand(changeUserNameRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
     @PatchMapping("/change_surname")
+    @Operation(summary = "Change user surname")
     public ResponseEntity<String> changeUserSurname(@RequestBody ChangeUserSurnameRequest changeUserSurnameRequest) {
         interactor.changeUserSurname(mapper.toChangeUserSurnameCommand(changeUserSurnameRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
     @PatchMapping("/change_patronymic")
+    @Operation(summary = "Change user patronymic")
     public ResponseEntity<String> changeUserPatronymic(@RequestBody ChangeUserPatronymicRequest changeUserPatronymicRequest) {
         interactor.changeUserPatronymic(mapper.toChangeUserPatronymicCommand(changeUserPatronymicRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
     @PatchMapping("/change_status")
+    @Operation(summary = "Change user status")
     public ResponseEntity<String> changeUserStatus(@RequestBody ChangeUserStatusRequest changeUserStatusRequest) {
         interactor.changeUserStatus(mapper.toChangeUserStatusCommand(changeUserStatusRequest));
         return ResponseEntity.status(200).body("Update was successful");
