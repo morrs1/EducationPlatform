@@ -46,12 +46,4 @@ public class ChangePersonalDataUserInteractor {
         });
     }
 
-    public void changeUserProfilePhotoLink(ChangeUserProfilePhotoLinkCommand changeUserProfilePhotoLinkCommand) {
-        transactionManager.inTransaction(() -> {
-            var user = repo.readUserById(changeUserProfilePhotoLinkCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
-            domainService.changeProfilePhotoLink(user, changeUserProfilePhotoLinkCommand.newProfilePhotoLink());
-            repo.update(user);
-        });
-    }
-
 }

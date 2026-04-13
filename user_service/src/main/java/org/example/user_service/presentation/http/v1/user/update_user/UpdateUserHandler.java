@@ -21,7 +21,7 @@ public class UpdateUserHandler {
 
     private final ChangePersonalDataUserInteractor interactor;
     private final UserMapperCommand mapper;
-
+//TODO сделать по rest api, чтобы id передавался в строке запроса, а не в теле
     @PatchMapping("/change_name")
     public ResponseEntity<String> changeUserName(@RequestBody ChangeUserNameRequest changeUserNameRequest) {
         interactor.changeUserName(mapper.toChangeUserNameCommand(changeUserNameRequest));
@@ -46,10 +46,5 @@ public class UpdateUserHandler {
         return ResponseEntity.status(200).body("Update was successful");
     }
 
-    @PatchMapping("/change_profile_photo_link")
-    public ResponseEntity<String> changeUserProfilePhotoLink(@RequestBody ChangeUserProfilePhotoLinkRequest changeUserProfilePhotoLinkRequest) {
-        interactor.changeUserProfilePhotoLink(mapper.toChangeUserProfilePhotoLinkCommand(changeUserProfilePhotoLinkRequest));
-        return ResponseEntity.status(200).body("Update was successful");
-    }
 
 }
