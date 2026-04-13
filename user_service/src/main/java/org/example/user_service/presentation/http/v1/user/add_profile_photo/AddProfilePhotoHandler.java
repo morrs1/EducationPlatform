@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoCommand;
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoInteractor;
+import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoView;
 import org.example.user_service.infrastructure.adapters.s3.SeaweedFSUserProfilePhotoRepo;
+import org.example.user_service.presentation.http.v1.exception.EmptyFileException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -26,16 +28,22 @@ public class AddProfilePhotoHandler {
     //TODO попытаться использовать встроенный класс вместо MiltipartFile
     @PostMapping(value = "/add_photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload user profile photo")
-    public AddProfilePhotoResponse upload(@RequestParam("user_id") UUID userId, @RequestPart("file") MultipartFile file) throws IOException {
-        var addProfilePhotoView = interactor.add(
-                new AddProfilePhotoCommand(
-                        userId,
-                        file.getOriginalFilename(),
-                        file.getContentType(),
-                        file.getSize(),
-                        file.getBytes()
-                )
-        );
+    public AddProfilePhotoResponse upload(@RequestParam("user_id") UUID userId, @RequestPart("file") MultipartFile file) {
+        AddProfilePhotoView addProfilePhotoView;
+        try {
+            addProfilePhotoView = interactor.add(
+                    new AddProfilePhotoCommand(
+                            userId,
+                            file.getOriginalFilename(),
+                            file.getContentType(),
+                            file.getSize(),
+                            file.getBytes()
+                    )
+            );
+        } catch (IOException ex) {
+            throw new EmptyFileException("Photo must be not empty");
+        }
+
         return new AddProfilePhotoResponse(
                 addProfilePhotoView.bucket(),
                 addProfilePhotoView.key(),
