@@ -18,13 +18,11 @@ public class SeaweedFSBeansConfig {
 
 
     @Bean
-    public SeaweedFSConnection seaweedFSConnection(
+    public S3Client seaweedFSConnection(
             @Value("${temp.s3.region}") String region,
-            @Value("${temp.s3.bucket}") String bucket,
             @Value("${temp.s3.endpoint:}") String endpoint,
             @Value("${temp.s3.access-key:}") String accessKey,
             @Value("${temp.s3.secret-key:}") String secretKey,
-            @Value("${temp.s3.public-base-url:}") String publicBaseUrl,
             @Value("${temp.s3.path-style-access:false}") boolean pathStyleAccess
     ) {
         var builder = S3Client.builder()
@@ -51,8 +49,15 @@ public class SeaweedFSBeansConfig {
             builder.credentialsProvider(DefaultCredentialsProvider.builder().build());
         }
 
-        var s3client = builder.build();
-        return new SeaweedFSConnection(s3client, bucket, publicBaseUrl);
+        return builder.build();
+    }
+
+    @Bean
+    public SeaweedFSConnectionInfo seaweedFSConnectionInfo(
+            @Value("${temp.s3.bucket}") String bucket,
+            @Value("${temp.s3.public-base-url:}") String publicBaseUrl
+    ) {
+        return new SeaweedFSConnectionInfo(bucket, publicBaseUrl);
     }
 
     private boolean hasText(String value) {
