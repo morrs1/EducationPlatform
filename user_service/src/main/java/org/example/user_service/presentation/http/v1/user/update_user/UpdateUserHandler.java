@@ -5,16 +5,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.interactors.user.update_user.ChangePersonalDataUserInteractor;
 import org.example.user_service.presentation.http.v1.mappers.UserMapperCommand;
-import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserPatronymicRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserNameRequest;
-import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserProfilePhotoLinkRequest;
+import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserPatronymicRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserStatusRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserSurnameRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("user")
@@ -24,34 +26,36 @@ public class UpdateUserHandler {
 
     private final ChangePersonalDataUserInteractor interactor;
     private final UserMapperCommand mapper;
-//TODO сделать по rest api, чтобы id передавался в строке запроса, а не в теле
-    @PatchMapping("/change_name")
+
+    @PatchMapping("/{id}/change_name")
     @Operation(summary = "Change user name")
-    public ResponseEntity<String> changeUserName(@RequestBody ChangeUserNameRequest changeUserNameRequest) {
-        interactor.changeUserName(mapper.toChangeUserNameCommand(changeUserNameRequest));
+    public ResponseEntity<String> changeUserName(@PathVariable UUID id,
+                                                 @RequestBody ChangeUserNameRequest changeUserNameRequest) {
+        interactor.changeUserName(mapper.toChangeUserNameCommand(id, changeUserNameRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
-    @PatchMapping("/change_surname")
+    @PatchMapping("/{id}/change_surname")
     @Operation(summary = "Change user surname")
-    public ResponseEntity<String> changeUserSurname(@RequestBody ChangeUserSurnameRequest changeUserSurnameRequest) {
-        interactor.changeUserSurname(mapper.toChangeUserSurnameCommand(changeUserSurnameRequest));
+    public ResponseEntity<String> changeUserSurname(@PathVariable UUID id,
+                                                    @RequestBody ChangeUserSurnameRequest changeUserSurnameRequest) {
+        interactor.changeUserSurname(mapper.toChangeUserSurnameCommand(id, changeUserSurnameRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
-    @PatchMapping("/change_patronymic")
+    @PatchMapping("/{id}/change_patronymic")
     @Operation(summary = "Change user patronymic")
-    public ResponseEntity<String> changeUserPatronymic(@RequestBody ChangeUserPatronymicRequest changeUserPatronymicRequest) {
-        interactor.changeUserPatronymic(mapper.toChangeUserPatronymicCommand(changeUserPatronymicRequest));
+    public ResponseEntity<String> changeUserPatronymic(@PathVariable UUID id,
+                                                       @RequestBody ChangeUserPatronymicRequest changeUserPatronymicRequest) {
+        interactor.changeUserPatronymic(mapper.toChangeUserPatronymicCommand(id, changeUserPatronymicRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
-    @PatchMapping("/change_status")
+    @PatchMapping("/{id}/change_status")
     @Operation(summary = "Change user status")
-    public ResponseEntity<String> changeUserStatus(@RequestBody ChangeUserStatusRequest changeUserStatusRequest) {
-        interactor.changeUserStatus(mapper.toChangeUserStatusCommand(changeUserStatusRequest));
+    public ResponseEntity<String> changeUserStatus(@PathVariable UUID id,
+                                                   @RequestBody ChangeUserStatusRequest changeUserStatusRequest) {
+        interactor.changeUserStatus(mapper.toChangeUserStatusCommand(id, changeUserStatusRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
-
-
 }
