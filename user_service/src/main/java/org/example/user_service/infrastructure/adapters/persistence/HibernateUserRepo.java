@@ -18,7 +18,7 @@ public class HibernateUserRepo implements UserRepo {
 
     private final EntityManager entityManager;
     private final UserMapperHibernate mapper;
-
+//TODO Унифицировать названия методов(для всех доменов должно быть просто create/update и тд)
     @Override
     public UUID createUser(User user) {
         var hibernateUser = mapper.toHibernateUser(user);

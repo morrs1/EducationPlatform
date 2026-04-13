@@ -1,10 +1,12 @@
 package org.example.user_service.setup.config_beans.user;
 
+import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoInteractor;
 import org.example.user_service.application.interactors.user.create_user.CreateUserInteractor;
 import org.example.user_service.application.interactors.mappers.UserViewMapper;
 import org.example.user_service.application.interactors.user.read_user_by_id.ReadUserByIdInteractor;
 import org.example.user_service.application.interactors.user.update_user.ChangePersonalDataUserInteractor;
 import org.example.user_service.application.ports.EventBus;
+import org.example.user_service.application.ports.PhotoStorage;
 import org.example.user_service.application.ports.TransactionManager;
 import org.example.user_service.application.ports.UserRepo;
 import org.example.user_service.domain.user.User;
@@ -14,7 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class UserConfig {
+public class UserBeansConfig {
 
     @Bean
     public UserDomainService userDomainService(PasswordHasher passwordHasher) {
@@ -50,6 +52,16 @@ public class UserConfig {
                 transactionManager,
                 userDomainService
         );
+    }
+
+    @Bean
+    public AddProfilePhotoInteractor addProfilePhotoInteractor(
+            PhotoStorage photoStorage,
+            TransactionManager transactionManager,
+            UserRepo userRepo,
+            UserDomainService userDomainService
+    ) {
+        return new AddProfilePhotoInteractor(photoStorage, transactionManager, userRepo, userDomainService);
     }
 
 

@@ -23,8 +23,6 @@ public class UserProfilePhotoLink extends BaseValueObject {
         if (Objects.isNull(profilePhotoLink)) {
             throw new ValidateException("Profile photo link must not be null");
         }
-        if (profilePhotoLink.isBlank()) {
-            throw new ValidateException("Profile photo link must not be blank");
-        }
+
     }
 }

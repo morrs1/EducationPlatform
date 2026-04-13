@@ -31,10 +31,10 @@ public class HibernateUser {
     @Column(name = "profile_photo_link")
     private String profilePhotoLink;
     @Column(name = "current_courses")
-    private List<String> currentCourses;
+    private List<UUID> currentCourses;
     @Column(name = "finished_courses")
-    private List<String> finishedCourses;
-    private List<String> certificates;
+    private List<UUID> finishedCourses;
+    private List<UUID> certificates;
 
 
 }
