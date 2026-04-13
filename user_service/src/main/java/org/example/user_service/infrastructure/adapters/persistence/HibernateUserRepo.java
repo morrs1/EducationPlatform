@@ -18,16 +18,15 @@ public class HibernateUserRepo implements UserRepo {
 
     private final EntityManager entityManager;
     private final UserMapperHibernate mapper;
-//TODO Унифицировать названия методов(для всех доменов должно быть просто create/update и тд)
     @Override
-    public UUID createUser(User user) {
+    public UUID add(User user) {
         var hibernateUser = mapper.toHibernateUser(user);
         entityManager.merge(hibernateUser);
         return hibernateUser.getId();
     }
 
     @Override
-    public Optional<User> readUserByEmail(String userEmail) {
+    public Optional<User> readByEmail(String userEmail) {
         return entityManager.createQuery(
                         "select u from HibernateUser u where u.email = :email",
                         HibernateUser.class
@@ -39,7 +38,7 @@ public class HibernateUserRepo implements UserRepo {
     }
 
     @Override
-    public Optional<User> readUserById(UUID id) {
+    public Optional<User> readById(UUID id) {
         return entityManager.createQuery(
                 "select u from HibernateUser u where u.id = :id",
                 HibernateUser.class

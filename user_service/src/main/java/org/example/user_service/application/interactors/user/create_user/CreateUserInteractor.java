@@ -17,10 +17,10 @@ public class CreateUserInteractor {
     private final UserDomainService userService;
     private final EventBus eventBus;
 //TODO проверить работу транзакций
-    public UUID create(CreateUserCommand command) {
+    public UUID add(CreateUserCommand command) {
 
         return transactionManager.inTransaction(() -> {
-            var user = userService.createUser(
+            var user = userService.add(
                     command.surname(),
                     command.name(),
                     command.patronymic(),
@@ -33,12 +33,12 @@ public class CreateUserInteractor {
                     command.certificates()
             );
 
-            if (userRepo.readUserByEmail(user.getEmail().getEmail()).isPresent()) {
+            if (userRepo.readByEmail(user.getEmail().getEmail()).isPresent()) {
                 throw new UserAlreadyExistsException(String.format("User with email %s already exists", user.getEmail().getEmail()));
             }
 
             eventBus.publish(userService.pull_events());
-            return userRepo.createUser(user);
+            return userRepo.add(user);
         });
     }
 

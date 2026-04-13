@@ -15,8 +15,8 @@ public class ReadUserByIdInteractor {
     private final UserRepo userRepo;
     private final UserViewMapper mapper;
 
-    public ReadUserByIdView readUserById(UUID id) {
-        var user = transactionManager.inTransaction(() -> userRepo.readUserById(id));
+    public ReadUserByIdView readById(UUID id) {
+        var user = transactionManager.inTransaction(() -> userRepo.readById(id));
         if (user.isEmpty()) throw new UserNotFoundException("User was not found");
         return mapper.toReadUserByIdView(user.get());
     }

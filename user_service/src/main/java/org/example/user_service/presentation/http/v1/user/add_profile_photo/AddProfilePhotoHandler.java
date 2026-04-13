@@ -1,37 +1,52 @@
 package org.example.user_service.presentation.http.v1.user.add_profile_photo;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoCommand;
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoInteractor;
+import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoView;
+import org.example.user_service.domain.base.exceptions.ValidateException;
 import org.example.user_service.infrastructure.adapters.s3.SeaweedFSUserProfilePhotoRepo;
+import org.example.user_service.presentation.http.v1.exception.EmptyFileException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
 @ConditionalOnBean(SeaweedFSUserProfilePhotoRepo.class)
+@Tag(name = "Users", description = "Operations for user management")
 public class AddProfilePhotoHandler {
 
     private final AddProfilePhotoInteractor interactor;
 
-    //TODO попытаться использовать встроенный класс вместо MiltipartFile
     @PostMapping(value = "/add_photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public AddProfilePhotoResponse upload(@RequestParam("user_id") UUID userId, @RequestPart("file") MultipartFile file) throws IOException {
-        var addProfilePhotoView = interactor.add(
-                new AddProfilePhotoCommand(
-                        userId,
-                        file.getOriginalFilename(),
-                        file.getContentType(),
-                        file.getSize(),
-                        file.getBytes()
-                )
-        );
+    @Operation(summary = "Upload user profile photo")
+    public AddProfilePhotoResponse upload(@RequestParam("user_id") UUID userId, @RequestPart("file") MultipartFile file) {
+        AddProfilePhotoView addProfilePhotoView;
+        try {
+            addProfilePhotoView = interactor.add(
+                    new AddProfilePhotoCommand(
+                            userId,
+                            file.getOriginalFilename(),
+                            file.getContentType(),
+                            file.getSize(),
+                            file.getBytes()
+                    )
+            );
+        } catch (IOException ex) {
+            throw new EmptyFileException("Photo must be not empty");
+        }
+        if (!isExtensionValid(file)) throw new ValidateException("Unsupported file extension");
+
         return new AddProfilePhotoResponse(
                 addProfilePhotoView.bucket(),
                 addProfilePhotoView.key(),
@@ -40,6 +55,22 @@ public class AddProfilePhotoHandler {
                 file.getContentType(),
                 file.getSize()
         );
+    }
+
+
+    private boolean isExtensionValid(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        String extension = StringUtils.getFilenameExtension(originalFilename);
+
+        if (extension == null) {
+            throw new ValidateException("File extension is missing");
+        }
+
+        extension = extension.toLowerCase();
+        Set<String> allowedExtensions = Set.of("jpg", "jpeg", "png", "webp");
+
+        return allowedExtensions.contains(extension);
+
     }
 
 

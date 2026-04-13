@@ -10,19 +10,26 @@ import org.example.user_service.presentation.http.v1.user.update_user.dto.Change
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserNameRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserStatusRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserSurnameRequest;
+import org.mapstruct.Mapping;
 import org.mapstruct.Mapper;
+
+import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface UserMapperCommand {
 
     CreateUserCommand toCreateUserCommand(CreateUserRequest userRequest);
 
-    ChangeUserNameCommand toChangeUserNameCommand(ChangeUserNameRequest userRequest);
+    @Mapping(target = "id", source = "id")
+    ChangeUserNameCommand toChangeUserNameCommand(UUID id, ChangeUserNameRequest userRequest);
 
-    ChangeUserSurnameCommand toChangeUserSurnameCommand(ChangeUserSurnameRequest userRequest);
+    @Mapping(target = "id", source = "id")
+    ChangeUserSurnameCommand toChangeUserSurnameCommand(UUID id, ChangeUserSurnameRequest userRequest);
 
-    ChangeUserPatronymicCommand toChangeUserPatronymicCommand(ChangeUserPatronymicRequest userRequest);
+    @Mapping(target = "id", source = "id")
+    ChangeUserPatronymicCommand toChangeUserPatronymicCommand(UUID id, ChangeUserPatronymicRequest userRequest);
 
-    ChangeUserStatusCommand toChangeUserStatusCommand(ChangeUserStatusRequest userRequest);
+    @Mapping(target = "id", source = "id")
+    ChangeUserStatusCommand toChangeUserStatusCommand(UUID id, ChangeUserStatusRequest userRequest);
 
 }
