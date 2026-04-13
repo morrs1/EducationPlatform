@@ -13,35 +13,35 @@ public class ChangePersonalDataUserInteractor {
     private final TransactionManager transactionManager;
     private final UserDomainService domainService;
 
-    public void changeUserName(ChangeUserNameCommand changeUserNameCommand) {
+    public void updateName(ChangeUserNameCommand changeUserNameCommand) {
         transactionManager.inTransaction(() -> {
-            var user = repo.readUserById(changeUserNameCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
-            domainService.changeName(user, changeUserNameCommand.newName());
+            var user = repo.readById(changeUserNameCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.updateName(user, changeUserNameCommand.newName());
             repo.update(user);
         });
 
     }
 
-    public void changeUserSurname(ChangeUserSurnameCommand changeUserSurnameCommand) {
+    public void updateSurname(ChangeUserSurnameCommand changeUserSurnameCommand) {
         transactionManager.inTransaction(() -> {
-            var user = repo.readUserById(changeUserSurnameCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
-            domainService.changeSurname(user, changeUserSurnameCommand.newSurname());
+            var user = repo.readById(changeUserSurnameCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.updateSurname(user, changeUserSurnameCommand.newSurname());
             repo.update(user);
         });
     }
 
-    public void changeUserPatronymic(ChangeUserPatronymicCommand changeUserPatronymicCommand) {
+    public void updatePatronymic(ChangeUserPatronymicCommand changeUserPatronymicCommand) {
         transactionManager.inTransaction(() -> {
-            var user = repo.readUserById(changeUserPatronymicCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
-            domainService.changePatronymic(user, changeUserPatronymicCommand.newPatronymic());
+            var user = repo.readById(changeUserPatronymicCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.updatePatronymic(user, changeUserPatronymicCommand.newPatronymic());
             repo.update(user);
         });
     }
 
-    public void changeUserStatus(ChangeUserStatusCommand changeUserStatusCommand) {
+    public void updateStatus(ChangeUserStatusCommand changeUserStatusCommand) {
         transactionManager.inTransaction(() -> {
-            var user = repo.readUserById(changeUserStatusCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
-            domainService.changeStatus(user, changeUserStatusCommand.newStatus());
+            var user = repo.readById(changeUserStatusCommand.id()).orElseThrow(() -> new UserNotFoundException("User was not found"));
+            domainService.updateStatus(user, changeUserStatusCommand.newStatus());
             repo.update(user);
         });
     }

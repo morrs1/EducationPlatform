@@ -15,7 +15,7 @@ public class UserDomainService extends BaseDomainService {
 
     private final PasswordHasher passwordHasher;
 
-    public User createUser(
+    public User add(
             String surname,
             String name,
             String patronymic,
@@ -45,23 +45,23 @@ public class UserDomainService extends BaseDomainService {
     }
 
 
-    public void changeName(User user, String newName) {
+    public void updateName(User user, String newName) {
         user.setName(new UserName(newName));
     }
 
-    public void changeSurname(User user, String newSurname) {
+    public void updateSurname(User user, String newSurname) {
         user.setSurname(new UserSurname(newSurname));
     }
 
-    public void changePatronymic(User user, String newPatronymic) {
+    public void updatePatronymic(User user, String newPatronymic) {
         user.setPatronymic(new UserPatronymic(newPatronymic));
     }
 
-    public void changeStatus(User user, String newStatus) {
+    public void updateStatus(User user, String newStatus) {
         user.setUserStatus(new UserStatus(newStatus));
     }
 
-    public void changeProfilePhotoLink(User user, String newProfilePhotoLink) {
+    public void updateProfilePhotoLink(User user, String newProfilePhotoLink) {
         user.setProfilePhotoLink(new UserProfilePhotoLink(newProfilePhotoLink));
     }
 }

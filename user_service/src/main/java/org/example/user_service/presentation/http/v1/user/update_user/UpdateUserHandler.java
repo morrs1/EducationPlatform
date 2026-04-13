@@ -29,33 +29,33 @@ public class UpdateUserHandler {
 
     @PatchMapping("/{id}/change_name")
     @Operation(summary = "Change user name")
-    public ResponseEntity<String> changeUserName(@PathVariable UUID id,
-                                                 @RequestBody ChangeUserNameRequest changeUserNameRequest) {
-        interactor.changeUserName(mapper.toChangeUserNameCommand(id, changeUserNameRequest));
+    public ResponseEntity<String> updateName(@PathVariable UUID id,
+                                             @RequestBody ChangeUserNameRequest changeUserNameRequest) {
+        interactor.updateName(mapper.toChangeUserNameCommand(id, changeUserNameRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
     @PatchMapping("/{id}/change_surname")
     @Operation(summary = "Change user surname")
-    public ResponseEntity<String> changeUserSurname(@PathVariable UUID id,
-                                                    @RequestBody ChangeUserSurnameRequest changeUserSurnameRequest) {
-        interactor.changeUserSurname(mapper.toChangeUserSurnameCommand(id, changeUserSurnameRequest));
+    public ResponseEntity<String> updateSurname(@PathVariable UUID id,
+                                                @RequestBody ChangeUserSurnameRequest changeUserSurnameRequest) {
+        interactor.updateSurname(mapper.toChangeUserSurnameCommand(id, changeUserSurnameRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
     @PatchMapping("/{id}/change_patronymic")
     @Operation(summary = "Change user patronymic")
-    public ResponseEntity<String> changeUserPatronymic(@PathVariable UUID id,
-                                                       @RequestBody ChangeUserPatronymicRequest changeUserPatronymicRequest) {
-        interactor.changeUserPatronymic(mapper.toChangeUserPatronymicCommand(id, changeUserPatronymicRequest));
+    public ResponseEntity<String> updatePatronymic(@PathVariable UUID id,
+                                                   @RequestBody ChangeUserPatronymicRequest changeUserPatronymicRequest) {
+        interactor.updatePatronymic(mapper.toChangeUserPatronymicCommand(id, changeUserPatronymicRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 
     @PatchMapping("/{id}/change_status")
     @Operation(summary = "Change user status")
-    public ResponseEntity<String> changeUserStatus(@PathVariable UUID id,
-                                                   @RequestBody ChangeUserStatusRequest changeUserStatusRequest) {
-        interactor.changeUserStatus(mapper.toChangeUserStatusCommand(id, changeUserStatusRequest));
+    public ResponseEntity<String> updateStatus(@PathVariable UUID id,
+                                               @RequestBody ChangeUserStatusRequest changeUserStatusRequest) {
+        interactor.updateStatus(mapper.toChangeUserStatusCommand(id, changeUserStatusRequest));
         return ResponseEntity.status(200).body("Update was successful");
     }
 }

@@ -23,8 +23,8 @@ public class CreateHandler {
 
     @PostMapping()
     @Operation(summary = "Create user", description = "Creates a new user and returns its identifier.")
-    public CreateUserResponse create(@RequestBody CreateUserRequest userRequest) {
-        return new CreateUserResponse(createUserInteractor.create(mapper.toCreateUserCommand(userRequest)));
+    public CreateUserResponse add(@RequestBody CreateUserRequest userRequest) {
+        return new CreateUserResponse(createUserInteractor.add(mapper.toCreateUserCommand(userRequest)));
     }
 
 }

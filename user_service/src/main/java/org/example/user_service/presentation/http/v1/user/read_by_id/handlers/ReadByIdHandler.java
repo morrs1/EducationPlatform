@@ -24,7 +24,7 @@ public class ReadByIdHandler {
 
     @GetMapping()
     @Operation(summary = "Get user by id", description = "Returns full user data by identifier.")
-    public ReadUserByIdResponse readUserById(@RequestParam("id") UUID id) {
-        return mapper.toReadUserByIdResponse(readUserByIdInteractor.readUserById(id));
+    public ReadUserByIdResponse readById(@RequestParam("id") UUID id) {
+        return mapper.toReadUserByIdResponse(readUserByIdInteractor.readById(id));
     }
 }

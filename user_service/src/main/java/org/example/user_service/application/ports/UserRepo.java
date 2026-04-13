@@ -6,11 +6,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepo {
-    UUID createUser(User user);
+    UUID add(User user);
 
-    Optional<User> readUserByEmail(String userEmail);
+    Optional<User> readByEmail(String userEmail);
 
-    Optional<User> readUserById(UUID id);
+    Optional<User> readById(UUID id);
 
     void update(User user);
 }

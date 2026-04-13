@@ -18,12 +18,12 @@ public class AddProfilePhotoInteractor {
     public AddProfilePhotoView add(AddProfilePhotoCommand command) {
 
         var user = transactionManager.inTransaction(
-                () -> hibernateUserRepo.readUserById(command.userId())
+                () -> hibernateUserRepo.readById(command.userId())
                         .orElseThrow(() -> new UserNotFoundException("User was not found"))
         );
         var addedPhoto = s3Repo.add(command);
         transactionManager.inTransaction(() -> {
-            domainService.changeProfilePhotoLink(user, addedPhoto.url());
+            domainService.updateProfilePhotoLink(user, addedPhoto.url());
             hibernateUserRepo.update(user);
         });
         return new AddProfilePhotoView(addedPhoto.bucket(), addedPhoto.key(), addedPhoto.url());
