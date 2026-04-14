@@ -17,7 +17,7 @@ public class AddCurrentCourseHandler {
     private final UserMapperCommand mapper;
 
     @PatchMapping("{id}/add_current_course")
-    public ResponseEntity<String> add(@PathVariable UUID id, AddCurrentCourseRequest request) {
+    public ResponseEntity<String> add(@PathVariable UUID id, @RequestBody AddCurrentCourseRequest request) {
         addCurrentCourseInteractor.add(mapper.toAddCurrentCourseCommand(id, request));
         return ResponseEntity.status(200).body("Update was successful");
     }

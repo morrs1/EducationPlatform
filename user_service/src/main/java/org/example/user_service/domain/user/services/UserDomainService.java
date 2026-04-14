@@ -70,4 +70,8 @@ public class UserDomainService extends BaseDomainService {
     public void addCurrentCourse(User user, UUID currentCourseId) {
         user.getCurrentCourses().add(new UserCurrentCourse(currentCourseId));
     }
+
+    public void addFinishedCourse(User user, UUID finishedCourseId) {
+        user.getFinishedCourses().add(new UserFinishedCourse(finishedCourseId));
+    }
 }
