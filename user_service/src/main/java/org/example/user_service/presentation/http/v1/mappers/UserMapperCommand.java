@@ -1,10 +1,12 @@
 package org.example.user_service.presentation.http.v1.mappers;
 
+import org.example.user_service.application.interactors.user.add_current_course.AddCurrentCourseCommand;
 import org.example.user_service.application.interactors.user.create_user.CreateUserCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserPatronymicCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserNameCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserStatusCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserSurnameCommand;
+import org.example.user_service.presentation.http.v1.user.add_current_course.AddCurrentCourseRequest;
 import org.example.user_service.presentation.http.v1.user.create.dto.CreateUserRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserPatronymicRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserNameRequest;
@@ -32,4 +34,6 @@ public interface UserMapperCommand {
     @Mapping(target = "id", source = "id")
     ChangeUserStatusCommand toChangeUserStatusCommand(UUID id, ChangeUserStatusRequest userRequest);
 
+    @Mapping(target = "userId", source = "id")
+    AddCurrentCourseCommand toAddCurrentCourseCommand(UUID id, AddCurrentCourseRequest request);
 }
