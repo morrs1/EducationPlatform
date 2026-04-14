@@ -9,7 +9,6 @@ import org.example.user_service.domain.user.services.UserDomainService;
 
 @RequiredArgsConstructor
 public class AddProfilePhotoInteractor {
-    //TODO переименовать hibernateUserRepo в просто userRepo и S3 в storage
     private final PhotoStorage photoStorage;
     private final TransactionManager transactionManager;
     private final UserRepo userRepo;
