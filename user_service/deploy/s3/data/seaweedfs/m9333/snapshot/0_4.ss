@@ -1,0 +1,2 @@
+6ba2796a
+{"lastIndex":4,"lastTerm":0,"peers":[{"name":"172.24.0.2:9333.19333","connectionString":"172.24.0.2:19333"}],"state":"eyJtYXhWb2x1bWVJZCI6MCwidG9wb2xvZ3lJZCI6IjE5Y2E0ZWJkLTZkYTMtNDkxOC04MWExLWU1ZTYyZmU1ZTNiZiJ9","path":"/data/m9333/snapshot/0_4.ss"}

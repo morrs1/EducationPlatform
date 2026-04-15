@@ -1,4 +1,7 @@
 function ProfileCard({ viewer }) {
+  const viewerStatus = viewer.status || viewer.headline;
+  const viewerAbout = viewer.about?.trim() ?? "";
+
   return (
     <div className="profile-card">
       <div className="profile-card-content">
@@ -13,9 +16,13 @@ function ProfileCard({ viewer }) {
 
           <h1 className="profile-card-title">{viewer.name}</h1>
 
-          <p className="profile-card-description">
-            <strong>{viewer.headline}</strong> {viewer.about}
-          </p>
+          {viewerStatus || viewerAbout ? (
+            <p className="profile-card-description">
+              {viewerStatus ? <strong>{viewerStatus}</strong> : null}
+              {viewerStatus && viewerAbout ? " " : null}
+              {viewerAbout || null}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

@@ -1,17 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { mockCourses } from "../../../entities/course/model/mockCourses";
-import {
-  buildAvatarUrl,
-  createInitialViewerState,
-  normalizeViewerProfile,
-} from "./factory";
+import { buildAvatarUrl, createInitialViewerState, normalizeViewerProfile } from "./factory";
 
 function getCourseById(courseId) {
   return mockCourses.find((course) => course.id === courseId) ?? null;
 }
 
-function buildFullName(firstName, lastName) {
-  return [firstName, lastName].filter(Boolean).join(" ").trim();
+function buildFullName(firstName, lastName, patronymic = "") {
+  return [firstName, patronymic, lastName].filter(Boolean).join(" ").trim();
 }
 
 function isGeneratedViewerAvatar(avatarUrl) {
@@ -26,19 +22,25 @@ const viewerSlice = createSlice({
       const {
         firstName = "",
         lastName = "",
+        patronymic = "",
+        status = "",
         headline = "",
         about = "",
         avatarUrl,
       } = action.payload;
       const nextFirstName = firstName.trim();
       const nextLastName = lastName.trim();
+      const nextPatronymic = patronymic.trim();
+      const nextStatus = status.trim() || headline.trim();
       const nextFullName =
-        buildFullName(nextFirstName, nextLastName) || state.name;
+        buildFullName(nextFirstName, nextLastName, nextPatronymic) || state.name;
 
       state.firstName = nextFirstName;
       state.lastName = nextLastName;
+      state.patronymic = nextPatronymic;
       state.name = nextFullName;
-      state.headline = headline.trim();
+      state.status = nextStatus;
+      state.headline = nextStatus;
       state.about = about.trim();
 
       if (avatarUrl) {
