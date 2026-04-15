@@ -1,0 +1,34 @@
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+  application:
+    name: user_service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_EXTERNAL_PORT:5435}/${POSTGRES_DB:user_service_db}
+    username: ${POSTGRES_USER:morrs}
+    password: ${POSTGRES_PASSWORD:123}
+    driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
+temp:
+  s3:
+    enabled: ${TEMP_S3_ENABLED:false}
+    region: ${TEMP_S3_REGION:eu-central-1}
+    bucket: ${TEMP_S3_BUCKET:}
+    endpoint: ${TEMP_S3_ENDPOINT:}
+    access-key: ${TEMP_S3_ACCESS_KEY:}
+    secret-key: ${TEMP_S3_SECRET_KEY:}
+    public-base-url: ${TEMP_S3_PUBLIC_BASE_URL:}
+    path-style-access: ${TEMP_S3_PATH_STYLE_ACCESS:false}

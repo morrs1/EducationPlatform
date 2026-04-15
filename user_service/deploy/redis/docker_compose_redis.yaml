@@ -1,0 +1,30 @@
+services:
+  redis:
+    image: redis:8.0.2-alpine
+    container_name: user_service.redis
+    hostname: user_service.redis
+    command: ["/bin/sh", "/usr/local/bin/redis_entrypoint.sh"]
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a \"$REDIS_PASSWORD\" ping" ]
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - user_service.redis.data:/data
+      - ./redis_entrypoint.sh:/usr/local/bin/redis_entrypoint.sh:ro
+    networks:
+      - services_network
+networks:
+  services_network:
+    external: true
+volumes:
+  user_service.redis.data:
