@@ -1,5 +1,9 @@
 export { default as viewerReducer } from "./model/viewerSlice";
-export { submitViewerProfileUpdate } from "./model/thunks";
+export {
+  submitViewerProfileUpdate,
+  hydrateViewerFromUserService,
+} from "./model/thunks";
+export { default as ViewerProfileBootstrap } from "./ui/ViewerProfileBootstrap";
 
 export {
   updateViewerProfile,

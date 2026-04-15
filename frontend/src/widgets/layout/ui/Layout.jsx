@@ -4,6 +4,7 @@ import Header from "../../header/ui/Header";
 import Footer from "../../footer/ui/Footer";
 import AuthModal from "../../auth-modal/ui/AuthModal";
 import CatalogSidebar from "../../catalog-sidebar/ui/CatalogSidebar";
+import { ViewerProfileBootstrap } from "../../../features/viewer";
 
 function Layout() {
   const headerRef = useRef(null);
@@ -65,6 +66,7 @@ function Layout() {
 
   return (
     <div className="flex flex-col w-full min-h-screen">
+      <ViewerProfileBootstrap />
       <div
         ref={headerRef}
         className="fixed inset-x-0 top-0 z-40 bg-gray-950 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.7)]"
