@@ -5,6 +5,9 @@ import org.example.user_service.domain.user.vo.*;
 import org.example.user_service.infrastructure.persistence.models.HibernateUser;
 import org.mapstruct.Mapper;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
 @Mapper(componentModel = "spring")
 public interface UserMapperHibernate {
 
@@ -18,9 +21,9 @@ public interface UserMapperHibernate {
                 user.getEmail().getEmail(),
                 user.getPassword().getPassword(),
                 user.getProfilePhotoLink().getProfilePhotoLink(),
-                user.getCurrentCourses().stream().map(UserCurrentCourse::getCurrentCourse).toList(),
-                user.getFinishedCourses().stream().map(UserFinishedCourse::getFinishedCourse).toList(),
-                user.getCertificates().stream().map(UserCertificate::getCertificate).toList()
+                user.getCurrentCourses().stream().map(UserCurrentCourse::getCurrentCourse).collect(Collectors.toCollection(ArrayList::new)),
+                user.getFinishedCourses().stream().map(UserFinishedCourse::getFinishedCourse).collect(Collectors.toCollection(ArrayList::new)),
+                user.getCertificates().stream().map(UserCertificate::getCertificate).collect(Collectors.toCollection(ArrayList::new))
         );
     }
 
@@ -34,9 +37,9 @@ public interface UserMapperHibernate {
                 new UserEmail(hibernateUser.getEmail()),
                 new UserPassword(hibernateUser.getPassword()),
                 new UserProfilePhotoLink(hibernateUser.getProfilePhotoLink()),
-                hibernateUser.getCurrentCourses().stream().map(UserCurrentCourse::new).toList(),
-                hibernateUser.getFinishedCourses().stream().map(UserFinishedCourse::new).toList(),
-                hibernateUser.getCertificates().stream().map(UserCertificate::new).toList()
+                hibernateUser.getCurrentCourses().stream().map(UserCurrentCourse::new).collect(Collectors.toCollection(ArrayList::new)),
+                hibernateUser.getFinishedCourses().stream().map(UserFinishedCourse::new).collect(Collectors.toCollection(ArrayList::new)),
+                hibernateUser.getCertificates().stream().map(UserCertificate::new).collect(Collectors.toCollection(ArrayList::new))
         );
     }
 }
