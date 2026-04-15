@@ -1324,7 +1324,7 @@
 }
 
 .lesson-workspace {
-  @apply relative min-w-0 flex-1;
+  @apply relative flex-1 min-w-0;
   transition:
     flex-basis 0.28s ease,
     max-width 0.28s ease;
@@ -1793,7 +1793,7 @@
 }
 
 .assistant-panel-scroll {
-  @apply flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-5 sm:px-6;
+  @apply flex flex-col flex-1 min-h-0 gap-4 px-5 py-5 overflow-y-auto sm:px-6;
   opacity: 0;
   scrollbar-gutter: stable;
   transition: opacity 0.16s ease;
@@ -1836,11 +1836,11 @@
 }
 
 .assistant-message-assistant {
-  @apply border-gray-200 bg-white text-gray-900;
+  @apply text-gray-900 bg-white border-gray-200;
 }
 
 .assistant-message-user {
-  @apply border-green-500 bg-green-600 text-white;
+  @apply text-white bg-green-600 border-green-500;
 }
 
 .assistant-message-pending {
@@ -1894,7 +1894,7 @@
 }
 
 .assistant-panel-input {
-  @apply w-full bg-transparent px-2 py-2 text-sm leading-7 text-gray-900 outline-none resize-none placeholder:text-gray-400;
+  @apply w-full px-2 py-2 text-sm leading-7 text-gray-900 bg-transparent outline-none resize-none placeholder:text-gray-400;
   min-height: 44px;
   max-height: none;
 }
