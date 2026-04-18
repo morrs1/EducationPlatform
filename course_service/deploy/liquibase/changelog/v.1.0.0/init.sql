@@ -11,7 +11,6 @@ CREATE TABLE course
     description       TEXT,
     difficulty        VARCHAR(32),
     language_code     VARCHAR(16),
-    cover_asset_id    UUID,
     estimated_minutes INTEGER      NOT NULL DEFAULT 0,
     structure         JSONB        NOT NULL DEFAULT '{"modules": []}'::jsonb,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
@@ -95,9 +94,6 @@ CREATE TABLE course_tag
         FOREIGN KEY (tag_id) REFERENCES tag (id) ON DELETE CASCADE
 );
 
-ALTER TABLE course
-    ADD CONSTRAINT fk_course_cover_asset
-        FOREIGN KEY (cover_asset_id) REFERENCES asset (id) ON DELETE SET NULL;
 
 CREATE INDEX idx_course_author_id
     ON course (author_id);
