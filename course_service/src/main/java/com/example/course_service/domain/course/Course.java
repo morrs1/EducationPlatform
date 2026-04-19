@@ -2,12 +2,14 @@ package com.example.course_service.domain.course;
 
 import com.example.course_service.domain.base.BaseEntity;
 import com.example.course_service.domain.course.vo.*;
+import com.example.course_service.domain.module.Module;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -23,7 +25,7 @@ public class Course extends BaseEntity {
     private CourseDifficulty difficulty;
     private CourseLanguageCode languageCode;
     private CourseEstimatedMinutes estimatedMinutes;
-    private CourseStructure structure;
+    private List<Module> structure;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private TagId tagId;
@@ -38,7 +40,7 @@ public class Course extends BaseEntity {
             CourseDifficulty difficulty,
             CourseLanguageCode languageCode,
             CourseEstimatedMinutes estimatedMinutes,
-            CourseStructure structure,
+            List<Module> structure,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             TagId tagId,
