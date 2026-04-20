@@ -1,9 +1,9 @@
-package com.example.course_service.domain.lesson_content;
+package com.example.course_service.domain.lesson;
 
 import com.example.course_service.domain.base.BaseEntity;
-import com.example.course_service.domain.lesson_content.vo.LessonContentContent;
-import com.example.course_service.domain.lesson_content.vo.LessonContentTitle;
-import com.example.course_service.domain.lesson_content.vo.LessonContentType;
+import com.example.course_service.domain.lesson.vo.LessonContent;
+import com.example.course_service.domain.lesson.vo.LessonTitle;
+import com.example.course_service.domain.lesson.vo.LessonType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,21 +16,21 @@ import java.util.UUID;
 @Setter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class LessonContent extends BaseEntity {
+public class Lesson extends BaseEntity {
 
     private UUID courseId;
-    private LessonContentType type;
-    private LessonContentTitle title;
-    private LessonContentContent content;
+    private LessonType type;
+    private LessonTitle title;
+    private LessonContent content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public LessonContent(
+    public Lesson(
             UUID id,
             UUID courseId,
-            LessonContentType type,
-            LessonContentTitle title,
-            LessonContentContent content,
+            LessonType type,
+            LessonTitle title,
+            LessonContent content,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {

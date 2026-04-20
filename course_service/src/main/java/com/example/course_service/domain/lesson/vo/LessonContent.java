@@ -1,4 +1,4 @@
-package com.example.course_service.domain.lesson_content.vo;
+package com.example.course_service.domain.lesson.vo;
 
 import com.example.course_service.domain.base.BaseValueObject;
 import com.example.course_service.domain.base.exceptions.ValidateException;
@@ -9,11 +9,11 @@ import java.util.Objects;
 
 @ToString
 @Getter
-public class LessonContentContent extends BaseValueObject {
+public class LessonContent extends BaseValueObject {
 
     private final String content;
 
-    public LessonContentContent(String content) {
+    public LessonContent(String content) {
         this.content = content;
         validate();
     }
@@ -21,10 +21,10 @@ public class LessonContentContent extends BaseValueObject {
     @Override
     public void validate() throws ValidateException {
         if (Objects.isNull(content)) {
-            throw new ValidateException("Lesson content payload must not be null");
+            throw new ValidateException("Lesson payload must not be null");
         }
         if (content.isBlank()) {
-            throw new ValidateException("Lesson content payload must not be blank");
+            throw new ValidateException("Lesson payload must not be blank");
         }
     }
 }
