@@ -33,7 +33,7 @@ async function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function extractErrorMessage(response, responseBody) {
+function extractErrorMessage(response, responseBody, context = "") {
   if (typeof responseBody === "string" && responseBody.trim()) {
     return responseBody.trim();
   }
@@ -55,15 +55,17 @@ function extractErrorMessage(response, responseBody) {
     }
   }
 
-  return `user_service returned ${response.status}.`;
+  return context
+    ? `user_service returned ${response.status} while ${context}.`
+    : `user_service returned ${response.status}.`;
 }
 
-async function requestUserService(url, options = {}) {
+async function requestUserService(url, options = {}, context = "") {
   const response = await fetch(url.toString(), options);
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response, responseBody));
+    throw new Error(extractErrorMessage(response, responseBody, context));
   }
 
   return responseBody;
@@ -175,7 +177,7 @@ export async function requestViewerProfileById(viewerId) {
     headers: {
       Accept: "application/json",
     },
-  });
+  }, `loading viewer ${viewerId}`);
 }
 
 function createJsonRequestOptions(payload) {

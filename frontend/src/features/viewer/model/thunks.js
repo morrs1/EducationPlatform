@@ -11,18 +11,46 @@ import {
   uploadViewerProfilePhoto,
 } from "./userServiceApi";
 
+function hasUnsupportedCourseIds(courseIds) {
+  if (!Array.isArray(courseIds)) {
+    return false;
+  }
+
+  return courseIds.some((courseId) => {
+    const normalizedCourseId =
+      typeof courseId === "string" ? courseId.trim() : courseId;
+
+    if (normalizedCourseId === "" || normalizedCourseId == null) {
+      return false;
+    }
+
+    return !Number.isFinite(Number(normalizedCourseId));
+  });
+}
+
+function pickCourseIdsForHydration(remoteCourseIds, localCourseIds) {
+  return hasUnsupportedCourseIds(remoteCourseIds)
+    ? localCourseIds
+    : remoteCourseIds;
+}
+
 const VIEWER_STATUS_PATTERN = /^[A-Z][A-Z_]{1,31}$/;
 
 function normalizeStatus(value) {
   return (value ?? "").trim().replace(/\s+/g, "_").toUpperCase();
 }
 
-function createRemoteViewerIdError() {
-  return {
-    ok: false,
-    error:
-      "Не удалось определить идентификатор пользователя в user_service. Откройте профиль с параметром ?id=<uuid> или настройте VITE_USER_SERVICE_DEMO_USER_ID.",
-  };
+function saveViewerProfileLocally(dispatch, viewer, profile) {
+  dispatch(
+    updateViewerProfile({
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      patronymic: profile.patronymic,
+      status: profile.status,
+      about: viewer.about ?? "",
+      avatarUrl: viewer.avatarUrl,
+    }),
+  );
 }
 
 export function submitViewerProfileUpdate(payload) {
@@ -33,7 +61,8 @@ export function submitViewerProfileUpdate(payload) {
     const nextLastName = payload.lastName?.trim() ?? "";
     const nextPatronymic = payload.patronymic?.trim() ?? "";
     const nextStatus = normalizeStatus(payload.status);
-    const nextAvatarFile = payload.avatarFile instanceof File ? payload.avatarFile : null;
+    const nextAvatarFile =
+      payload.avatarFile instanceof File ? payload.avatarFile : null;
     const remoteViewerId = resolveRemoteViewerId(
       state.auth.currentViewerId,
       payload.remoteViewerId ?? viewer.remoteId,
@@ -76,14 +105,28 @@ export function submitViewerProfileUpdate(payload) {
     }
 
     if (!remoteViewerId) {
-      return createRemoteViewerIdError();
+      saveViewerProfileLocally(dispatch, viewer, {
+        firstName: nextFirstName,
+        lastName: nextLastName,
+        patronymic: nextPatronymic,
+        status: nextStatus,
+      });
+
+      return {
+        ok: true,
+        message: nextAvatarFile
+          ? "Данные профиля сохранены локально. Фото будет доступно после подключения user_service."
+          : "Данные профиля сохранены локально.",
+      };
     }
 
     const operations = [];
     let uploadedPhotoUrl = null;
 
     if (viewer.firstName !== nextFirstName) {
-      operations.push(() => requestViewerNameUpdate(remoteViewerId, nextFirstName));
+      operations.push(() =>
+        requestViewerNameUpdate(remoteViewerId, nextFirstName),
+      );
     }
 
     if (viewer.lastName !== nextLastName) {
@@ -99,7 +142,9 @@ export function submitViewerProfileUpdate(payload) {
     }
 
     if ((viewer.status ?? viewer.headline ?? "") !== nextStatus) {
-      operations.push(() => requestViewerStatusUpdate(remoteViewerId, nextStatus));
+      operations.push(() =>
+        requestViewerStatusUpdate(remoteViewerId, nextStatus),
+      );
     }
 
     if (nextAvatarFile) {
@@ -196,15 +241,25 @@ export function hydrateViewerFromUserService(options = {}) {
           ...localViewer,
           ...remoteViewer,
           remoteId: remoteViewerId,
-          status: remoteViewer.status || localViewer.status || localViewer.headline,
+          status:
+            remoteViewer.status || localViewer.status || localViewer.headline,
           headline:
             remoteViewer.headline || localViewer.status || localViewer.headline,
           about: localViewer.about,
           avatarUrl: remoteViewer.avatarUrl || localViewer.avatarUrl,
-          enrolledCourseIds: localViewer.enrolledCourseIds,
+          enrolledCourseIds: pickCourseIdsForHydration(
+            response?.currentCourses,
+            localViewer.enrolledCourseIds,
+          ),
           favouriteCourseIds: localViewer.favouriteCourseIds,
-          completedCourseIds: localViewer.completedCourseIds,
-          certificateCourseIds: localViewer.certificateCourseIds,
+          completedCourseIds: pickCourseIdsForHydration(
+            response?.finishedCourses,
+            localViewer.completedCourseIds,
+          ),
+          certificateCourseIds: pickCourseIdsForHydration(
+            response?.certificates,
+            localViewer.certificateCourseIds,
+          ),
           progressByCourseId: localViewer.progressByCourseId,
         }),
       );

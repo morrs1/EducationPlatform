@@ -55,17 +55,18 @@ export function submitLogin({ email, password }) {
   };
 }
 
-export function submitRegister({ fullName, email, password }) {
+export function submitRegister({ fullName, email, password, status, avatarUrl }) {
   return (dispatch) => {
     const normalizedFullName = fullName?.trim() ?? "";
     const normalizedEmail = email?.trim().toLowerCase() ?? "";
     const normalizedPassword = password?.trim() ?? "";
+    const normalizedStatus = status?.trim() ?? "";
 
-    if (!normalizedFullName) {
-      dispatch(loginFailure("Введите имя и фамилию."));
+    if (normalizedFullName.split(/\s+/).filter(Boolean).length < 2) {
+      dispatch(loginFailure("Укажите ФИО полностью, минимум имя и фамилию."));
       return {
         ok: false,
-        error: "Введите имя и фамилию.",
+        error: "Укажите ФИО полностью, минимум имя и фамилию.",
       };
     }
 
@@ -106,6 +107,8 @@ export function submitRegister({ fullName, email, password }) {
         viewerId,
         email: normalizedEmail,
         fullName: normalizedFullName,
+        status: normalizedStatus,
+        avatarUrl,
       }),
     );
 

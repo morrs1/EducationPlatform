@@ -64,11 +64,20 @@ function splitFullName(fullName) {
     };
   }
 
-  const [firstName = "", ...restNameParts] = normalizedFullName.split(/\s+/);
+  const nameParts = normalizedFullName.split(/\s+/);
+
+  if (nameParts.length === 1) {
+    return {
+      firstName: nameParts[0],
+      lastName: "",
+    };
+  }
+
+  const [lastName = "", firstName = ""] = nameParts;
 
   return {
     firstName,
-    lastName: restNameParts.join(" ").trim(),
+    lastName,
   };
 }
 
@@ -81,8 +90,7 @@ export function normalizeViewerProfile(value) {
   const lastName = normalizeText(value?.lastName);
   const patronymic = normalizeText(value?.patronymic);
   const email = normalizeText(value?.email, { lowercase: true });
-  const status =
-    normalizeText(value?.status) || normalizeText(value?.headline);
+  const status = normalizeText(value?.status) || normalizeText(value?.headline);
   const explicitName = normalizeText(value?.name);
   const fallbackName =
     explicitName ||
@@ -100,7 +108,7 @@ export function normalizeViewerProfile(value) {
     name: fallbackName,
     email,
     status,
-    headline: status,
+    headline: normalizeText(value?.headline) || status,
     about: normalizeText(value?.about),
     avatarUrl: normalizeText(value?.avatarUrl) || buildAvatarUrl(fallbackName),
     enrolledCourseIds: normalizeCourseIdList(value?.enrolledCourseIds),
@@ -131,8 +139,13 @@ export function createViewerProfileFromRegistration({
   viewerId,
   email,
   fullName,
+  status,
+  avatarUrl,
 }) {
   const normalizedFullName = normalizeText(fullName);
+  const normalizedStatus = normalizeText(status);
+  const fallbackHeadline =
+    normalizedStatus || "Начинает собирать свой учебный трек";
   const { firstName, lastName } = splitFullName(normalizedFullName);
 
   return normalizeViewerProfile({
@@ -143,9 +156,10 @@ export function createViewerProfileFromRegistration({
     patronymic: "",
     name: normalizedFullName || buildFullName(firstName, lastName),
     email,
-    status: "STUDENT",
-    headline: "STUDENT",
+    status: normalizedStatus,
+    headline: fallbackHeadline,
     about: "",
+    avatarUrl: normalizeText(avatarUrl),
     enrolledCourseIds: [],
     favouriteCourseIds: [],
     completedCourseIds: [],
