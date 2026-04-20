@@ -68,7 +68,7 @@ services:
 
   redis:
     <<: *default
-    image: redis:8.6.1-alpine
+    image: redis:8.6.2-alpine
     container_name: answer_service.redis
     hostname: answer_service.redis
     environment:
@@ -93,7 +93,7 @@ services:
 
   chromadb:
     <<: *default
-    image: chromadb/chroma:1.5.5
+    image: chromadb/chroma:1.5.8
     container_name: answer_service.chromadb
     hostname: answer_service.chromadb
     environment:
