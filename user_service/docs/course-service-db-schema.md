@@ -82,12 +82,12 @@ Quiz:
   "introMarkdown": "## Вопросы",
   "questions": [
     {
-      "id": "question-id",
+      "id": "11111111-1111-1111-1111-111111111111",
       "type": "single_choice",
       "text": "Вопрос?",
       "options": [
-        { "id": "o1", "text": "A", "isCorrect": true },
-        { "id": "o2", "text": "B", "isCorrect": false }
+        { "id": "22222222-2222-2222-2222-222222222221", "text": "A", "isCorrect": true },
+        { "id": "22222222-2222-2222-2222-222222222222", "text": "B", "isCorrect": false }
       ]
     }
   ]
@@ -107,7 +107,7 @@ Coding:
   ],
   "testCases": [
     {
-      "id": "tc1",
+      "id": "33333333-3333-3333-3333-333333333331",
       "public": true,
       "input": "1",
       "expectedOutput": "1"
