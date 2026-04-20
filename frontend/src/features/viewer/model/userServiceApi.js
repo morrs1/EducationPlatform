@@ -24,6 +24,41 @@ function getUserServiceApiBaseUrl() {
   return configuredBaseUrl || DEFAULT_USER_SERVICE_API_BASE_URL;
 }
 
+async function readResponseBody(response) {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    return response.json().catch(() => null);
+  }
+
+  return response.text().catch(() => "");
+}
+
+function extractErrorMessage(response, responseBody, viewerId) {
+  if (typeof responseBody === "string" && responseBody.trim()) {
+    return responseBody.trim();
+  }
+
+  if (
+    responseBody &&
+    typeof responseBody === "object" &&
+    !Array.isArray(responseBody)
+  ) {
+    if (typeof responseBody.msg === "string" && responseBody.msg.trim()) {
+      return responseBody.msg.trim();
+    }
+
+    if (
+      typeof responseBody.message === "string" &&
+      responseBody.message.trim()
+    ) {
+      return responseBody.message.trim();
+    }
+  }
+
+  return `user_service returned ${response.status} while loading viewer ${viewerId}.`;
+}
+
 export function resolveRemoteViewerId(
   currentViewerId,
   preferredRemoteViewerId = null,
@@ -52,13 +87,12 @@ export function mapReadUserByIdResponseToViewerProfile(response, viewerId) {
     joinNameParts(firstName, surname) ||
     viewerId ||
     "Пользователь";
-  const lastName = joinNameParts(surname, patronymic);
   const avatarUrl = normalizeText(response?.userProfilePhotoLink);
 
   return {
     id: viewerId,
     firstName,
-    lastName,
+    lastName: surname,
     name: displayName,
     email: normalizeText(response?.userEmail).toLowerCase(),
     headline: normalizeText(response?.userStatus),
@@ -82,12 +116,11 @@ export async function requestViewerProfileById(viewerId) {
       Accept: "application/json",
     },
   });
+  const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(
-      `user_service returned ${response.status} while loading viewer ${viewerId}.`,
-    );
+    throw new Error(extractErrorMessage(response, responseBody, viewerId));
   }
 
-  return response.json();
+  return responseBody;
 }

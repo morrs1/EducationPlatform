@@ -166,7 +166,7 @@ function UpdateProfileForm({ viewer, onSubmit }) {
       </div>
 
       <label className="settings-field">
-        <span className="settings-label">Кратко о себе</span>
+        <span className="settings-label">Статус</span>
         <input
           type="text"
           className="settings-input"

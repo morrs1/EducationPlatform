@@ -1,4 +1,7 @@
 function ProfileCard({ viewer }) {
+  const hasHeadline = Boolean(viewer.headline);
+  const hasAbout = Boolean(viewer.about);
+
   return (
     <div className="profile-card">
       <div className="profile-card-content">
@@ -14,7 +17,9 @@ function ProfileCard({ viewer }) {
           <h1 className="profile-card-title">{viewer.name}</h1>
 
           <p className="profile-card-description">
-            <strong>{viewer.headline}</strong> {viewer.about}
+            {hasHeadline ? <strong>{viewer.headline}</strong> : null}
+            {hasHeadline && hasAbout ? " " : null}
+            {hasAbout ? viewer.about : null}
           </p>
         </div>
       </div>

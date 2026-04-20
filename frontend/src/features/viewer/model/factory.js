@@ -64,11 +64,20 @@ function splitFullName(fullName) {
     };
   }
 
-  const [firstName = "", ...restNameParts] = normalizedFullName.split(/\s+/);
+  const nameParts = normalizedFullName.split(/\s+/);
+
+  if (nameParts.length === 1) {
+    return {
+      firstName: nameParts[0],
+      lastName: "",
+    };
+  }
+
+  const [lastName = "", firstName = ""] = nameParts;
 
   return {
     firstName,
-    lastName: restNameParts.join(" ").trim(),
+    lastName,
   };
 }
 
@@ -94,7 +103,7 @@ export function normalizeViewerProfile(value) {
     lastName,
     name: fallbackName,
     email,
-    headline: normalizeText(value?.headline),
+    headline: normalizeText(value?.headline) || normalizeText(value?.status),
     about: normalizeText(value?.about),
     avatarUrl: normalizeText(value?.avatarUrl) || buildAvatarUrl(fallbackName),
     enrolledCourseIds: normalizeCourseIdList(value?.enrolledCourseIds),
@@ -122,8 +131,11 @@ export function createViewerProfileFromRegistration({
   viewerId,
   email,
   fullName,
+  status,
+  avatarUrl,
 }) {
   const normalizedFullName = normalizeText(fullName);
+  const normalizedStatus = normalizeText(status);
   const { firstName, lastName } = splitFullName(normalizedFullName);
 
   return normalizeViewerProfile({
@@ -132,8 +144,9 @@ export function createViewerProfileFromRegistration({
     lastName,
     name: normalizedFullName || buildFullName(firstName, lastName),
     email,
-    headline: "Начинает собирать свой учебный трек",
+    headline: normalizedStatus || "Начинает собирать свой учебный трек",
     about: "",
+    avatarUrl: normalizeText(avatarUrl),
     enrolledCourseIds: [],
     favouriteCourseIds: [],
     completedCourseIds: [],

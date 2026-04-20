@@ -5,6 +5,29 @@ import {
   resolveRemoteViewerId,
 } from "./userServiceApi";
 
+function hasUnsupportedCourseIds(courseIds) {
+  if (!Array.isArray(courseIds)) {
+    return false;
+  }
+
+  return courseIds.some((courseId) => {
+    const normalizedCourseId =
+      typeof courseId === "string" ? courseId.trim() : courseId;
+
+    if (normalizedCourseId === "" || normalizedCourseId == null) {
+      return false;
+    }
+
+    return !Number.isFinite(Number(normalizedCourseId));
+  });
+}
+
+function pickCourseIdsForHydration(remoteCourseIds, localCourseIds) {
+  return hasUnsupportedCourseIds(remoteCourseIds)
+    ? localCourseIds
+    : remoteCourseIds;
+}
+
 export function submitViewerProfileUpdate(payload) {
   return (dispatch) => {
     const nextFirstName = payload.firstName?.trim() ?? "";
@@ -72,6 +95,18 @@ export function hydrateViewerFromUserService(options = {}) {
           headline: remoteViewer.headline || localViewer.headline,
           about: remoteViewer.about || localViewer.about,
           avatarUrl: remoteViewer.avatarUrl || localViewer.avatarUrl,
+          enrolledCourseIds: pickCourseIdsForHydration(
+            response?.currentCourses,
+            localViewer.enrolledCourseIds,
+          ),
+          completedCourseIds: pickCourseIdsForHydration(
+            response?.finishedCourses,
+            localViewer.completedCourseIds,
+          ),
+          certificateCourseIds: pickCourseIdsForHydration(
+            response?.certificates,
+            localViewer.certificateCourseIds,
+          ),
           favouriteCourseIds: localViewer.favouriteCourseIds,
           progressByCourseId: localViewer.progressByCourseId,
         }),

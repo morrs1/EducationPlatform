@@ -17,7 +17,7 @@ function UpdateProfileSection() {
 
         <p className="settings-section-description">
           Обновите основные данные аккаунта, которые будут видеть другие
-          пользователи.
+          пользователи, включая фото и текущий статус.
         </p>
       </header>
 
