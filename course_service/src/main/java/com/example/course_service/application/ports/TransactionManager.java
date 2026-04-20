@@ -2,7 +2,7 @@ package com.example.course_service.application.ports;
 
 import java.util.function.Supplier;
 
-public interface TransactionalManager {
+public interface TransactionManager {
 
     void inTransaction(Runnable action);
 

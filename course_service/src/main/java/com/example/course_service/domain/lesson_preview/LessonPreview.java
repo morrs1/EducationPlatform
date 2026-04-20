@@ -6,10 +6,7 @@ import com.example.course_service.domain.lesson_preview.vo.LessonPreviewIsPrevie
 import com.example.course_service.domain.lesson_preview.vo.LessonPreviewPosition;
 import com.example.course_service.domain.lesson_preview.vo.LessonPreviewTitle;
 import com.example.course_service.domain.lesson_preview.vo.LessonPreviewType;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -17,6 +14,7 @@ import java.util.UUID;
 @Setter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@NoArgsConstructor
 public class LessonPreview extends BaseEntity {
 
     private LessonPreviewType type;

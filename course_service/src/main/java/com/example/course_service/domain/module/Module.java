@@ -6,10 +6,7 @@ import com.example.course_service.domain.module.vo.ModuleEstimatedMinutes;
 import com.example.course_service.domain.module.vo.ModuleLessons;
 import com.example.course_service.domain.module.vo.ModulePosition;
 import com.example.course_service.domain.module.vo.ModuleTitle;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -17,6 +14,7 @@ import java.util.UUID;
 @Setter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@NoArgsConstructor
 public class Module extends BaseEntity {
 
     private ModuleTitle title;

@@ -3,10 +3,7 @@ package com.example.course_service.domain.course;
 import com.example.course_service.domain.base.BaseEntity;
 import com.example.course_service.domain.course.vo.*;
 import com.example.course_service.domain.module.Module;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +13,8 @@ import java.util.UUID;
 @Setter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@NoArgsConstructor
+//TODO убрать noArgsConstructor
 public class Course extends BaseEntity {
 
     private UUID authorId;
@@ -33,8 +32,8 @@ public class Course extends BaseEntity {
 
     public Course(
             UUID id,
-            UUID id1,
             UUID authorId,
+            CourseTitle title,
             CourseShortDescription shortDescription,
             CourseDescription description,
             CourseDifficulty difficulty,
@@ -47,8 +46,8 @@ public class Course extends BaseEntity {
             TagName tagName
     ) {
         super(id);
-        this.id = id1;
         this.authorId = authorId;
+        this.title = title;
         this.shortDescription = shortDescription;
         this.description = description;
         this.difficulty = difficulty;
