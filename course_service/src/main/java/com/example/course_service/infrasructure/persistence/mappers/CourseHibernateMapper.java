@@ -7,6 +7,7 @@ import com.example.course_service.domain.course.vo.CourseEstimatedMinutes;
 import com.example.course_service.domain.course.vo.CourseLanguageCode;
 import com.example.course_service.domain.course.vo.CourseShortDescription;
 import com.example.course_service.domain.course.vo.CourseTitle;
+import com.example.course_service.domain.course.vo.TagName;
 import com.example.course_service.domain.lesson_preview.LessonPreview;
 import com.example.course_service.domain.lesson_preview.vo.LessonPreviewEstimatedMinutes;
 import com.example.course_service.domain.lesson_preview.vo.LessonPreviewIsPreview;
@@ -16,15 +17,18 @@ import com.example.course_service.domain.lesson_preview.vo.LessonPreviewType;
 import com.example.course_service.domain.module.Module;
 import com.example.course_service.domain.module.vo.ModuleDescription;
 import com.example.course_service.domain.module.vo.ModuleEstimatedMinutes;
-import com.example.course_service.domain.module.vo.ModuleLessons;
 import com.example.course_service.domain.module.vo.ModulePosition;
 import com.example.course_service.domain.module.vo.ModuleTitle;
+import com.example.course_service.domain.tag.Tag;
 import com.example.course_service.infrasructure.persistence.models.HibernateCourse;
+import com.example.course_service.infrasructure.persistence.models.HibernateTag;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Component
 public class CourseHibernateMapper {
@@ -42,6 +46,7 @@ public class CourseHibernateMapper {
         hibernateCourse.setStructure(new HibernateCourse.CourseStructureJson(mapModuleJsons(course.getStructure())));
         hibernateCourse.setCreatedAt(course.getCreatedAt());
         hibernateCourse.setUpdatedAt(course.getUpdatedAt());
+        hibernateCourse.setTags(mapHibernateTags(course.getTags()));
         return hibernateCourse;
     }
 
@@ -58,8 +63,41 @@ public class CourseHibernateMapper {
                 mapModules(hibernateCourse.getStructure()),
                 hibernateCourse.getCreatedAt(),
                 hibernateCourse.getUpdatedAt(),
-                null,
-                null
+                mapTags(hibernateCourse.getTags())
+        );
+    }
+
+    private Set<HibernateTag> mapHibernateTags(List<Tag> tags) {
+        if (Objects.isNull(tags)) {
+            return new LinkedHashSet<>();
+        }
+
+        return tags.stream()
+                .map(this::mapHibernateTag)
+                .collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+    }
+
+    private HibernateTag mapHibernateTag(Tag tag) {
+        var hibernateTag = new HibernateTag();
+        hibernateTag.setId(tag.getId());
+        hibernateTag.setName(Objects.isNull(tag.getName()) ? null : tag.getName().getName());
+        return hibernateTag;
+    }
+
+    private List<Tag> mapTags(Set<HibernateTag> tags) {
+        if (Objects.isNull(tags)) {
+            return new ArrayList<>();
+        }
+
+        return tags.stream()
+                .map(this::mapTag)
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    }
+
+    private Tag mapTag(HibernateTag hibernateTag) {
+        return new Tag(
+                hibernateTag.getId(),
+                new TagName(hibernateTag.getName())
         );
     }
 
@@ -80,7 +118,7 @@ public class CourseHibernateMapper {
                 Objects.isNull(module.getDescription()) ? null : module.getDescription().getDescription(),
                 Objects.isNull(module.getPosition()) ? null : module.getPosition().getPosition(),
                 Objects.isNull(module.getEstimatedMinutes()) ? null : module.getEstimatedMinutes().getEstimatedMinutes(),
-                mapLessonPreviewJsons(Objects.isNull(module.getLessons()) ? null : module.getLessons().getLessons())
+                mapLessonPreviewJsons(module.getLessons())
         );
     }
 
@@ -123,7 +161,7 @@ public class CourseHibernateMapper {
                 new ModuleDescription(moduleJson.description()),
                 new ModulePosition(moduleJson.position()),
                 new ModuleEstimatedMinutes(moduleJson.estimatedMinutes()),
-                new ModuleLessons(mapLessonPreviews(moduleJson.lessons()))
+                mapLessonPreviews(moduleJson.lessons())
         );
     }
 

@@ -22,7 +22,7 @@ public class HibernateCourseRepo implements CourseRepo {
     @Override
     public Optional<Course> readById(UUID id) {
         return entityManager.createQuery(
-                        "select c from HibernateCourse c where c.id = :id",
+                        "select distinct c from HibernateCourse c left join fetch c.tags where c.id = :id",
                         HibernateCourse.class
                 )
                 .setParameter("id", id)

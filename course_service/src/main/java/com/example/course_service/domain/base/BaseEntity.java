@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
-//TODO убрать noArgsConstructor
+
 public abstract class BaseEntity {
 
     protected UUID id;

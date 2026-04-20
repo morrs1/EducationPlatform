@@ -2,7 +2,11 @@ package com.example.course_service.infrasructure.persistence.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +15,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Table(name = "course")
@@ -41,6 +47,13 @@ public class HibernateCourse {
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "course_tag",
+            joinColumns = @JoinColumn(name = "course_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<HibernateTag> tags = new LinkedHashSet<>();
 
     public record CourseStructureJson(List<ModuleJson> modules) {
     }

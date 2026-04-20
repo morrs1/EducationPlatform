@@ -3,18 +3,19 @@ package com.example.course_service.domain.course;
 import com.example.course_service.domain.base.BaseEntity;
 import com.example.course_service.domain.course.vo.*;
 import com.example.course_service.domain.module.Module;
+import com.example.course_service.domain.tag.Tag;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Getter
 @Setter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-@NoArgsConstructor
-//TODO убрать noArgsConstructor
 public class Course extends BaseEntity {
 
     private UUID authorId;
@@ -27,8 +28,7 @@ public class Course extends BaseEntity {
     private List<Module> structure;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private TagId tagId;
-    private TagName tagName;
+    private List<Tag> tags;
 
     public Course(
             UUID id,
@@ -42,8 +42,7 @@ public class Course extends BaseEntity {
             List<Module> structure,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
-            TagId tagId,
-            TagName tagName
+            List<Tag> tags
     ) {
         super(id);
         this.authorId = authorId;
@@ -56,7 +55,6 @@ public class Course extends BaseEntity {
         this.structure = structure;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.tagId = tagId;
-        this.tagName = tagName;
+        this.tags = Objects.isNull(tags) ? new ArrayList<>() : new ArrayList<>(tags);
     }
 }
