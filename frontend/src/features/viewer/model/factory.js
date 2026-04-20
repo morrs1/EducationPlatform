@@ -50,8 +50,8 @@ function normalizeProgressByCourseId(value) {
   }, {});
 }
 
-function buildFullName(firstName, lastName) {
-  return [firstName, lastName].filter(Boolean).join(" ").trim();
+function buildFullName(firstName, lastName, patronymic = "") {
+  return [firstName, patronymic, lastName].filter(Boolean).join(" ").trim();
 }
 
 function splitFullName(fullName) {
@@ -88,22 +88,27 @@ export function buildAvatarUrl(seed) {
 export function normalizeViewerProfile(value) {
   const firstName = normalizeText(value?.firstName);
   const lastName = normalizeText(value?.lastName);
+  const patronymic = normalizeText(value?.patronymic);
   const email = normalizeText(value?.email, { lowercase: true });
+  const status = normalizeText(value?.status) || normalizeText(value?.headline);
   const explicitName = normalizeText(value?.name);
   const fallbackName =
     explicitName ||
-    buildFullName(firstName, lastName) ||
+    buildFullName(firstName, lastName, patronymic) ||
     email ||
     normalizeText(value?.id) ||
     "Новый студент";
 
   return {
     id: normalizeText(value?.id) || null,
+    remoteId: normalizeText(value?.remoteId) || null,
     firstName,
     lastName,
+    patronymic,
     name: fallbackName,
     email,
-    headline: normalizeText(value?.headline) || normalizeText(value?.status),
+    status,
+    headline: normalizeText(value?.headline) || status,
     about: normalizeText(value?.about),
     avatarUrl: normalizeText(value?.avatarUrl) || buildAvatarUrl(fallbackName),
     enrolledCourseIds: normalizeCourseIdList(value?.enrolledCourseIds),
@@ -121,7 +126,10 @@ export function createInitialViewerState() {
 export function createEmptyViewerProfile(viewerId = null) {
   return normalizeViewerProfile({
     id: viewerId,
+    remoteId: null,
     name: "Новый студент",
+    patronymic: "",
+    status: "",
     headline: "",
     about: "",
   });
@@ -136,15 +144,20 @@ export function createViewerProfileFromRegistration({
 }) {
   const normalizedFullName = normalizeText(fullName);
   const normalizedStatus = normalizeText(status);
+  const fallbackHeadline =
+    normalizedStatus || "Начинает собирать свой учебный трек";
   const { firstName, lastName } = splitFullName(normalizedFullName);
 
   return normalizeViewerProfile({
     id: viewerId,
+    remoteId: null,
     firstName,
     lastName,
+    patronymic: "",
     name: normalizedFullName || buildFullName(firstName, lastName),
     email,
-    headline: normalizedStatus || "Начинает собирать свой учебный трек",
+    status: normalizedStatus,
+    headline: fallbackHeadline,
     about: "",
     avatarUrl: normalizeText(avatarUrl),
     enrolledCourseIds: [],

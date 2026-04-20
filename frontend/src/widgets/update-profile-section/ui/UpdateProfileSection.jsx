@@ -16,8 +16,9 @@ function UpdateProfileSection() {
         <h1 className="settings-section-title">Редактирование профиля</h1>
 
         <p className="settings-section-description">
-          Обновите основные данные аккаунта, которые будут видеть другие
-          пользователи, включая фото и текущий статус.
+          Обновите имя, фамилию, отчество, статус и фото профиля. Если
+          `user_service` подключен, изменения уйдут на backend, иначе профиль
+          сохранится локально.
         </p>
       </header>
 

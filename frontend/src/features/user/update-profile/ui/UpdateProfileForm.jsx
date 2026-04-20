@@ -8,10 +8,10 @@ function UpdateProfileForm({ viewer, onSubmit }) {
   const [formState, setFormState] = useState({
     firstName: viewer.firstName ?? "",
     lastName: viewer.lastName ?? "",
-    headline: viewer.headline ?? "",
-    about: viewer.about ?? "",
+    patronymic: viewer.patronymic ?? "",
+    status: viewer.status ?? viewer.headline ?? "",
   });
-  const [avatarDataUrl, setAvatarDataUrl] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,10 +35,10 @@ function UpdateProfileForm({ viewer, onSubmit }) {
     setFormState({
       firstName: viewer.firstName ?? "",
       lastName: viewer.lastName ?? "",
-      headline: viewer.headline ?? "",
-      about: viewer.about ?? "",
+      patronymic: viewer.patronymic ?? "",
+      status: viewer.status ?? viewer.headline ?? "",
     });
-    setAvatarDataUrl(null);
+    setAvatarFile(null);
     setSelectedFileName("Файл не выбран");
   }, [viewer]);
 
@@ -64,15 +64,8 @@ function UpdateProfileForm({ viewer, onSubmit }) {
     objectUrlRef.current = nextObjectUrl;
 
     setPreviewSrc(nextObjectUrl);
+    setAvatarFile(file);
     setSelectedFileName(file.name);
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatarDataUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
   }
 
   function handleFieldChange(event) {
@@ -93,7 +86,7 @@ function UpdateProfileForm({ viewer, onSubmit }) {
 
     const result = await onSubmit({
       ...formState,
-      avatarUrl: avatarDataUrl,
+      avatarFile,
     });
 
     if (!result?.ok) {
@@ -119,14 +112,15 @@ function UpdateProfileForm({ viewer, onSubmit }) {
           <div className="settings-avatar-picker-text">
             <span className="settings-label">Фото профиля</span>
             <p className="settings-helper-text">
-              Выберите изображение с компьютера. После выбора мы покажем превью.
+              Фото загрузится в S3 через user_service, а после сохранения в
+              профиле появится ссылка, которую вернет backend.
             </p>
           </div>
 
           <input
             id={avatarInputId}
             type="file"
-            accept="image/*"
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
             className="settings-file-input-hidden"
             onChange={handleAvatarChange}
           />
@@ -163,6 +157,18 @@ function UpdateProfileForm({ viewer, onSubmit }) {
             onChange={handleFieldChange}
           />
         </label>
+
+        <label className="settings-field">
+          <span className="settings-label">Отчество</span>
+          <input
+            type="text"
+            className="settings-input"
+            name="patronymic"
+            placeholder="Введите отчество"
+            value={formState.patronymic}
+            onChange={handleFieldChange}
+          />
+        </label>
       </div>
 
       <label className="settings-field">
@@ -170,23 +176,15 @@ function UpdateProfileForm({ viewer, onSubmit }) {
         <input
           type="text"
           className="settings-input"
-          name="headline"
-          placeholder="Например: Изучает frontend и продуктовую разработку"
-          value={formState.headline}
+          name="status"
+          placeholder="Например: STUDENT"
+          value={formState.status}
           onChange={handleFieldChange}
         />
-      </label>
-
-      <label className="settings-field">
-        <span className="settings-label">О себе</span>
-        <textarea
-          className="settings-textarea"
-          name="about"
-          placeholder="Расскажите немного о себе"
-          value={formState.about}
-          onChange={handleFieldChange}
-          rows={5}
-        />
+        <span className="settings-helper-text">
+          Используйте латинские заглавные буквы и символы подчеркивания:
+          `STUDENT`, `ACTIVE_USER`.
+        </span>
       </label>
 
       {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
