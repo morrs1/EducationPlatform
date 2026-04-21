@@ -4,3 +4,15 @@
 16:19:52.904148 version@stat F·[] S·0B[] Sc·[]
 16:19:52.906003 db@janitor F·2 G·0
 16:19:52.906100 db@open done T·3.60275ms
+=============== Apr 21, 2026 (UTC) ===============
+16:05:20.008257 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+16:05:20.008950 version@stat F·[] S·0B[] Sc·[]
+16:05:20.008979 db@open opening
+16:05:20.009266 journal@recovery F·1
+16:05:20.009322 journal@recovery recovering @1
+16:05:20.010482 memdb@flush created L0@2 N·14 S·1KiB "Q@\xee..log,v3":"\xe7mv..png,v13"
+16:05:20.010801 version@stat F·[1] S·1KiB[1KiB] Sc·[0.25]
+16:05:20.012632 db@janitor F·3 G·0
+16:05:20.012785 db@open done T·3.746708ms
+16:05:49.417340 db@close closing
+16:05:49.417860 db@close done T·521.667µs

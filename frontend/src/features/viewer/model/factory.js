@@ -50,8 +50,12 @@ function normalizeProgressByCourseId(value) {
   }, {});
 }
 
-function buildFullName(firstName, lastName, patronymic = "") {
-  return [firstName, patronymic, lastName].filter(Boolean).join(" ").trim();
+export function buildViewerDisplayName(
+  firstName,
+  lastName,
+  patronymic = "",
+) {
+  return [lastName, firstName, patronymic].filter(Boolean).join(" ").trim();
 }
 
 function splitFullName(fullName) {
@@ -61,6 +65,7 @@ function splitFullName(fullName) {
     return {
       firstName: "",
       lastName: "",
+      patronymic: "",
     };
   }
 
@@ -70,14 +75,16 @@ function splitFullName(fullName) {
     return {
       firstName: nameParts[0],
       lastName: "",
+      patronymic: "",
     };
   }
 
-  const [lastName = "", firstName = ""] = nameParts;
+  const [lastName = "", firstName = "", ...patronymicParts] = nameParts;
 
   return {
     firstName,
     lastName,
+    patronymic: patronymicParts.join(" "),
   };
 }
 
@@ -92,9 +99,14 @@ export function normalizeViewerProfile(value) {
   const email = normalizeText(value?.email, { lowercase: true });
   const status = normalizeText(value?.status) || normalizeText(value?.headline);
   const explicitName = normalizeText(value?.name);
+  const structuredName = buildViewerDisplayName(
+    firstName,
+    lastName,
+    patronymic,
+  );
   const fallbackName =
+    structuredName ||
     explicitName ||
-    buildFullName(firstName, lastName, patronymic) ||
     email ||
     normalizeText(value?.id) ||
     "Новый студент";
@@ -146,15 +158,17 @@ export function createViewerProfileFromRegistration({
   const normalizedStatus = normalizeText(status);
   const fallbackHeadline =
     normalizedStatus || "Начинает собирать свой учебный трек";
-  const { firstName, lastName } = splitFullName(normalizedFullName);
+  const { firstName, lastName, patronymic } = splitFullName(normalizedFullName);
 
   return normalizeViewerProfile({
     id: viewerId,
     remoteId: null,
     firstName,
     lastName,
-    patronymic: "",
-    name: normalizedFullName || buildFullName(firstName, lastName),
+    patronymic,
+    name:
+      buildViewerDisplayName(firstName, lastName, patronymic) ||
+      normalizedFullName,
     email,
     status: normalizedStatus,
     headline: fallbackHeadline,

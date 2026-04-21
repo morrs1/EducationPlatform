@@ -1,4 +1,4 @@
-import { buildAvatarUrl } from "./factory";
+import { buildAvatarUrl, buildViewerDisplayName } from "./factory";
 
 const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
@@ -11,10 +11,6 @@ function normalizeText(value) {
 
 function isUuid(value) {
   return UUID_PATTERN.test(normalizeText(value));
-}
-
-function joinNameParts(...parts) {
-  return parts.filter(Boolean).join(" ").trim();
 }
 
 function buildUserServiceUrl(pathname = "/user") {
@@ -145,8 +141,7 @@ export function mapReadUserByIdResponseToViewerProfile(response, viewerId) {
   const patronymic = normalizeText(response?.patronymic);
   const status = normalizeText(response?.userStatus);
   const displayName =
-    joinNameParts(firstName, patronymic, surname) ||
-    joinNameParts(firstName, surname) ||
+    buildViewerDisplayName(firstName, surname, patronymic) ||
     viewerId ||
     "Пользователь";
   const avatarUrl = normalizeUserServicePhotoUrl(
