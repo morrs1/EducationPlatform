@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   clearLoginError,
@@ -31,11 +31,9 @@ function AuthModal() {
   const [registerAvatarPreviewSrc, setRegisterAvatarPreviewSrc] = useState("");
   const [registerAvatarFileName, setRegisterAvatarFileName] =
     useState("Фото не выбрано");
-  const [shouldRender, setShouldRender] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [modalView, setModalView] = useState(null);
 
   const isOpen = isLoginModalOpen || isRegisterModalOpen;
+  const modalView = isRegisterModalOpen ? "register" : "login";
 
   useEffect(() => {
     return () => {
@@ -93,6 +91,10 @@ function AuthModal() {
     dispatch(clearLoginError());
     dispatch(closeAuthModals());
   }
+
+  const handleCloseOnEscape = useEffectEvent(() => {
+    handleClose();
+  });
 
   function handleOpenLogin() {
     dispatch(clearLoginError());
@@ -183,23 +185,28 @@ function AuthModal() {
   }
 
   useEffect(() => {
-    if (isLoginModalOpen) {
-      setModalView("login");
-    } else if (isRegisterModalOpen) {
-      setModalView("register");
-    }
-  }, [isLoginModalOpen, isRegisterModalOpen]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-      const timer = setTimeout(() => setIsAnimating(true), 100);
-      return () => clearTimeout(timer);
+    if (!isOpen) {
+      return undefined;
     }
 
-    setIsAnimating(false);
-    const timer = setTimeout(() => setShouldRender(false), 300);
-    return () => clearTimeout(timer);
+    const { body, documentElement } = document;
+    const previousHtmlOverflow = documentElement.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
+    const previousBodyPaddingRight = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+
+    documentElement.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      documentElement.style.overflow = previousHtmlOverflow;
+      body.style.overflow = previousBodyOverflow;
+      body.style.paddingRight = previousBodyPaddingRight;
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -208,36 +215,58 @@ function AuthModal() {
     }
   }, [dispatch, isOpen]);
 
-  if (!shouldRender) {
-    return false;
-  }
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    function handleEscapeKeyDown(event) {
+      if (event.key === "Escape") {
+        handleCloseOnEscape();
+      }
+    }
+
+    document.addEventListener("keydown", handleEscapeKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKeyDown);
+    };
+  }, [isOpen]);
 
   return (
-    <>
-      <div
-        className={`fixed inset-0 bg-black/80 transition-opacity duration-150 ${isAnimating ? "opacity-100" : "opacity-0"}`}
-      />
-
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
+    <div
+      className={`auth-modal-root ${isOpen ? "is-open" : ""}`}
+      aria-hidden={!isOpen}
+    >
+      <button
+        type="button"
+        aria-label="Закрыть окно авторизации"
+        tabIndex={isOpen ? 0 : -1}
+        className="auth-modal-backdrop"
         onClick={handleClose}
+      />
+      <div
+        className="auth-modal-shell"
       >
         <div
-          className={`relative w-full max-w-[95%] rounded-xl bg-white shadow-2xl transition-scale duration-150 sm:max-w-md ${isAnimating ? "scale-100" : "scale-0"}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label={modalView === "login" ? "Вход в аккаунт" : "Регистрация аккаунта"}
+          className="auth-modal-panel"
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="flex items-center justify-between border-b border-gray-500 p-2 sm:p-3">
-            <div className="mx-2 flex gap-2 sm:mx-3 sm:gap-4">
+          <div className="auth-modal-header">
+            <div className="auth-modal-tabs">
               <button
                 type="button"
-                className={`modal-up-btn text-base sm:text-lg ${modalView === "login" ? "active" : ""}`}
+                className={`auth-modal-tab ${modalView === "login" ? "active" : ""}`}
                 onClick={handleOpenLogin}
               >
                 Вход
               </button>
               <button
                 type="button"
-                className={`modal-up-btn text-base sm:text-lg ${modalView === "register" ? "active" : ""}`}
+                className={`auth-modal-tab ${modalView === "register" ? "active" : ""}`}
                 onClick={handleOpenRegister}
               >
                 Регистрация
@@ -247,20 +276,20 @@ function AuthModal() {
             <button
               type="button"
               onClick={handleClose}
-              className="modal-close-btn mx-2 text-xl sm:mx-3 sm:text-2xl"
+              className="auth-modal-close"
             >
               ✕
             </button>
           </div>
 
-          <div className="p-3 sm:p-4">
+          <div className="auth-modal-body">
             <form onSubmit={handleSubmit}>
               {modalView === "login" ? (
-                <div className="my-3 grid gap-3 sm:my-4 sm:gap-4">
+                <div className="auth-modal-grid">
                   <input
                     type="email"
                     placeholder="Email"
-                    className="modal-input w-full text-sm sm:text-base"
+                    className="auth-modal-input"
                     value={emailInput}
                     onChange={handleEmailChange}
                     required
@@ -268,21 +297,21 @@ function AuthModal() {
                   <input
                     type="password"
                     placeholder="Пароль"
-                    className="modal-input w-full text-sm sm:text-base"
+                    className="auth-modal-input"
                     value={passwordInput}
                     onChange={handlePasswordChange}
                     required
                   />
                   {loginError ? (
-                    <span className="text-red-600">{loginError}</span>
+                    <span className="auth-modal-feedback error">{loginError}</span>
                   ) : null}
                 </div>
               ) : (
-                <div className="my-3 grid gap-3 sm:my-4 sm:gap-4">
+                <div className="auth-modal-grid">
                   <input
                     type="text"
                     placeholder="Фамилия Имя Отчество"
-                    className="modal-input w-full text-sm sm:text-base"
+                    className="auth-modal-input"
                     value={registerNameInput}
                     onChange={handleRegisterNameChange}
                     required
@@ -290,7 +319,7 @@ function AuthModal() {
                   <input
                     type="email"
                     placeholder="Email"
-                    className="modal-input w-full text-sm sm:text-base"
+                    className="auth-modal-input"
                     value={registerEmailInput}
                     onChange={handleRegisterEmailChange}
                     required
@@ -298,7 +327,7 @@ function AuthModal() {
                   <input
                     type="password"
                     placeholder="Пароль"
-                    className="modal-input w-full text-sm sm:text-base"
+                    className="auth-modal-input"
                     value={registerPasswordInput}
                     onChange={handleRegisterPasswordChange}
                     required
@@ -306,37 +335,37 @@ function AuthModal() {
 
                   <textarea
                     placeholder="Статус в профиле, коротко о себе. Например: Ищу первую стажировку во frontend"
-                    className="modal-input min-h-24 w-full resize-y py-3 text-sm sm:text-base"
+                    className="auth-modal-input auth-modal-textarea"
                     value={registerStatusInput}
                     onChange={handleRegisterStatusChange}
                     rows={3}
                   />
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-slate-200">
+                  <div className="auth-modal-avatar-picker">
+                    <div className="auth-modal-avatar-row">
+                      <div className="auth-modal-avatar-preview">
                         {registerAvatarPreviewSrc ? (
                           <img
                             src={registerAvatarPreviewSrc}
                             alt="Предпросмотр фото профиля"
-                            className="h-full w-full object-cover"
+                            className="auth-modal-avatar-image"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xs font-medium text-slate-500">
+                          <div className="auth-modal-avatar-empty">
                             Фото
                           </div>
                         )}
                       </div>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-900">
+                      <div className="auth-modal-avatar-copy">
+                        <p className="auth-modal-avatar-title">
                           Фото профиля
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="auth-modal-avatar-hint">
                           Необязательно. Можно выбрать изображение с устройства
                           и сразу увидеть превью.
                         </p>
-                        <p className="mt-2 truncate text-xs text-slate-600">
+                        <p className="auth-modal-avatar-name">
                           {registerAvatarFileName}
                         </p>
 
@@ -350,7 +379,7 @@ function AuthModal() {
 
                         <label
                           htmlFor={registerAvatarInputId}
-                          className="mt-3 inline-flex cursor-pointer items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                          className="auth-modal-avatar-trigger"
                         >
                           Выбрать фото
                         </label>
@@ -359,15 +388,15 @@ function AuthModal() {
                   </div>
 
                   {loginError ? (
-                    <span className="text-red-600">{loginError}</span>
+                    <span className="auth-modal-feedback error">{loginError}</span>
                   ) : null}
                 </div>
               )}
 
-              <div className="flex justify-center">
+              <div className="auth-modal-actions">
                 <button
                   type="submit"
-                  className="modal-submit-btn text-base sm:text-lg"
+                  className="auth-modal-submit"
                 >
                   {modalView === "login" ? "Войти" : "Зарегистрироваться"}
                 </button>
@@ -376,7 +405,7 @@ function AuthModal() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

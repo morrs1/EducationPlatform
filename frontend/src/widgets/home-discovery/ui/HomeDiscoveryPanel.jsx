@@ -5,9 +5,38 @@ function HomeDiscoveryPanel({
   onFilterChange,
   onSubmit,
 }) {
+  const highlights = [
+    "Для новичков",
+    "Практика в каждом треке",
+    "Курсы с сильным рейтингом",
+  ];
+
   return (
     <section className="home-discovery-panel">
+      <div className="home-discovery-copy">
+        <span className="home-discovery-badge">
+          Спокойный и современный интерфейс обучения
+        </span>
+        <h2 className="home-discovery-title">
+          Подбирайте курсы под свой темп, уровень и интерес без лишнего шума.
+        </h2>
+        <p className="home-discovery-lead">
+          Ищите по теме, преподавателю или направлению, а потом быстро
+          сужайте подборку фильтрами для новичков и по сильному рейтингу.
+        </p>
+
+        <div className="home-discovery-highlights">
+          {highlights.map((highlight) => (
+            <span key={highlight} className="home-discovery-highlight">
+              {highlight}
+            </span>
+          ))}
+        </div>
+      </div>
+
       <form className="home-discovery-form" onSubmit={onSubmit}>
+        <p className="home-discovery-form-label">Быстрый подбор курса</p>
+
         <div className="home-discovery-input-wrap">
           <input
             type="search"
@@ -26,7 +55,7 @@ function HomeDiscoveryPanel({
               checked={filters.filter1}
               onChange={onFilterChange}
             />
-            Фильтр 1
+            Для новичков
           </label>
 
           <label className="home-discovery-filter">
@@ -36,12 +65,12 @@ function HomeDiscoveryPanel({
               checked={filters.filter2}
               onChange={onFilterChange}
             />
-            Фильтр 2
+            Рейтинг 4.8+
           </label>
         </div>
 
         <button type="submit" className="home-discovery-submit">
-          Искать
+          Найти курс
         </button>
       </form>
     </section>

@@ -1,15 +1,34 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { Outlet, useLocation } from "react-router";
 import Header from "../../header/ui/Header";
 import Footer from "../../footer/ui/Footer";
 import AuthModal from "../../auth-modal/ui/AuthModal";
 import CatalogSidebar from "../../catalog-sidebar/ui/CatalogSidebar";
 import { ViewerProfileBootstrap } from "../../../features/viewer";
+import {
+  selectIsLoginModalOpen,
+  selectIsRegisterModalOpen,
+} from "../../../features/auth";
+import { selectIsCatalogOpen } from "../../../features/catalog";
+import { ThemeBootstrap } from "../../../features/theme";
 
 function Layout() {
   const headerRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const location = useLocation();
+  const isCatalogOpen = useSelector(selectIsCatalogOpen);
+  const isLoginModalOpen = useSelector(selectIsLoginModalOpen);
+  const isRegisterModalOpen = useSelector(selectIsRegisterModalOpen);
+  const isAuthModalOpen = isLoginModalOpen || isRegisterModalOpen;
+  const appShellStateClassName = [
+    "app-shell",
+    isCatalogOpen ? "is-catalog-open" : "",
+    isAuthModalOpen ? "is-modal-open" : "",
+    isCatalogOpen || isAuthModalOpen ? "is-overlay-active" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   useLayoutEffect(() => {
     const headerElement = headerRef.current;
@@ -65,16 +84,19 @@ function Layout() {
   }, [location.pathname, location.search]);
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className={appShellStateClassName}>
+      <div className="app-shell-glow app-shell-glow-left" aria-hidden="true" />
+      <div className="app-shell-glow app-shell-glow-right" aria-hidden="true" />
+      <ThemeBootstrap />
       <ViewerProfileBootstrap />
       <div
         ref={headerRef}
-        className="fixed inset-x-0 top-0 z-40 bg-gray-950 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.7)]"
+        className="app-header-shell"
       >
         <Header />
       </div>
       <main
-        className="flex-1 w-full"
+        className="app-main"
         style={{ paddingTop: `${headerHeight}px` }}
       >
         <Outlet />
