@@ -18,6 +18,11 @@ import CourseReviewsTab from "../../../widgets/course-reviews/ui/CourseReviewsTa
 import { getCoursePageData } from "../lib/getCoursePageData";
 import { getCourseDescriptionMarkdown } from "../lib/getCourseDescriptionMarkdown";
 import { parseCourseDescriptionMarkdown } from "../lib/parseCourseDescriptionMarkdown";
+import {
+  isUuid,
+  mapReadCourseByIdResponseToCoursePageData,
+  requestCourseById,
+} from "../../../entities/course/model/courseServiceApi";
 
 const tabIds = ["description", "content", "reviews"];
 
@@ -29,6 +34,7 @@ function resolveActiveTab(searchParams) {
 function CoursePage() {
   const { courseId: courseIdParam } = useParams();
   const numericCourseId = Number(courseIdParam);
+  const isBackendCourseRoute = isUuid(courseIdParam);
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const isLogged = useSelector(selectIsLogged);
@@ -44,40 +50,100 @@ function CoursePage() {
   );
   const completedStepIds = useSelector(selectCompletedStepIds);
 
-  const [descriptionStatus, setDescriptionStatus] = useState("loading");
-  const [descriptionMarkdown, setDescriptionMarkdown] = useState("");
+  const [mockDescriptionStatus, setMockDescriptionStatus] = useState("loading");
+  const [mockDescriptionMarkdown, setMockDescriptionMarkdown] = useState("");
   const [descriptionRequestSeed, setDescriptionRequestSeed] = useState(0);
-
-  const pageData = useMemo(
-    () => getCoursePageData(numericCourseId),
-    [numericCourseId],
-  );
-  const course = viewerCourse ?? pageData?.course ?? null;
-  const activeTab = resolveActiveTab(searchParams);
+  const [backendPageStatus, setBackendPageStatus] = useState("idle");
+  const [backendPageData, setBackendPageData] = useState(null);
+  const [backendPageError, setBackendPageError] = useState("");
+  const [backendRequestSeed, setBackendRequestSeed] = useState(0);
 
   useEffect(() => {
-    if (!course) {
-      setDescriptionStatus("error");
-      setDescriptionMarkdown("");
+    if (!isBackendCourseRoute || !courseIdParam) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function loadBackendCourse() {
+      setBackendPageStatus("loading");
+      setBackendPageError("");
+
+      try {
+        const response = await requestCourseById(courseIdParam);
+        const nextPageData = mapReadCourseByIdResponseToCoursePageData(
+          response,
+          courseIdParam,
+        );
+
+        if (!isCancelled) {
+          setBackendPageData(nextPageData);
+          setBackendPageStatus("success");
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setBackendPageData(null);
+          setBackendPageStatus("error");
+          setBackendPageError(
+            error?.message ?? "Не удалось загрузить курс из course_service.",
+          );
+        }
+      }
+    }
+
+    loadBackendCourse();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [courseIdParam, isBackendCourseRoute, backendRequestSeed]);
+
+  const pageData = useMemo(() => {
+    if (isBackendCourseRoute) {
+      return backendPageData;
+    }
+
+    return getCoursePageData(numericCourseId);
+  }, [backendPageData, isBackendCourseRoute, numericCourseId]);
+  const course = isBackendCourseRoute
+    ? pageData?.course ?? null
+    : viewerCourse ?? pageData?.course ?? null;
+  const activeTab = resolveActiveTab(searchParams);
+  const isBackendCourse = Boolean(course?.isBackendCourse);
+  const canUseCourseContent = isBackendCourse ? true : canViewContent;
+  const isContentAccessible = isBackendCourse ? true : isLogged;
+  const descriptionStatus = !course
+    ? "error"
+    : isBackendCourse
+      ? "success"
+      : mockDescriptionStatus;
+  const descriptionMarkdown = !course
+    ? ""
+    : isBackendCourse
+      ? course.description || ""
+      : mockDescriptionMarkdown;
+
+  useEffect(() => {
+    if (!course || course.isBackendCourse) {
       return;
     }
 
     let isCancelled = false;
 
     async function loadDescription() {
-      setDescriptionStatus("loading");
+      setMockDescriptionStatus("loading");
 
       try {
         const markdown = await getCourseDescriptionMarkdown(course.id);
 
         if (!isCancelled) {
-          setDescriptionMarkdown(markdown);
-          setDescriptionStatus("success");
+          setMockDescriptionMarkdown(markdown);
+          setMockDescriptionStatus("success");
         }
       } catch {
         if (!isCancelled) {
-          setDescriptionMarkdown("");
-          setDescriptionStatus("error");
+          setMockDescriptionMarkdown("");
+          setMockDescriptionStatus("error");
         }
       }
     }
@@ -87,7 +153,7 @@ function CoursePage() {
     return () => {
       isCancelled = true;
     };
-  }, [course?.id, descriptionRequestSeed]);
+  }, [course, descriptionRequestSeed]);
 
   const descriptionBlocks = useMemo(
     () => parseCourseDescriptionMarkdown(descriptionMarkdown),
@@ -97,6 +163,45 @@ function CoursePage() {
     () => getLessonProgressMap(completedStepIds),
     [completedStepIds],
   );
+
+  function handlePageRetry() {
+    setBackendRequestSeed((value) => value + 1);
+  }
+
+  if (isBackendCourseRoute && backendPageStatus === "loading") {
+    return (
+      <div className="course-page">
+        <section className="course-not-found">
+          <p className="course-not-found-label">Загрузка курса</p>
+          <h1 className="course-not-found-title">Подключаем course_service</h1>
+          <p className="course-not-found-text">
+            Запрашиваем курс по UUID и подготавливаем его для текущего UI.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
+  if (isBackendCourseRoute && backendPageStatus === "error") {
+    return (
+      <div className="course-page">
+        <section className="course-not-found">
+          <p className="course-not-found-label">Ошибка загрузки</p>
+          <h1 className="course-not-found-title">Не удалось получить курс</h1>
+          <p className="course-not-found-text">
+            {backendPageError || "course_service не вернул данные курса."}
+          </p>
+          <button
+            type="button"
+            className="course-inline-btn"
+            onClick={handlePageRetry}
+          >
+            Повторить
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   if (!pageData || !course) {
     return (
@@ -125,6 +230,11 @@ function CoursePage() {
   }
 
   function handlePrimaryAction() {
+    if (isBackendCourse) {
+      changeTab("content");
+      return;
+    }
+
     if (!isLogged) {
       dispatch(openLoginModal());
       return;
@@ -138,6 +248,10 @@ function CoursePage() {
   }
 
   function handleToggleFavourite() {
+    if (isBackendCourse) {
+      return;
+    }
+
     if (!isLogged) {
       dispatch(openLoginModal());
       return;
@@ -152,7 +266,7 @@ function CoursePage() {
 
   const tabs = [
     { id: "description", label: "Описание", isLocked: false },
-    { id: "content", label: "Содержание", isLocked: !canViewContent },
+    { id: "content", label: "Содержание", isLocked: !canUseCourseContent },
     { id: "reviews", label: "Отзывы", isLocked: false },
   ];
 
@@ -166,16 +280,29 @@ function CoursePage() {
         <section className="course-hero">
           <div className="course-hero-copy">
             <p className="course-hero-eyebrow">
-              {course.categoryName} / {course.subcategoryName}
+              {course.categoryName || "Курс"} /{" "}
+              {course.subcategoryName || "Описание структуры"}
             </p>
             <h1 className="course-hero-title">{course.title}</h1>
             <p className="course-hero-description">{course.shortDescription}</p>
           </div>
 
           <div className="course-hero-meta">
-            <span>Автор: {course.authorName}</span>
-            <span>Рейтинг {course.rating}</span>
-            <span>{course.studentsCount} студентов</span>
+            <span>
+              {course.authorName
+                ? `Автор: ${course.authorName}`
+                : "Автор пока недоступен"}
+            </span>
+            <span>
+              {course.rating == null
+                ? "Рейтинг пока недоступен"
+                : `Рейтинг ${course.rating}`}
+            </span>
+            <span>
+              {course.studentsCount == null
+                ? "Статистика студентов пока недоступна"
+                : `${course.studentsCount} студентов`}
+            </span>
           </div>
         </section>
 
@@ -191,10 +318,10 @@ function CoursePage() {
           <CourseContentTab
             course={course}
             syllabus={pageData.syllabus}
-            isLogged={isLogged}
-            canViewContent={canViewContent}
+            isLogged={isContentAccessible}
+            canViewContent={canUseCourseContent}
             lessonProgressByLessonId={
-              canViewContent ? lessonProgressByLessonId : {}
+              canUseCourseContent ? lessonProgressByLessonId : {}
             }
             onLogin={() => dispatch(openLoginModal())}
             onEnroll={handlePrimaryAction}
@@ -209,7 +336,7 @@ function CoursePage() {
       <aside className="course-page-sidebar-rail">
         <CourseSidebar
           course={course}
-          isLogged={isLogged}
+          isLogged={isContentAccessible}
           onPrimaryAction={handlePrimaryAction}
           onToggleFavourite={handleToggleFavourite}
         />

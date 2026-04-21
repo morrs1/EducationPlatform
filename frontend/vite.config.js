@@ -1,3 +1,5 @@
+import process from "node:process";
+import { Buffer } from "node:buffer";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
@@ -5,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 const USER_SERVICE_API_PROXY_PATH = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
+const COURSE_SERVICE_API_PROXY_PATH = "/api/course-service";
 
 function normalizeBoolean(value, fallback = false) {
   if (typeof value !== "string") {
@@ -184,6 +187,26 @@ function createUserServiceMediaProxyPlugin(env) {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const userServiceUrl = env.VITE_USER_SERVICE_URL?.trim();
+  const courseServiceUrl = env.VITE_COURSE_SERVICE_URL?.trim();
+  const proxy = {};
+
+  if (userServiceUrl) {
+    proxy[USER_SERVICE_API_PROXY_PATH] = {
+      target: userServiceUrl,
+      changeOrigin: true,
+      rewrite: (path) =>
+        path.replace(/^\/api\/user-service/, ""),
+    };
+  }
+
+  if (courseServiceUrl) {
+    proxy[COURSE_SERVICE_API_PROXY_PATH] = {
+      target: courseServiceUrl,
+      changeOrigin: true,
+      rewrite: (path) =>
+        path.replace(/^\/api\/course-service/, ""),
+    };
+  }
 
   return {
     plugins: [
@@ -191,16 +214,9 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       createUserServiceMediaProxyPlugin(env),
     ],
-    server: userServiceUrl
+    server: Object.keys(proxy).length
       ? {
-          proxy: {
-            [USER_SERVICE_API_PROXY_PATH]: {
-              target: userServiceUrl,
-              changeOrigin: true,
-              rewrite: (path) =>
-                path.replace(/^\/api\/user-service/, ""),
-            },
-          },
+          proxy,
         }
       : undefined,
   };

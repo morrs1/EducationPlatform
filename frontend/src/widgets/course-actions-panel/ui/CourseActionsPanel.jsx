@@ -4,22 +4,27 @@ function CourseActionsPanel({
   onPrimaryAction,
   onToggleFavourite,
 }) {
+  const isReadOnlyCourse = course.isReadOnlyCourse;
   const isLearningAvailable = course.isEnrolled || course.isCompleted;
-  const primaryButtonLabel = !isLogged
-    ? "Войти, чтобы записаться"
-    : isLearningAvailable
-      ? "Перейти к содержанию"
-      : "Записаться на курс";
+  const primaryButtonLabel = isReadOnlyCourse
+    ? "Открыть содержание"
+    : !isLogged
+      ? "Войти, чтобы записаться"
+      : isLearningAvailable
+        ? "Перейти к содержанию"
+        : "Записаться на курс";
   const secondaryButtonLabel = course.isFavourite
     ? "Убрать из избранного"
     : "Добавить в избранное";
-  const statusText = !isLogged
-    ? "Содержание откроется после входа и записи на курс."
-    : isLearningAvailable
-      ? course.isCompleted
-        ? "Курс уже завершен, можно вернуться к материалам и отзывам."
-        : "Вы записаны на курс. Можно продолжить обучение."
-      : "Описание и отзывы доступны сразу, а содержание откроется после записи.";
+  const statusText = isReadOnlyCourse
+    ? "Курс загружен напрямую из course_service. Содержание уже можно проверить, а запись и избранное пока оставлены заглушками."
+    : !isLogged
+      ? "Содержание откроется после входа и записи на курс."
+      : isLearningAvailable
+        ? course.isCompleted
+          ? "Курс уже завершен, можно вернуться к материалам и отзывам."
+          : "Вы записаны на курс. Можно продолжить обучение."
+        : "Описание и отзывы доступны сразу, а содержание откроется после записи.";
 
   return (
     <section className="course-side-card">
@@ -37,13 +42,15 @@ function CourseActionsPanel({
           {primaryButtonLabel}
         </button>
 
-        <button
-          type="button"
-          className={`course-secondary-btn ${course.isFavourite ? "active" : ""}`}
-          onClick={onToggleFavourite}
-        >
-          {secondaryButtonLabel}
-        </button>
+        {!isReadOnlyCourse ? (
+          <button
+            type="button"
+            className={`course-secondary-btn ${course.isFavourite ? "active" : ""}`}
+            onClick={onToggleFavourite}
+          >
+            {secondaryButtonLabel}
+          </button>
+        ) : null}
       </div>
 
       <p className="course-side-card-note">{statusText}</p>
