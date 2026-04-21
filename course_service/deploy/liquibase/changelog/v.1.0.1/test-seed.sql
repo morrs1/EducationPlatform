@@ -252,3 +252,93 @@ VALUES (
            TIMESTAMPTZ '2026-04-22 09:40:00+03',
            TIMESTAMPTZ '2026-04-22 09:40:00+03'
        );
+
+INSERT INTO asset (id,
+                   course_id,
+                   lesson_id,
+                   asset_type,
+                   storage_key,
+                   public_url,
+                   mime_type,
+                   size_bytes,
+                   original_filename,
+                   title,
+                   created_at)
+VALUES (
+           'ee6af12a-f482-4ec3-bf65-50b4b4f7d939',
+           '4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8',
+           NULL,
+           'cover',
+           'courses/4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8/cover/java-core-start.png',
+           'https://cdn.example.local/course-service/courses/4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8/cover/java-core-start.png',
+           'image/png',
+           245760,
+           'java-core-start-cover.png',
+           'Обложка курса Java Core Start',
+           TIMESTAMPTZ '2026-04-22 08:55:00+03'
+       ),
+       (
+           '8e3d68dd-4b89-474f-b2c0-9ceb9e85b8c0',
+           '4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8',
+           '4fe8d1b8-3fd7-4107-8c18-0df73f5162d9',
+           'image',
+           'courses/4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8/lessons/4fe8d1b8-3fd7-4107-8c18-0df73f5162d9/variables-diagram.png',
+           'https://cdn.example.local/course-service/courses/4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8/lessons/4fe8d1b8-3fd7-4107-8c18-0df73f5162d9/variables-diagram.png',
+           'image/png',
+           98304,
+           'variables-diagram.png',
+           'Схема переменных и типов данных',
+           TIMESTAMPTZ '2026-04-22 09:01:00+03'
+       ),
+       (
+           '8df6d696-ad8b-4725-a883-0d4ac98ceff7',
+           '4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8',
+           '5555181a-bd6d-4041-b5d4-c6cca3f9f7a7',
+           'file',
+           'courses/4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8/lessons/5555181a-bd6d-4041-b5d4-c6cca3f9f7a7/square-task.pdf',
+           'https://cdn.example.local/course-service/courses/4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8/lessons/5555181a-bd6d-4041-b5d4-c6cca3f9f7a7/square-task.pdf',
+           'application/pdf',
+           184320,
+           'square-task.pdf',
+           'Условие задачи в PDF',
+           TIMESTAMPTZ '2026-04-22 09:21:00+03'
+       ),
+       (
+           '26a0356f-cd33-4597-aa83-92a67d1b3d83',
+           '51652887-b537-468f-91e0-bc4ee1ddb4fd',
+           NULL,
+           'cover',
+           'courses/51652887-b537-468f-91e0-bc4ee1ddb4fd/cover/spring-boot-rest-basics.png',
+           'https://cdn.example.local/course-service/courses/51652887-b537-468f-91e0-bc4ee1ddb4fd/cover/spring-boot-rest-basics.png',
+           'image/png',
+           262144,
+           'spring-boot-rest-basics-cover.png',
+           'Обложка курса Spring Boot REST Basics',
+           TIMESTAMPTZ '2026-04-22 09:25:00+03'
+       ),
+       (
+           'c56f1d30-1dcc-4fdc-a743-833a95f34515',
+           '51652887-b537-468f-91e0-bc4ee1ddb4fd',
+           'cb7fec8e-c93d-455f-bfe8-535ce2fe11d9',
+           'video',
+           'courses/51652887-b537-468f-91e0-bc4ee1ddb4fd/lessons/cb7fec8e-c93d-455f-bfe8-535ce2fe11d9/rest-controller-intro.mp4',
+           'https://cdn.example.local/course-service/courses/51652887-b537-468f-91e0-bc4ee1ddb4fd/lessons/cb7fec8e-c93d-455f-bfe8-535ce2fe11d9/rest-controller-intro.mp4',
+           'video/mp4',
+           15728640,
+           'rest-controller-intro.mp4',
+           'Видео: введение в REST контроллеры',
+           TIMESTAMPTZ '2026-04-22 09:31:00+03'
+       ),
+       (
+           '5323daf6-c75c-4675-810d-56a938c0a853',
+           '51652887-b537-468f-91e0-bc4ee1ddb4fd',
+           'fa2416f1-4c87-4d0f-bf46-b72d38fe4f03',
+           'file',
+           'courses/51652887-b537-468f-91e0-bc4ee1ddb4fd/lessons/fa2416f1-4c87-4d0f-bf46-b72d38fe4f03/hello-endpoint-checklist.txt',
+           'https://cdn.example.local/course-service/courses/51652887-b537-468f-91e0-bc4ee1ddb4fd/lessons/fa2416f1-4c87-4d0f-bf46-b72d38fe4f03/hello-endpoint-checklist.txt',
+           'text/plain',
+           2048,
+           'hello-endpoint-checklist.txt',
+           'Чеклист для задания hello endpoint',
+           TIMESTAMPTZ '2026-04-22 09:41:00+03'
+       );
