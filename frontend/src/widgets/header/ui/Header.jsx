@@ -16,6 +16,7 @@ import {
 } from "../../../features/viewer";
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router";
+import { ThemeToggleButton } from "../../../features/theme";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,35 +42,43 @@ function Header() {
   }, []);
 
   return (
-    <header className="flex flex-col items-center justify-between gap-2 px-3 py-2 md:flex-row sm:px-4 md:px-6 sm:py-3 bg-gray-950 md:gap-0">
-      <div className="flex items-center justify-between w-full gap-2 md:w-auto sm:gap-4">
-        <NavLink
-          className="text-sm header-catalog-btn sm:text-base whitespace-nowrap"
-          to="/"
-          onClick={() => dispatch(closeCatalog())}
-        >
-          Главная
-        </NavLink>
+    <header className="header-shell">
+      <div className="header-brand-cluster">
         <button
           data-catalog-toggle="true"
-          className="text-sm header-catalog-btn sm:text-base whitespace-nowrap"
+          className="header-catalog-btn"
           onClick={() =>
             isCatalogOpen ? dispatch(closeCatalog()) : dispatch(openCatalog())
           }
         >
           Каталог
         </button>
+
+        <NavLink
+          className="header-brand"
+          to="/"
+          onClick={() => dispatch(closeCatalog())}
+        >
+          <span className="header-brand-mark">EP</span>
+          <span className="header-brand-copy">
+            <span className="header-brand-eyebrow">Трек, практика, прогресс</span>
+            <span className="header-brand-title">EduPlatform</span>
+          </span>
+        </NavLink>
       </div>
 
-      <div className="w-full md:flex-1 md:mx-4">
+      <label className="header-search-wrap">
+        <span className="header-search-kicker">Быстрый поиск</span>
         <input
           type="text"
-          placeholder="Поиск..."
-          className="w-full header-search"
+          placeholder="Название курса, автор или направление"
+          className="header-search"
         />
-      </div>
+      </label>
 
-      <div className="flex justify-center w-full gap-2 md:w-auto sm:gap-3">
+      <div className="header-actions">
+        <ThemeToggleButton />
+
         {!isLogged ? (
           <>
             <button
@@ -85,6 +94,10 @@ function Header() {
               Зарегистрироваться
             </button>
           </>
+        ) : null}
+
+        {isLogged ? (
+          <span className="header-viewer-pill">{viewerName}</span>
         ) : null}
 
         <div className="header-profile-menu-wrap" ref={menuRef}>

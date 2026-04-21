@@ -26,6 +26,7 @@ import {
 } from "../../features/viewer";
 
 import { assistantReducer } from "../../features/assistant";
+import { themeReducer } from "../../features/theme";
 
 function readStoredJson(key) {
   try {
@@ -207,6 +208,7 @@ const store = configureStore({
     lessonSession: lessonSessionReducer,
     viewer: viewerReducer,
     assistant: assistantReducer,
+    theme: themeReducer,
   },
   preloadedState: loadPreloadedState(),
 });

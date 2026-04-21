@@ -1,16 +1,21 @@
 import CoursePreviewCard from "../../../entities/course/ui/preview/CoursePreviewCard";
 
+const FILTER_LABELS = {
+  filter1: "Для новичков",
+  filter2: "Рейтинг 4.8+",
+};
+
 function SearchResults({ searchQuery, filters, results }) {
   const hasResults = results.length > 0;
   const hasSearchQuery = searchQuery.length > 0;
   const activeFilters = [];
 
   if (filters.filter1) {
-    activeFilters.push("Фильтр 1");
+    activeFilters.push(FILTER_LABELS.filter1);
   }
 
   if (filters.filter2) {
-    activeFilters.push("Фильтр 2");
+    activeFilters.push(FILTER_LABELS.filter2);
   }
 
   return (
