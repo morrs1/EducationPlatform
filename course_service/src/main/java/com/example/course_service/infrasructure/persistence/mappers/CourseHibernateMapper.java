@@ -20,8 +20,8 @@ import com.example.course_service.domain.module.vo.ModuleEstimatedMinutes;
 import com.example.course_service.domain.module.vo.ModulePosition;
 import com.example.course_service.domain.module.vo.ModuleTitle;
 import com.example.course_service.domain.tag.Tag;
-import com.example.course_service.infrasructure.persistence.models.HibernateCourse;
-import com.example.course_service.infrasructure.persistence.models.HibernateTag;
+import com.example.course_service.infrasructure.persistence.models.course.HibernateCourse;
+import com.example.course_service.infrasructure.persistence.models.course.HibernateTag;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

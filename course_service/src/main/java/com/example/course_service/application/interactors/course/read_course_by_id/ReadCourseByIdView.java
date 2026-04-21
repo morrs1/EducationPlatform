@@ -1,4 +1,4 @@
-package com.example.course_service.application.interactors.read_course_by_id;
+package com.example.course_service.application.interactors.course.read_course_by_id;
 
 import com.example.course_service.domain.module.Module;
 import com.example.course_service.domain.tag.Tag;

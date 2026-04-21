@@ -1,4 +1,4 @@
-package com.example.course_service.infrasructure.persistence.models;
+package com.example.course_service.infrasructure.persistence.models.course;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

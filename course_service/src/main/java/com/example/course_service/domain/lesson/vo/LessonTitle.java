@@ -1,4 +1,4 @@
-package com.example.course_service.domain.lesson_content.vo;
+package com.example.course_service.domain.lesson.vo;
 
 import com.example.course_service.domain.base.BaseValueObject;
 import com.example.course_service.domain.base.exceptions.ValidateException;
@@ -9,11 +9,11 @@ import java.util.Objects;
 
 @ToString
 @Getter
-public class LessonContentTitle extends BaseValueObject {
+public class LessonTitle extends BaseValueObject {
 
     private final String title;
 
-    public LessonContentTitle(String title) {
+    public LessonTitle(String title) {
         this.title = title;
         validate();
     }
@@ -21,13 +21,13 @@ public class LessonContentTitle extends BaseValueObject {
     @Override
     public void validate() throws ValidateException {
         if (Objects.isNull(title)) {
-            throw new ValidateException("Lesson content title must not be null");
+            throw new ValidateException("Lesson title must not be null");
         }
         if (title.isBlank()) {
-            throw new ValidateException("Lesson content title must not be blank");
+            throw new ValidateException("Lesson title must not be blank");
         }
         if (title.length() > 255) {
-            throw new ValidateException("Lesson content title length must not exceed 255 characters");
+            throw new ValidateException("Lesson title length must not exceed 255 characters");
         }
     }
 }

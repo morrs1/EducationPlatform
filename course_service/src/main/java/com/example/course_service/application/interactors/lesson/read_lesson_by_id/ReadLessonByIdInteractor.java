@@ -1,0 +1,28 @@
+package com.example.course_service.application.interactors.lesson.read_lesson_by_id;
+
+import com.example.course_service.application.exceptions.LessonNotFoundException;
+import com.example.course_service.application.interactors.mappers.LessonViewMapper;
+import com.example.course_service.application.ports.LessonRepo;
+import com.example.course_service.application.ports.TransactionManager;
+import lombok.RequiredArgsConstructor;
+
+import java.util.UUID;
+
+@RequiredArgsConstructor
+public class ReadLessonByIdInteractor {
+
+    private final LessonRepo lessonRepo;
+    private final TransactionManager transactionManager;
+    private final LessonViewMapper mapper;
+
+    public ReadLessonByIdView readById(UUID id) {
+        return mapper.toReadLessonByIdView(
+                transactionManager.inTransaction(
+                                () -> lessonRepo.readById(id)
+                        )
+                        .orElseThrow(() -> new LessonNotFoundException("Lesson with this id was not found"))
+        );
+    }
+
+
+}

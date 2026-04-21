@@ -1,4 +1,4 @@
-package com.example.course_service.infrasructure.persistence.models;
+package com.example.course_service.infrasructure.persistence.models.course;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

@@ -3,7 +3,7 @@ package com.example.course_service.infrasructure.adapters.persistence;
 import com.example.course_service.application.ports.CourseRepo;
 import com.example.course_service.domain.course.Course;
 import com.example.course_service.infrasructure.persistence.mappers.CourseHibernateMapper;
-import com.example.course_service.infrasructure.persistence.models.HibernateCourse;
+import com.example.course_service.infrasructure.persistence.models.course.HibernateCourse;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
