@@ -10,7 +10,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/course")
 @RequiredArgsConstructor
-public class ReadByIdHandler {
+public class ReadCourseByIdHandler {
 
     private final ReadCourseByIdInteractor interactor;
     private final CourseMapperQuery mapper;
