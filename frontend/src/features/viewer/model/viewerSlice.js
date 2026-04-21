@@ -1,13 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { mockCourses } from "../../../entities/course/model/mockCourses";
-import { buildAvatarUrl, createInitialViewerState, normalizeViewerProfile } from "./factory";
+import {
+  buildAvatarUrl,
+  buildViewerDisplayName,
+  createInitialViewerState,
+  normalizeViewerProfile,
+} from "./factory";
 
 function getCourseById(courseId) {
   return mockCourses.find((course) => course.id === courseId) ?? null;
-}
-
-function buildFullName(firstName, lastName, patronymic = "") {
-  return [firstName, patronymic, lastName].filter(Boolean).join(" ").trim();
 }
 
 function isGeneratedViewerAvatar(avatarUrl) {
@@ -33,7 +34,11 @@ const viewerSlice = createSlice({
       const nextPatronymic = patronymic.trim();
       const nextStatus = status.trim() || headline.trim();
       const nextFullName =
-        buildFullName(nextFirstName, nextLastName, nextPatronymic) || state.name;
+        buildViewerDisplayName(
+          nextFirstName,
+          nextLastName,
+          nextPatronymic,
+        ) || state.name;
 
       state.firstName = nextFirstName;
       state.lastName = nextLastName;

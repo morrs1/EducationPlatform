@@ -63,10 +63,15 @@ export function submitRegister({ fullName, email, password, status, avatarUrl })
     const normalizedStatus = status?.trim() ?? "";
 
     if (normalizedFullName.split(/\s+/).filter(Boolean).length < 2) {
-      dispatch(loginFailure("Укажите ФИО полностью, минимум имя и фамилию."));
+      dispatch(
+        loginFailure(
+          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
+        ),
+      );
       return {
         ok: false,
-        error: "Укажите ФИО полностью, минимум имя и фамилию.",
+        error:
+          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
       };
     }
 
