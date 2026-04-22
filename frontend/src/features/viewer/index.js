@@ -12,12 +12,14 @@ export {
   toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
+  upsertViewerCourseSnapshot,
   restoreViewer,
   resetDemoState,
 } from "./model/viewerSlice";
 
 export {
   buildAvatarUrl,
+  createViewerCourseSnapshot,
   createInitialViewerState,
   createViewerProfileFromRegistration,
 } from "./model/factory";

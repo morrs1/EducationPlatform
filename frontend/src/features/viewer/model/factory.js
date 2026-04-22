@@ -10,18 +10,54 @@ function normalizeText(value, { lowercase = false } = {}) {
   return lowercase ? normalizedValue.toLowerCase() : normalizedValue;
 }
 
+const INTEGER_ID_PATTERN = /^\d+$/;
+
+export function normalizeViewerCourseId(value) {
+  if (Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalizedValue = value.trim();
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  if (INTEGER_ID_PATTERN.test(normalizedValue)) {
+    return Number(normalizedValue);
+  }
+
+  return normalizedValue;
+}
+
+export function getViewerCourseStorageKey(courseId) {
+  const normalizedCourseId = normalizeViewerCourseId(courseId);
+
+  return normalizedCourseId == null ? null : String(normalizedCourseId);
+}
+
 function normalizeCourseIdList(value) {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return Array.from(
-    new Set(
-      value
-        .map((courseId) => Number(courseId))
-        .filter((courseId) => Number.isFinite(courseId)),
-    ),
-  );
+  const uniqueCourseIds = new Map();
+
+  value.forEach((courseId) => {
+    const normalizedCourseId = normalizeViewerCourseId(courseId);
+
+    if (normalizedCourseId == null) {
+      return;
+    }
+
+    uniqueCourseIds.set(String(normalizedCourseId), normalizedCourseId);
+  });
+
+  return Array.from(uniqueCourseIds.values());
 }
 
 function normalizeProgressByCourseId(value) {
@@ -30,13 +66,13 @@ function normalizeProgressByCourseId(value) {
   }
 
   return Object.entries(value).reduce((progressMap, [courseId, progress]) => {
-    const normalizedCourseId = Number(courseId);
+    const storageKey = getViewerCourseStorageKey(courseId);
 
-    if (!Number.isFinite(normalizedCourseId)) {
+    if (!storageKey) {
       return progressMap;
     }
 
-    progressMap[normalizedCourseId] = {
+    progressMap[storageKey] = {
       completedLessons: Number(progress?.completedLessons) || 0,
       completedTests: Number(progress?.completedTests) || 0,
       completedTasks: Number(progress?.completedTasks) || 0,
@@ -48,6 +84,113 @@ function normalizeProgressByCourseId(value) {
 
     return progressMap;
   }, {});
+}
+
+function normalizeCourseSnapshotArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const normalizedLessonIds = [];
+  const seenLessonIds = new Set();
+
+  value.forEach((lessonId) => {
+    const normalizedLessonId = normalizeViewerCourseId(lessonId);
+
+    if (normalizedLessonId == null) {
+      return;
+    }
+
+    const lessonStorageKey = String(normalizedLessonId);
+
+    if (seenLessonIds.has(lessonStorageKey)) {
+      return;
+    }
+
+    seenLessonIds.add(lessonStorageKey);
+    normalizedLessonIds.push(normalizedLessonId);
+  });
+
+  return normalizedLessonIds;
+}
+
+export function normalizeViewerCourseSnapshot(value) {
+  const normalizedCourseId = normalizeViewerCourseId(value?.id);
+
+  if (normalizedCourseId == null) {
+    return null;
+  }
+
+  return {
+    id: normalizedCourseId,
+    authorId: value?.authorId ?? null,
+    authorName: normalizeText(value?.authorName) || "Автор курса",
+    title: normalizeText(value?.title) || "Курс без названия",
+    shortDescription: normalizeText(value?.shortDescription),
+    categoryId: normalizeViewerCourseId(value?.categoryId) ?? null,
+    categoryName: normalizeText(value?.categoryName) || "Курс",
+    categoryIcon: normalizeText(value?.categoryIcon) || "DB",
+    subcategoryId: normalizeViewerCourseId(value?.subcategoryId) ?? null,
+    subcategoryName:
+      normalizeText(value?.subcategoryName) || "Курс из базы данных",
+    level: normalizeText(value?.level) || "beginner",
+    durationLabel: normalizeText(value?.durationLabel) || "Длительность уточняется",
+    rating: Number.isFinite(value?.rating) ? value.rating : null,
+    studentsCount: Number.isFinite(value?.studentsCount)
+      ? value.studentsCount
+      : null,
+    lessonsCount: Number(value?.lessonsCount) || 0,
+    testsCount: Number(value?.testsCount) || 0,
+    tasksCount: Number(value?.tasksCount) || 0,
+    coverUrl: normalizeText(value?.coverUrl),
+    imageUrl: normalizeText(value?.imageUrl),
+    isBackendCourse: Boolean(value?.isBackendCourse),
+    syllabusLessonIds: normalizeCourseSnapshotArray(value?.syllabusLessonIds),
+  };
+}
+
+function normalizeCourseSnapshotsById(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.values(value).reduce((snapshotsMap, snapshot) => {
+    const normalizedSnapshot = normalizeViewerCourseSnapshot(snapshot);
+
+    if (!normalizedSnapshot) {
+      return snapshotsMap;
+    }
+
+    snapshotsMap[String(normalizedSnapshot.id)] = normalizedSnapshot;
+
+    return snapshotsMap;
+  }, {});
+}
+
+export function createViewerCourseSnapshot(course, syllabusLessonIds = []) {
+  return normalizeViewerCourseSnapshot({
+    id: course?.id,
+    authorId: course?.authorId ?? null,
+    authorName: course?.authorName,
+    title: course?.title,
+    shortDescription: course?.shortDescription,
+    categoryId: course?.categoryId,
+    categoryName: course?.categoryName,
+    categoryIcon: course?.categoryIcon,
+    subcategoryId: course?.subcategoryId,
+    subcategoryName: course?.subcategoryName,
+    level: course?.level,
+    durationLabel: course?.durationLabel,
+    rating: course?.rating,
+    studentsCount: course?.studentsCount,
+    lessonsCount: course?.lessonsCount,
+    testsCount: course?.testsCount,
+    tasksCount: course?.tasksCount,
+    coverUrl: course?.coverUrl,
+    imageUrl: course?.imageUrl,
+    isBackendCourse: course?.isBackendCourse,
+    syllabusLessonIds,
+  });
 }
 
 export function buildViewerDisplayName(
@@ -128,6 +271,7 @@ export function normalizeViewerProfile(value) {
     completedCourseIds: normalizeCourseIdList(value?.completedCourseIds),
     certificateCourseIds: normalizeCourseIdList(value?.certificateCourseIds),
     progressByCourseId: normalizeProgressByCourseId(value?.progressByCourseId),
+    courseSnapshotsById: normalizeCourseSnapshotsById(value?.courseSnapshotsById),
   };
 }
 

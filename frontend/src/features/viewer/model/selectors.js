@@ -4,6 +4,10 @@ import {
   enrichCourse,
   getCourseById,
 } from "../../../entities/course/model/selectors";
+import {
+  getViewerCourseStorageKey,
+  normalizeViewerCourseId,
+} from "./factory";
 
 export const selectViewer = (state) => state.viewer;
 export const selectViewerId = (state) => state.viewer.id;
@@ -32,6 +36,20 @@ const selectCompletedLessonIds = (state) =>
   state.lessonSession?.completedLessonIds ?? [];
 const selectCourseIdParam = (_state, courseId) => courseId;
 
+function getViewerCourseRecord(viewer, courseId) {
+  const normalizedCourseId = normalizeViewerCourseId(courseId);
+
+  if (normalizedCourseId == null) {
+    return null;
+  }
+
+  return (
+    getCourseById(normalizedCourseId) ??
+    viewer.courseSnapshotsById[getViewerCourseStorageKey(normalizedCourseId)] ??
+    null
+  );
+}
+
 function attachViewerState(
   course,
   viewer,
@@ -40,12 +58,14 @@ function attachViewerState(
   completedLessonIds,
 ) {
   const enrichedCourse = enrichCourse(course);
+  const storageKey = getViewerCourseStorageKey(course.id);
   const progress = sessionIsActive
     ? getCourseProgressByCourseId({
         courseId: course.id,
-        viewerProgress: viewer.progressByCourseId[course.id] ?? null,
+        viewerProgress: viewer.progressByCourseId[storageKey] ?? null,
         viewedLessonIds,
         completedLessonIds,
+        courseSnapshot: course,
       })
     : null;
 
@@ -64,15 +84,15 @@ function attachViewerState(
 
 export const selectIsEnrolledInCourse = (state, courseId) =>
   selectViewerSessionActive(state) &&
-  state.viewer.enrolledCourseIds.includes(courseId);
+  state.viewer.enrolledCourseIds.includes(normalizeViewerCourseId(courseId));
 
 export const selectIsFavouriteCourse = (state, courseId) =>
   selectViewerSessionActive(state) &&
-  state.viewer.favouriteCourseIds.includes(courseId);
+  state.viewer.favouriteCourseIds.includes(normalizeViewerCourseId(courseId));
 
 export const selectIsCompletedCourse = (state, courseId) =>
   selectViewerSessionActive(state) &&
-  state.viewer.completedCourseIds.includes(courseId);
+  state.viewer.completedCourseIds.includes(normalizeViewerCourseId(courseId));
 
 export const selectCanViewCourseContent = (state, courseId) =>
   selectIsEnrolledInCourse(state, courseId) ||
@@ -81,10 +101,14 @@ export const selectCanViewCourseContent = (state, courseId) =>
 export const selectViewerCourseProgress = (state, courseId) =>
   selectViewerSessionActive(state)
     ? getCourseProgressByCourseId({
-        courseId,
-        viewerProgress: state.viewer.progressByCourseId[courseId] ?? null,
+        courseId: normalizeViewerCourseId(courseId),
+        viewerProgress:
+          state.viewer.progressByCourseId[
+            getViewerCourseStorageKey(courseId)
+          ] ?? null,
         viewedLessonIds: selectViewedLessonIds(state),
         completedLessonIds: selectCompletedLessonIds(state),
+        courseSnapshot: getViewerCourseRecord(state.viewer, courseId),
       })
     : null;
 
@@ -99,7 +123,7 @@ export const selectCurrentCourses = createSelector(
     !sessionIsActive
       ? []
       : viewer.enrolledCourseIds
-          .map(getCourseById)
+          .map((courseId) => getViewerCourseRecord(viewer, courseId))
           .filter(Boolean)
           .map((course) =>
             attachViewerState(
@@ -123,7 +147,7 @@ export const selectFavouriteCourses = createSelector(
     !sessionIsActive
       ? []
       : viewer.favouriteCourseIds
-          .map(getCourseById)
+          .map((courseId) => getViewerCourseRecord(viewer, courseId))
           .filter(Boolean)
           .map((course) =>
             attachViewerState(
@@ -147,7 +171,7 @@ export const selectCompletedCourses = createSelector(
     !sessionIsActive
       ? []
       : viewer.completedCourseIds
-          .map(getCourseById)
+          .map((courseId) => getViewerCourseRecord(viewer, courseId))
           .filter(Boolean)
           .map((course) =>
             attachViewerState(
@@ -169,7 +193,7 @@ export const selectViewerCourseById = createSelector(
     selectCourseIdParam,
   ],
   (sessionIsActive, viewer, viewedLessonIds, completedLessonIds, courseId) => {
-    const course = getCourseById(courseId);
+    const course = getViewerCourseRecord(viewer, courseId);
 
     return course
       ? attachViewerState(

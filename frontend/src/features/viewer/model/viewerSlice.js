@@ -3,12 +3,58 @@ import { mockCourses } from "../../../entities/course/model/mockCourses";
 import {
   buildAvatarUrl,
   buildViewerDisplayName,
+  createViewerCourseSnapshot,
   createInitialViewerState,
+  getViewerCourseStorageKey,
+  normalizeViewerCourseId,
+  normalizeViewerCourseSnapshot,
   normalizeViewerProfile,
 } from "./factory";
 
 function getCourseById(courseId) {
   return mockCourses.find((course) => course.id === courseId) ?? null;
+}
+
+function getViewerCourseRecord(state, courseId) {
+  const normalizedCourseId = normalizeViewerCourseId(courseId);
+
+  if (normalizedCourseId == null) {
+    return null;
+  }
+
+  return (
+    getCourseById(normalizedCourseId) ??
+    state.courseSnapshotsById[getViewerCourseStorageKey(normalizedCourseId)] ??
+    null
+  );
+}
+
+function resolveViewerCourseActionPayload(payload) {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    !Array.isArray(payload) &&
+    ("courseId" in payload || "courseSnapshot" in payload)
+  ) {
+    return {
+      courseId: normalizeViewerCourseId(payload.courseId),
+      courseSnapshot:
+        normalizeViewerCourseSnapshot(payload.courseSnapshot) ?? null,
+    };
+  }
+
+  return {
+    courseId: normalizeViewerCourseId(payload),
+    courseSnapshot: null,
+  };
+}
+
+function upsertCourseSnapshot(state, courseSnapshot) {
+  if (!courseSnapshot) {
+    return;
+  }
+
+  state.courseSnapshotsById[String(courseSnapshot.id)] = courseSnapshot;
 }
 
 function isGeneratedViewerAvatar(avatarUrl) {
@@ -69,22 +115,26 @@ const viewerSlice = createSlice({
       normalizeViewerProfile(action.payload ?? createInitialViewerState()),
 
     enrollInCourse: (state, action) => {
-      const courseId = action.payload;
+      const { courseId, courseSnapshot } = resolveViewerCourseActionPayload(
+        action.payload,
+      );
+
+      if (courseId == null) {
+        return;
+      }
+
+      upsertCourseSnapshot(state, courseSnapshot);
 
       if (state.enrolledCourseIds.includes(courseId)) {
         return;
       }
 
-      const course = getCourseById(courseId);
-
-      if (!course) {
-        return;
-      }
-
       state.enrolledCourseIds.push(courseId);
 
-      if (!state.progressByCourseId[courseId]) {
-        state.progressByCourseId[courseId] = {
+      const storageKey = getViewerCourseStorageKey(courseId);
+
+      if (!storageKey || !state.progressByCourseId[storageKey]) {
+        state.progressByCourseId[storageKey] = {
           completedLessons: 0,
           completedTests: 0,
           completedTasks: 0,
@@ -94,7 +144,16 @@ const viewerSlice = createSlice({
     },
 
     toggleFavouriteCourse: (state, action) => {
-      const courseId = action.payload;
+      const { courseId, courseSnapshot } = resolveViewerCourseActionPayload(
+        action.payload,
+      );
+
+      if (courseId == null) {
+        return;
+      }
+
+      upsertCourseSnapshot(state, courseSnapshot);
+
       const favouriteIndex = state.favouriteCourseIds.indexOf(courseId);
 
       if (favouriteIndex >= 0) {
@@ -106,9 +165,9 @@ const viewerSlice = createSlice({
     },
 
     leaveCourse: (state, action) => {
-      const courseId = action.payload;
+      const courseId = normalizeViewerCourseId(action.payload);
 
-      if (!state.enrolledCourseIds.includes(courseId)) {
+      if (courseId == null || !state.enrolledCourseIds.includes(courseId)) {
         return;
       }
 
@@ -116,18 +175,25 @@ const viewerSlice = createSlice({
         (id) => id !== courseId,
       );
 
+      const storageKey = getViewerCourseStorageKey(courseId);
+
       if (!state.completedCourseIds.includes(courseId)) {
-        delete state.progressByCourseId[courseId];
+        delete state.progressByCourseId[storageKey];
       }
     },
 
     markCourseCompleted: (state, action) => {
-      const courseId = action.payload;
-      const course = getCourseById(courseId);
+      const { courseId, courseSnapshot } = resolveViewerCourseActionPayload(
+        action.payload,
+      );
 
-      if (!course) {
+      if (courseId == null) {
         return;
       }
+
+      upsertCourseSnapshot(state, courseSnapshot);
+
+      const course = getViewerCourseRecord(state, courseId);
 
       if (!state.completedCourseIds.includes(courseId)) {
         state.completedCourseIds.push(courseId);
@@ -137,12 +203,25 @@ const viewerSlice = createSlice({
         (id) => id !== courseId,
       );
 
-      state.progressByCourseId[courseId] = {
-        completedLessons: course.lessonsCount,
-        completedTests: course.testsCount,
-        completedTasks: course.tasksCount,
+      const storageKey = getViewerCourseStorageKey(courseId);
+
+      state.progressByCourseId[storageKey] = {
+        completedLessons: course?.lessonsCount ?? 0,
+        completedTests: course?.testsCount ?? 0,
+        completedTasks: course?.tasksCount ?? 0,
         lastVisitedAt: new Date().toISOString(),
       };
+    },
+
+    upsertViewerCourseSnapshot: (state, action) => {
+      const courseSnapshot =
+        action.payload?.courseSnapshot ?? action.payload ?? null;
+
+      upsertCourseSnapshot(
+        state,
+        normalizeViewerCourseSnapshot(courseSnapshot) ??
+          createViewerCourseSnapshot(courseSnapshot),
+      );
     },
 
     resetDemoState: () => createInitialViewerState(),
@@ -156,6 +235,7 @@ export const {
   toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
+  upsertViewerCourseSnapshot,
   restoreViewer,
   resetDemoState,
 } = viewerSlice.actions;

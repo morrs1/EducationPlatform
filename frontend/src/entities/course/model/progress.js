@@ -12,13 +12,26 @@ function getInteractiveLessonIds(syllabus) {
     .filter(Boolean);
 }
 
+function getCourseInteractiveLessonIds(course) {
+  if (!course) {
+    return [];
+  }
+
+  if (Array.isArray(course.syllabusLessonIds)) {
+    return course.syllabusLessonIds.filter(Boolean);
+  }
+
+  return getInteractiveLessonIds(getCourseSyllabus(course.id));
+}
+
 export function getCourseProgressByCourseId({
   courseId,
   viewerProgress = null,
   viewedLessonIds = [],
   completedLessonIds = [],
+  courseSnapshot = null,
 }) {
-  const course = mockCoursesById.get(courseId) ?? null;
+  const course = courseSnapshot ?? mockCoursesById.get(courseId) ?? null;
 
   if (!course) {
     return viewerProgress ?? null;
@@ -26,8 +39,7 @@ export function getCourseProgressByCourseId({
 
   const persistedProgress = viewerProgress ?? {};
   const lessonsCount = course.lessonsCount ?? 0;
-  const syllabus = getCourseSyllabus(course.id);
-  const interactiveLessonIds = getInteractiveLessonIds(syllabus);
+  const interactiveLessonIds = getCourseInteractiveLessonIds(course);
   const lessonProgressByLessonId = getLessonProgressMap(
     viewedLessonIds,
     completedLessonIds,
@@ -68,7 +80,7 @@ export function getCourseProgressByCourseId({
         ? persistedProgress.lastVisitedAt
         : null,
     progressPercent,
-    interactiveLessonsCount,
+    interactiveLessonsCount: interactiveLessonIds.length,
     startedInteractiveLessonsCount,
     completedInteractiveLessonsCount,
   };

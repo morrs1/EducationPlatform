@@ -8,8 +8,14 @@ import {
 } from "../../../features/lesson-session";
 import {
   enrollInCourse,
+  createViewerCourseSnapshot,
+  upsertViewerCourseSnapshot,
+  selectIsCompletedCourse,
+  selectIsFavouriteCourse,
+  selectIsEnrolledInCourse,
   selectCanViewCourseContent,
   selectViewerCourseById,
+  selectViewerCourseProgress,
   toggleFavouriteCourse,
 } from "../../../features/viewer";
 import { getLessonProgressMap } from "../../../entities/lesson/model/progress";
@@ -38,18 +44,40 @@ function CoursePage() {
   const { courseId: courseIdParam } = useParams();
   const numericCourseId = Number(courseIdParam);
   const isBackendCourseRoute = isUuid(courseIdParam);
+  const resolvedCourseId = isBackendCourseRoute ? courseIdParam : numericCourseId;
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const isLogged = useSelector(selectIsLogged);
   const viewerCourse = useSelector((state) =>
-    Number.isFinite(numericCourseId)
-      ? selectViewerCourseById(state, numericCourseId)
+    resolvedCourseId != null &&
+    (typeof resolvedCourseId === "string" || Number.isFinite(resolvedCourseId))
+      ? selectViewerCourseById(state, resolvedCourseId)
       : null,
   );
-  const canViewContent = useSelector((state) =>
-    Number.isFinite(numericCourseId)
-      ? selectCanViewCourseContent(state, numericCourseId)
+  const isEnrolled = useSelector((state) =>
+    resolvedCourseId != null
+      ? selectIsEnrolledInCourse(state, resolvedCourseId)
       : false,
+  );
+  const isFavourite = useSelector((state) =>
+    resolvedCourseId != null
+      ? selectIsFavouriteCourse(state, resolvedCourseId)
+      : false,
+  );
+  const isCompleted = useSelector((state) =>
+    resolvedCourseId != null
+      ? selectIsCompletedCourse(state, resolvedCourseId)
+      : false,
+  );
+  const canViewContent = useSelector((state) =>
+    resolvedCourseId != null
+      ? selectCanViewCourseContent(state, resolvedCourseId)
+      : false,
+  );
+  const viewerCourseProgress = useSelector((state) =>
+    resolvedCourseId != null
+      ? selectViewerCourseProgress(state, resolvedCourseId)
+      : null,
   );
   const viewedLessonIds = useSelector(selectViewedLessonIds);
   const completedLessonIds = useSelector(selectCompletedLessonIds);
@@ -109,13 +137,49 @@ function CoursePage() {
 
     return getCoursePageData(numericCourseId);
   }, [backendPageData, isBackendCourseRoute, numericCourseId]);
-  const course = isBackendCourseRoute
-    ? pageData?.course ?? null
-    : viewerCourse ?? pageData?.course ?? null;
+  const syllabusLessonIds = useMemo(
+    () =>
+      (pageData?.syllabus?.modules ?? [])
+        .flatMap((module) => module.lessons.map((lesson) => lesson.lessonId))
+        .filter(Boolean),
+    [pageData],
+  );
+  const backendCourseSnapshot = useMemo(
+    () =>
+      isBackendCourseRoute && pageData?.course
+        ? createViewerCourseSnapshot(pageData.course, syllabusLessonIds)
+        : null,
+    [isBackendCourseRoute, pageData, syllabusLessonIds],
+  );
+  const course = useMemo(() => {
+    if (isBackendCourseRoute) {
+      if (!pageData?.course) {
+        return null;
+      }
+
+      return {
+        ...pageData.course,
+        isEnrolled,
+        isFavourite,
+        isCompleted,
+        progress: viewerCourseProgress,
+      };
+    }
+
+    return viewerCourse ?? pageData?.course ?? null;
+  }, [
+    isBackendCourseRoute,
+    pageData,
+    isCompleted,
+    isEnrolled,
+    isFavourite,
+    viewerCourse,
+    viewerCourseProgress,
+  ]);
   const activeTab = resolveActiveTab(searchParams);
   const isBackendCourse = Boolean(course?.isBackendCourse);
-  const canUseCourseContent = isBackendCourse ? true : canViewContent;
-  const isContentAccessible = isBackendCourse ? true : isLogged;
+  const canUseCourseContent = canViewContent;
+  const isContentAccessible = isLogged;
   const descriptionStatus = !course
     ? "error"
     : isBackendCourse
@@ -159,16 +223,17 @@ function CoursePage() {
     };
   }, [course, descriptionRequestSeed]);
 
+  useEffect(() => {
+    if (!backendCourseSnapshot) {
+      return;
+    }
+
+    dispatch(upsertViewerCourseSnapshot(backendCourseSnapshot));
+  }, [backendCourseSnapshot, dispatch]);
+
   const descriptionBlocks = useMemo(
     () => parseCourseDescriptionMarkdown(descriptionMarkdown),
     [descriptionMarkdown],
-  );
-  const syllabusLessonIds = useMemo(
-    () =>
-      (pageData?.syllabus?.modules ?? [])
-        .flatMap((module) => module.lessons.map((lesson) => lesson.lessonId))
-        .filter(Boolean),
-    [pageData],
   );
   const lessonProgressByLessonId = useMemo(
     () =>
@@ -246,34 +311,35 @@ function CoursePage() {
   }
 
   function handlePrimaryAction() {
-    if (isBackendCourse) {
-      changeTab("content");
-      return;
-    }
-
     if (!isLogged) {
       dispatch(openLoginModal());
       return;
     }
 
     if (!canViewContent) {
-      dispatch(enrollInCourse(course.id));
+      dispatch(
+        enrollInCourse({
+          courseId: course.id,
+          courseSnapshot: backendCourseSnapshot,
+        }),
+      );
     }
 
     changeTab("content");
   }
 
   function handleToggleFavourite() {
-    if (isBackendCourse) {
-      return;
-    }
-
     if (!isLogged) {
       dispatch(openLoginModal());
       return;
     }
 
-    dispatch(toggleFavouriteCourse(course.id));
+    dispatch(
+      toggleFavouriteCourse({
+        courseId: course.id,
+        courseSnapshot: backendCourseSnapshot,
+      }),
+    );
   }
 
   function handleDescriptionRetry() {

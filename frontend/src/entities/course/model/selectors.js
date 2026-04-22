@@ -28,10 +28,10 @@ export function enrichCourse(course) {
   return {
     ...course,
     author,
-    authorName: author?.name ?? "Автор курса",
+    authorName: author?.name ?? course.authorName ?? "Автор курса",
     authorHeadline: author?.headline ?? "",
     authorAvatarUrl: author?.avatarUrl ?? "",
-    imageUrl: getCourseCoverSrc(course),
+    imageUrl: course.imageUrl || getCourseCoverSrc(course),
   };
 }
 

@@ -4,7 +4,6 @@ import {
   RouterProvider,
   useLocation,
   Outlet,
-  matchPath,
 } from "react-router";
 import { useSelector } from "react-redux";
 
@@ -26,23 +25,10 @@ import { selectIsLogged } from "../../features/auth";
 import UpdateProfileSection from "../../widgets/update-profile-section/ui/UpdateProfileSection";
 import ChangePasswordSection from "../../widgets/change-password-section/ui/ChangePasswordSection";
 import ChangeEmailSection from "../../widgets/change-email-section/ui/ChangeEmailSection";
-import { isUuid } from "../../entities/course/model/courseServiceApi";
 
 function ProtectedRoute() {
   const isLogged = useSelector(selectIsLogged);
   const location = useLocation();
-  const backendLessonMatch = matchPath(
-    "/courses/:courseId/lessons/:lessonId",
-    location.pathname,
-  );
-
-  if (
-    backendLessonMatch &&
-    isUuid(backendLessonMatch.params.courseId) &&
-    isUuid(backendLessonMatch.params.lessonId)
-  ) {
-    return <Outlet />;
-  }
 
   if (!isLogged) {
     return <Navigate to="/" replace state={{ from: location }} />;
