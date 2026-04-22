@@ -3299,10 +3299,12 @@
 
 .assistant-message {
   @apply min-w-0 w-fit max-w-[88%] rounded-[1.5rem] border px-4 py-3 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.35)];
+  color: var(--app-ink);
 }
 
 .assistant-message-assistant {
-  @apply text-gray-900 bg-white border-gray-200;
+  border-color: rgba(16, 33, 61, 0.1);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .assistant-message-user {
@@ -3311,11 +3313,13 @@
 }
 
 .assistant-message-pending {
-  @apply border-dashed bg-white/90;
+  @apply border-dashed;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .assistant-message-meta {
-  @apply flex items-center gap-2 mb-2 text-xs font-medium opacity-80;
+  @apply mb-2 flex items-center gap-2 text-xs font-medium;
+  color: var(--app-muted);
 }
 
 .assistant-message-role {
@@ -3328,7 +3332,16 @@
 
 .assistant-message-text {
   @apply block text-sm leading-7 break-words whitespace-pre-wrap;
+  color: inherit;
   overflow-wrap: anywhere;
+}
+
+.assistant-message-user .assistant-message-meta {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.assistant-message-user .assistant-message-text {
+  color: #ffffff;
 }
 
 .assistant-typing-indicator {
@@ -3500,7 +3513,7 @@
 :root[data-theme="dark"] .assistant-message-assistant,
 :root[data-theme="dark"] .assistant-message-pending {
   border-color: var(--app-border);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 :root[data-theme="dark"] .course-outline-progressbar {
@@ -3639,6 +3652,28 @@
 
 :root[data-theme="dark"] .assistant-panel-input::placeholder {
   color: rgba(150, 161, 183, 0.78);
+}
+
+:root[data-theme="dark"] .assistant-message-assistant,
+:root[data-theme="dark"] .assistant-message-pending {
+  color: var(--app-ink);
+  box-shadow: 0 18px 36px -28px rgba(0, 0, 0, 0.46);
+}
+
+:root[data-theme="dark"] .assistant-message-text {
+  color: inherit;
+}
+
+:root[data-theme="dark"] .assistant-message-user .assistant-message-text {
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .assistant-message-meta {
+  color: rgba(192, 203, 227, 0.84);
+}
+
+:root[data-theme="dark"] .assistant-message-user .assistant-message-meta {
+  color: rgba(234, 240, 255, 0.82);
 }
 
 :root[data-theme="dark"] .assistant-panel-form-hint span {
