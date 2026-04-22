@@ -1,11 +1,10 @@
 import {
-  markStepCompleted,
-  markStepViewed,
-  setCurrentStep,
+  markLessonCompleted,
+  markLessonViewed,
   setRunResult,
   setSubmissionResult,
 } from "./lessonSessionSlice";
-import { selectStepDraft } from "./selectors";
+import { selectLessonDraft } from "./selectors";
 import { executeCodeStep } from "./codeExecutionGateway";
 
 function createTimestamp() {
@@ -23,137 +22,164 @@ function areOptionIdsEqual(left, right) {
   return sortedLeft.every((value, index) => value === sortedRight[index]);
 }
 
-function normalizeTextAnswer(answer, grader) {
+function normalizeTextAnswer(answer, question) {
   let value = answer ?? "";
 
-  if (grader.trim) {
+  if (question?.trim) {
     value = value.trim();
   }
 
-  if (grader.ignoreCase) {
+  if (question?.ignoreCase) {
     value = value.toLowerCase();
   }
 
   return value;
 }
 
-function gradeChoiceStep(step, grader, draft) {
-  const selectedOptionIds = draft?.selectedOptionIds ?? [];
+function getQuestionCorrectOptionIds(question) {
+  if (Array.isArray(question?.correctOptionIds)) {
+    return question.correctOptionIds;
+  }
 
-  if (selectedOptionIds.length === 0) {
+  return (question?.options ?? [])
+    .filter((option) => option.isCorrect)
+    .map((option) => option.id);
+}
+
+function gradeQuizLesson(lesson, draft) {
+  const questions = lesson?.questions ?? [];
+
+  if (!questions.length) {
     return {
       status: "incorrect",
       score: 0,
-      maxScore: step.points ?? 0,
-      feedback: "Выберите хотя бы один вариант ответа.",
+      maxScore: lesson?.points ?? 0,
+      feedback: "В уроке пока нет вопросов для проверки.",
       answerSnapshot: {
-        selectedOptionIds: [],
+        answersByQuestionId: {},
       },
       checkedAt: createTimestamp(),
+      passedCases: 0,
+      totalCases: 0,
     };
   }
 
-  const isCorrect = areOptionIdsEqual(
-    selectedOptionIds,
-    grader.correctOptionIds ?? [],
-  );
+  const answersByQuestionId = draft?.answersByQuestionId ?? {};
+  let correctAnswersCount = 0;
+  let answeredQuestionsCount = 0;
+
+  questions.forEach((question) => {
+    const answerDraft = answersByQuestionId[question.id] ?? null;
+
+    if (question.type === "text") {
+      const rawAnswer = answerDraft?.answer ?? "";
+      const normalizedAnswer = normalizeTextAnswer(rawAnswer, question);
+
+      if (!normalizedAnswer) {
+        return;
+      }
+
+      answeredQuestionsCount += 1;
+
+      const acceptedAnswers = (question.acceptedAnswers ?? []).map((answer) =>
+        normalizeTextAnswer(answer, question),
+      );
+
+      if (acceptedAnswers.includes(normalizedAnswer)) {
+        correctAnswersCount += 1;
+      }
+
+      return;
+    }
+
+    const selectedOptionIds = answerDraft?.selectedOptionIds ?? [];
+
+    if (!selectedOptionIds.length) {
+      return;
+    }
+
+    answeredQuestionsCount += 1;
+
+    if (
+      areOptionIdsEqual(selectedOptionIds, getQuestionCorrectOptionIds(question))
+    ) {
+      correctAnswersCount += 1;
+    }
+  });
+
+  const totalQuestionsCount = questions.length;
+  const isCompleted = correctAnswersCount === totalQuestionsCount;
+  const maxScore = lesson?.points ?? totalQuestionsCount;
+  const feedback =
+    answeredQuestionsCount === 0
+      ? "Ответьте хотя бы на один вопрос перед проверкой."
+      : isCompleted
+        ? "Верно. Все ответы засчитаны."
+        : `Пока верно ${correctAnswersCount} из ${totalQuestionsCount}.`;
 
   return {
-    status: isCorrect ? "correct" : "incorrect",
-    score: isCorrect ? step.points ?? 0 : 0,
-    maxScore: step.points ?? 0,
-    feedback: isCorrect
-      ? "Верно. Ответ засчитан."
-      : "Ответ пока неверный. Попробуйте еще раз.",
+    status: isCompleted ? "correct" : "incorrect",
+    score: isCompleted ? maxScore : 0,
+    maxScore,
+    feedback,
     answerSnapshot: {
-      selectedOptionIds,
+      answersByQuestionId,
     },
     checkedAt: createTimestamp(),
+    passedCases: correctAnswersCount,
+    totalCases: totalQuestionsCount,
   };
 }
 
-function gradeTextStep(step, grader, draft) {
-  const rawAnswer = draft?.answer ?? "";
-  const normalizedAnswer = normalizeTextAnswer(rawAnswer, grader);
-  const acceptedAnswers = (grader.acceptedAnswers ?? []).map((answer) =>
-    normalizeTextAnswer(answer, grader),
-  );
-
-  if (!normalizedAnswer) {
-    return {
-      status: "incorrect",
-      score: 0,
-      maxScore: step.points ?? 0,
-      feedback: "Введите ответ перед проверкой.",
-      answerSnapshot: {
-        answer: rawAnswer,
-      },
-      checkedAt: createTimestamp(),
-    };
-  }
-
-  const isCorrect = acceptedAnswers.includes(normalizedAnswer);
-
-  return {
-    status: isCorrect ? "correct" : "incorrect",
-    score: isCorrect ? step.points ?? 0 : 0,
-    maxScore: step.points ?? 0,
-    feedback: isCorrect
-      ? "Верно. Ответ засчитан."
-      : "Ответ пока неверный. Попробуйте еще раз.",
-    answerSnapshot: {
-      answer: rawAnswer,
-    },
-    checkedAt: createTimestamp(),
-  };
-}
-
-function createUnsupportedStepResult(step, type) {
+function createUnsupportedLessonResult(lesson, type) {
   return {
     status: "incorrect",
     score: 0,
-    maxScore: step.points ?? 0,
-    feedback: `Тип шага "${type}" пока не поддерживается.`,
+    maxScore: lesson?.points ?? 0,
+    feedback: `Тип урока "${type}" пока не поддерживается.`,
     checkedAt: createTimestamp(),
     answerSnapshot: null,
   };
 }
 
-export function openLessonStep({ lessonId, stepId, stepType }) {
+export function openLesson({ lesson }) {
   return (dispatch) => {
-    dispatch(setCurrentStep({ lessonId, stepId }));
-    dispatch(markStepViewed(stepId));
+    if (!lesson?.id) {
+      return;
+    }
 
-    if (stepType === "theory") {
-      dispatch(markStepCompleted(stepId));
+    dispatch(markLessonViewed(lesson.id));
+
+    if (lesson.type === "theory") {
+      dispatch(markLessonCompleted(lesson.id));
     }
   };
 }
 
-export function runCodeStep({ step }) {
+export function runCodeLesson({ lesson }) {
   return async (dispatch, getState) => {
-    if (!step || step.type !== "code" || !step.grader) {
+    if (!lesson || lesson.type !== "code" || !lesson.grader) {
       return {
         status: "failed",
         passedCases: 0,
         totalCases: 0,
-        feedback: "Для шага не настроен code runner.",
+        feedback: "Для урока пока не настроен code runner.",
         cases: [],
       };
     }
 
-    const draft = selectStepDraft(getState(), step.id);
+    const draft = selectLessonDraft(getState(), lesson.id);
     const code = draft?.code ?? "";
     const result = await executeCodeStep({
-      step,
-      grader: step.grader,
+      lesson,
+      grader: lesson.grader,
       code,
       mode: "run",
     });
 
     dispatch(
       setRunResult({
-        stepId: step.id,
+        lessonId: lesson.id,
         result: {
           ...result,
           updatedAt: createTimestamp(),
@@ -165,49 +191,47 @@ export function runCodeStep({ step }) {
   };
 }
 
-export function submitStepAnswer({ step }) {
+export function submitLessonAnswer({ lesson }) {
   return async (dispatch, getState) => {
-    if (!step) {
+    if (!lesson) {
       return {
         status: "incorrect",
         score: 0,
         maxScore: 0,
-        feedback: "Шаг не найден.",
+        feedback: "Урок не найден.",
       };
     }
 
-    if (step.type === "theory") {
-      dispatch(markStepCompleted(step.id));
+    if (lesson.type === "theory") {
+      dispatch(markLessonCompleted(lesson.id));
 
       return {
         status: "correct",
         score: 0,
         maxScore: 0,
-        feedback: "Теоретический шаг засчитан как просмотренный.",
+        feedback: "Теоретический урок засчитан как просмотренный.",
       };
     }
 
-    const draft = selectStepDraft(getState(), step.id);
+    const draft = selectLessonDraft(getState(), lesson.id);
     let result;
 
-    if (step.type === "quiz_choice") {
-      result = gradeChoiceStep(step, step.grader, draft);
-    } else if (step.type === "quiz_text") {
-      result = gradeTextStep(step, step.grader, draft);
-    } else if (step.type === "code") {
+    if (lesson.type === "quiz") {
+      result = gradeQuizLesson(lesson, draft);
+    } else if (lesson.type === "code") {
       result = await executeCodeStep({
-        step,
-        grader: step.grader,
+        lesson,
+        grader: lesson.grader,
         code: draft?.code ?? "",
         mode: "submit",
       });
     } else {
-      result = createUnsupportedStepResult(step, step.type);
+      result = createUnsupportedLessonResult(lesson, lesson.type);
     }
 
     dispatch(
       setSubmissionResult({
-        stepId: step.id,
+        lessonId: lesson.id,
         result: {
           ...result,
           checkedAt: result.checkedAt ?? createTimestamp(),
@@ -216,7 +240,7 @@ export function submitStepAnswer({ step }) {
     );
 
     if (result.status === "correct") {
-      dispatch(markStepCompleted(step.id));
+      dispatch(markLessonCompleted(lesson.id));
     }
 
     return result;

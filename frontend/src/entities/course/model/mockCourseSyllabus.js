@@ -202,58 +202,51 @@ const pythonBeginnersFirstModule = {
     {
       id: "python-m1-lesson-1",
       lessonId: "python-beginners-module-1-lesson-1",
-      title: "Переменные, строки и вывод",
-      durationLabel: "18 мин",
-      stepsCount: 6,
+      title: "Что такое Python и как работает print",
+      durationLabel: "8 мин",
     },
     {
       id: "python-m1-lesson-2",
-      title: "Числа и арифметические операции",
-      durationLabel: "16 мин",
-      stepsCount: 5,
+      lessonId: "python-beginners-module-1-lesson-2",
+      title: "Переменные и строки",
+      durationLabel: "10 мин",
     },
     {
       id: "python-m1-lesson-3",
-      title: "Ввод данных через input()",
-      durationLabel: "17 мин",
-      stepsCount: 5,
+      lessonId: "python-beginners-module-1-lesson-3",
+      title: "Что выведет программа",
+      durationLabel: "9 мин",
     },
     {
       id: "python-m1-lesson-4",
-      title: "Типы данных: str, int и float",
-      durationLabel: "19 мин",
-      stepsCount: 4,
+      lessonId: "python-beginners-module-1-lesson-4",
+      title: "Введите тип значения",
+      durationLabel: "7 мин",
     },
     {
       id: "python-m1-lesson-5",
       title: "Практика: приветствие пользователя",
+      lessonId: "python-beginners-module-1-lesson-5",
       durationLabel: "14 мин",
-      stepsCount: 6,
     },
     {
       id: "python-m1-lesson-6",
       title: "Практика: сумма двух чисел",
+      lessonId: "python-beginners-module-1-lesson-6",
       durationLabel: "15 мин",
-      stepsCount: 6,
     },
     {
       id: "python-m1-lesson-7",
       title: "Типичные ошибки новичка",
       durationLabel: "13 мин",
-      stepsCount: 4,
     },
     {
       id: "python-m1-lesson-8",
       title: "Мини-тренажер по базовому синтаксису",
       durationLabel: "21 мин",
-      stepsCount: 7,
     },
   ],
 };
-
-function createFallbackStepsCount(courseId, moduleIndex, lessonIndex) {
-  return 4 + ((courseId + moduleIndex + lessonIndex) % 5);
-}
 
 function splitLessonsByModule(totalLessons, modulesCount) {
   const counts = Array.from({ length: modulesCount }, () =>
@@ -320,21 +313,6 @@ function normalizeSyllabus(course, syllabus) {
   };
 }
 
-function addLessonStepCounts(syllabus) {
-  return {
-    ...syllabus,
-    modules: syllabus.modules.map((module, moduleIndex) => ({
-      ...module,
-      lessons: module.lessons.map((lesson, lessonIndex) => ({
-        ...lesson,
-        stepsCount:
-          lesson.stepsCount ??
-          createFallbackStepsCount(syllabus.courseId, moduleIndex, lessonIndex),
-      })),
-    })),
-  };
-}
-
 function customizePythonBeginnersSyllabus(syllabus) {
   if (!syllabus.modules.length) {
     return syllabus;
@@ -364,8 +342,8 @@ export function getCourseSyllabus(courseId) {
   const normalizedSyllabus = normalizeSyllabus(course, syllabus);
 
   if (numericCourseId === 1001) {
-    return addLessonStepCounts(customizePythonBeginnersSyllabus(normalizedSyllabus));
+    return customizePythonBeginnersSyllabus(normalizedSyllabus);
   }
 
-  return addLessonStepCounts(normalizedSyllabus);
+  return normalizedSyllabus;
 }

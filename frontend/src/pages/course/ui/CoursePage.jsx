@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import { selectIsLogged, openLoginModal } from "../../../features/auth";
-import { selectCompletedStepIds } from "../../../features/lesson-session";
+import {
+  selectCompletedLessonIds,
+  selectViewedLessonIds,
+} from "../../../features/lesson-session";
 import {
   enrollInCourse,
   selectCanViewCourseContent,
@@ -48,7 +51,8 @@ function CoursePage() {
       ? selectCanViewCourseContent(state, numericCourseId)
       : false,
   );
-  const completedStepIds = useSelector(selectCompletedStepIds);
+  const viewedLessonIds = useSelector(selectViewedLessonIds);
+  const completedLessonIds = useSelector(selectCompletedLessonIds);
 
   const [mockDescriptionStatus, setMockDescriptionStatus] = useState("loading");
   const [mockDescriptionMarkdown, setMockDescriptionMarkdown] = useState("");
@@ -159,9 +163,21 @@ function CoursePage() {
     () => parseCourseDescriptionMarkdown(descriptionMarkdown),
     [descriptionMarkdown],
   );
+  const syllabusLessonIds = useMemo(
+    () =>
+      (pageData?.syllabus?.modules ?? [])
+        .flatMap((module) => module.lessons.map((lesson) => lesson.lessonId))
+        .filter(Boolean),
+    [pageData],
+  );
   const lessonProgressByLessonId = useMemo(
-    () => getLessonProgressMap(completedStepIds),
-    [completedStepIds],
+    () =>
+      getLessonProgressMap(
+        viewedLessonIds,
+        completedLessonIds,
+        syllabusLessonIds,
+      ),
+    [viewedLessonIds, completedLessonIds, syllabusLessonIds],
   );
 
   function handlePageRetry() {

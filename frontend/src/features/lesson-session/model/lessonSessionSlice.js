@@ -1,22 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  currentStepIdByLessonId: {},
-  viewedStepIds: [],
-  completedStepIds: [],
-  draftsByStepId: {},
-  submissionsByStepId: {},
-  runResultsByStepId: {},
+  viewedLessonIds: [],
+  completedLessonIds: [],
+  draftsByLessonId: {},
+  submissionsByLessonId: {},
+  runResultsByLessonId: {},
 };
 
 export function createInitialLessonSessionState() {
   return {
-    currentStepIdByLessonId: {},
-    viewedStepIds: [],
-    completedStepIds: [],
-    draftsByStepId: {},
-    submissionsByStepId: {},
-    runResultsByStepId: {},
+    viewedLessonIds: [],
+    completedLessonIds: [],
+    draftsByLessonId: {},
+    submissionsByLessonId: {},
+    runResultsByLessonId: {},
   };
 }
 
@@ -40,78 +38,84 @@ function removeValue(list, value) {
   }
 }
 
-function clearStepState(state, stepId) {
-  delete state.draftsByStepId[stepId];
-  delete state.submissionsByStepId[stepId];
-  delete state.runResultsByStepId[stepId];
-  removeValue(state.viewedStepIds, stepId);
-  removeValue(state.completedStepIds, stepId);
+function clearLessonState(state, lessonId) {
+  delete state.draftsByLessonId[lessonId];
+  delete state.submissionsByLessonId[lessonId];
+  delete state.runResultsByLessonId[lessonId];
+  removeValue(state.viewedLessonIds, lessonId);
+  removeValue(state.completedLessonIds, lessonId);
 }
 
 const lessonSessionSlice = createSlice({
   name: "lessonSession",
   initialState,
   reducers: {
-    setCurrentStep: (state, action) => {
-      const { lessonId, stepId } = action.payload ?? {};
-
-      if (!lessonId || !stepId) {
-        return;
-      }
-
-      state.currentStepIdByLessonId[lessonId] = stepId;
+    markLessonViewed: (state, action) => {
+      addUniqueValue(state.viewedLessonIds, action.payload);
     },
 
-    markStepViewed: (state, action) => {
-      const stepId = action.payload;
-
-      addUniqueValue(state.viewedStepIds, stepId);
-    },
-
-    markStepCompleted: (state, action) => {
-      const stepId = action.payload;
-
-      addUniqueValue(state.completedStepIds, stepId);
+    markLessonCompleted: (state, action) => {
+      addUniqueValue(state.completedLessonIds, action.payload);
     },
 
     saveChoiceDraft: (state, action) => {
-      const { stepId, selectedOptionIds = [] } = action.payload ?? {};
+      const {
+        lessonId,
+        questionId,
+        selectedOptionIds = [],
+      } = action.payload ?? {};
 
-      if (!stepId) {
+      if (!lessonId || !questionId) {
         return;
       }
 
-      state.draftsByStepId[stepId] = {
-        type: "quiz_choice",
-        selectedOptionIds: Array.from(
-          new Set(selectedOptionIds.filter(Boolean)),
-        ),
+      const previousDraft = state.draftsByLessonId[lessonId] ?? {};
+
+      state.draftsByLessonId[lessonId] = {
+        type: "quiz",
+        answersByQuestionId: {
+          ...(previousDraft.answersByQuestionId ?? {}),
+          [questionId]: {
+            type: "choice",
+            selectedOptionIds: Array.from(
+              new Set(selectedOptionIds.filter(Boolean)),
+            ),
+          },
+        },
         updatedAt: createTimestamp(),
       };
     },
 
     saveTextDraft: (state, action) => {
-      const { stepId, answer = "" } = action.payload ?? {};
+      const { lessonId, questionId, answer = "" } = action.payload ?? {};
 
-      if (!stepId) {
+      if (!lessonId || !questionId) {
         return;
       }
 
-      state.draftsByStepId[stepId] = {
-        type: "quiz_text",
-        answer,
+      const previousDraft = state.draftsByLessonId[lessonId] ?? {};
+
+      state.draftsByLessonId[lessonId] = {
+        type: "quiz",
+        answersByQuestionId: {
+          ...(previousDraft.answersByQuestionId ?? {}),
+          [questionId]: {
+            type: "text",
+            answer,
+          },
+        },
         updatedAt: createTimestamp(),
       };
     },
 
     saveCodeDraft: (state, action) => {
-      const { stepId, code = "" } = action.payload ?? {};
+      const { lessonId, code = "" } = action.payload ?? {};
 
-      if (!stepId) {
+      if (!lessonId) {
         return;
       }
 
-      state.draftsByStepId[stepId] = {
+      state.draftsByLessonId[lessonId] = {
         type: "code",
         code,
         updatedAt: createTimestamp(),
@@ -119,13 +123,13 @@ const lessonSessionSlice = createSlice({
     },
 
     setRunResult: (state, action) => {
-      const { stepId, result } = action.payload ?? {};
+      const { lessonId, result } = action.payload ?? {};
 
-      if (!stepId || !result) {
+      if (!lessonId || !result) {
         return;
       }
 
-      state.runResultsByStepId[stepId] = {
+      state.runResultsByLessonId[lessonId] = {
         status: result.status ?? "idle",
         passedCases: result.passedCases ?? 0,
         totalCases: result.totalCases ?? 0,
@@ -136,16 +140,16 @@ const lessonSessionSlice = createSlice({
     },
 
     setSubmissionResult: (state, action) => {
-      const { stepId, result } = action.payload ?? {};
+      const { lessonId, result } = action.payload ?? {};
 
-      if (!stepId || !result) {
+      if (!lessonId || !result) {
         return;
       }
 
       const previousAttemptCount =
-        state.submissionsByStepId[stepId]?.attemptCount ?? 0;
+        state.submissionsByLessonId[lessonId]?.attemptCount ?? 0;
 
-      state.submissionsByStepId[stepId] = {
+      state.submissionsByLessonId[lessonId] = {
         status: result.status ?? "idle",
         score: result.score ?? 0,
         maxScore: result.maxScore ?? 0,
@@ -167,37 +171,22 @@ const lessonSessionSlice = createSlice({
       }
 
       return {
-        currentStepIdByLessonId: payload.currentStepIdByLessonId ?? {},
-        viewedStepIds: payload.viewedStepIds ?? [],
-        completedStepIds: payload.completedStepIds ?? [],
-        draftsByStepId: payload.draftsByStepId ?? {},
-        submissionsByStepId: payload.submissionsByStepId ?? {},
-        runResultsByStepId: payload.runResultsByStepId ?? {},
+        viewedLessonIds: payload.viewedLessonIds ?? [],
+        completedLessonIds: payload.completedLessonIds ?? [],
+        draftsByLessonId: payload.draftsByLessonId ?? {},
+        submissionsByLessonId: payload.submissionsByLessonId ?? {},
+        runResultsByLessonId: payload.runResultsByLessonId ?? {},
       };
     },
 
-    resetStepSession: (state, action) => {
-      const { stepId } = action.payload ?? {};
-
-      if (!stepId) {
-        return;
-      }
-
-      clearStepState(state, stepId);
-    },
-
     resetLessonSession: (state, action) => {
-      const { lessonId, stepIds = [] } = action.payload ?? {};
+      const { lessonId } = action.payload ?? {};
 
       if (!lessonId) {
         return;
       }
 
-      delete state.currentStepIdByLessonId[lessonId];
-
-      stepIds.forEach((stepId) => {
-        clearStepState(state, stepId);
-      });
+      clearLessonState(state, lessonId);
     },
 
     resetAllLessonSessions: () => initialState,
@@ -205,16 +194,14 @@ const lessonSessionSlice = createSlice({
 });
 
 export const {
-  setCurrentStep,
-  markStepViewed,
-  markStepCompleted,
+  markLessonViewed,
+  markLessonCompleted,
   saveChoiceDraft,
   saveTextDraft,
   saveCodeDraft,
   setRunResult,
   setSubmissionResult,
   restoreLessonSession,
-  resetStepSession,
   resetLessonSession,
   resetAllLessonSessions,
 } = lessonSessionSlice.actions;

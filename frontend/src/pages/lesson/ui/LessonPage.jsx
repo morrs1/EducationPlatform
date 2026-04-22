@@ -1,14 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
+import { createPortal } from "react-dom";
 
 import { getLessonPageData } from "../lib/getLessonPageData";
-import { getStepContentMarkdown } from "../lib/getStepContentMarkdown";
+import {
+  getCachedLessonContentMarkdown,
+  getLessonContentMarkdown,
+} from "../lib/getLessonContentMarkdown";
 import { parseLessonMarkdown } from "../lib/parseLessonMarkdown";
 import { getCourseSyllabus } from "../../../entities/course/model/mockCourseSyllabus";
 import { getLessonProgressMap } from "../../../entities/lesson/model/progress";
+import {
+  isUuid,
+  mapReadLessonByIdResponseToLessonPageData,
+  requestCourseById,
+  requestLessonById,
+} from "../../../entities/course/model/courseServiceApi";
 import CourseOutline from "../../../widgets/course-outline/ui/CourseOutline";
-import LessonStepSection from "../../../widgets/lesson-step-section/ui/LessonStepSection";
+import LessonContentSection from "../../../widgets/lesson-content-section/ui/LessonContentSection";
 import AssistantPanel from "../../../widgets/assistant-panel/ui/AssistantPanel";
 import {
   closeAssistant,
@@ -20,66 +30,188 @@ import {
 } from "../../../features/assistant";
 
 import {
-  openLessonStep,
-  runCodeStep,
+  openLesson,
+  runCodeLesson,
   saveCodeDraft,
-  selectCompletedStepIds,
-  selectCurrentStepId,
-  selectStepRunResult,
+  selectCompletedLessonIds,
+  selectLessonRunResult,
   saveChoiceDraft,
   saveTextDraft,
-  selectStepDraft,
-  selectViewedStepIds,
-  selectLessonCompletedStepsCount,
-  selectStepSubmission,
-  submitStepAnswer,
+  selectLessonDraft,
+  selectViewedLessonIds,
+  selectLessonSubmission,
+  submitLessonAnswer,
 } from "../../../features/lesson-session";
 import { selectCanViewCourseContent } from "../../../features/viewer";
 
+function getNavigableLessons(syllabus) {
+  return (syllabus?.modules ?? []).flatMap((module) =>
+    module.lessons
+      .filter((lesson) => lesson.lessonId)
+      .map((lesson) => ({
+        ...lesson,
+        moduleId: module.id,
+        moduleTitle: module.title,
+      })),
+  );
+}
+
+function mapSyllabusLessonTypeToLessonType(type) {
+  if (type === "coding") {
+    return "code";
+  }
+
+  if (type === "quiz") {
+    return "quiz";
+  }
+
+  return "theory";
+}
+
+function getSyllabusLessonLocation(syllabus, lessonId) {
+  for (const module of syllabus?.modules ?? []) {
+    const lesson = module.lessons.find((item) => item.lessonId === lessonId);
+
+    if (lesson) {
+      return { module, lesson };
+    }
+  }
+
+  return {
+    module: null,
+    lesson: null,
+  };
+}
+
+function buildPendingBackendPageData(currentPageData, courseId, lessonId) {
+  if (!currentPageData?.course || currentPageData.course.id !== courseId) {
+    return null;
+  }
+
+  const { module, lesson } = getSyllabusLessonLocation(
+    currentPageData.syllabus,
+    lessonId,
+  );
+
+  if (!module || !lesson) {
+    return null;
+  }
+
+  return {
+    course: currentPageData.course,
+    syllabus: currentPageData.syllabus,
+    lesson: {
+      id: lesson.lessonId,
+      courseId,
+      moduleId: module.id,
+      moduleTitle: module.title,
+      title: lesson.title,
+      position: lesson.position ?? 1,
+      type: mapSyllabusLessonTypeToLessonType(lesson.type),
+      points: 0,
+      contentMarkdown: "",
+      isBackendLesson: true,
+      isPendingPreview: true,
+    },
+  };
+}
+
 function LessonPage() {
   const { courseId, lessonId } = useParams();
+  const navigate = useNavigate();
   const numericCourseId = Number(courseId);
-  const pageData = useMemo(() => getLessonPageData(lessonId), [lessonId]);
+  const isBackendCourseRoute = isUuid(courseId);
+  const isBackendLessonRoute = isBackendCourseRoute && isUuid(lessonId);
   const dispatch = useDispatch();
+  const [isLessonNavigationPending, startLessonNavigationTransition] =
+    useTransition();
+  const [backendPageStatus, setBackendPageStatus] = useState(() =>
+    isBackendLessonRoute ? "loading" : "idle",
+  );
+  const [backendPageData, setBackendPageData] = useState(null);
+  const [backendResolvedLessonId, setBackendResolvedLessonId] = useState(null);
+  const [backendPageError, setBackendPageError] = useState("");
+  const [backendRequestSeed, setBackendRequestSeed] = useState(0);
+
+  useEffect(() => {
+    if (!isBackendLessonRoute || !courseId || !lessonId) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function loadBackendLesson() {
+      setBackendPageStatus("loading");
+      setBackendPageError("");
+
+      try {
+        const [courseResponse, lessonResponse] = await Promise.all([
+          requestCourseById(courseId),
+          requestLessonById(lessonId),
+        ]);
+        const nextPageData = mapReadLessonByIdResponseToLessonPageData({
+          courseId,
+          lessonId,
+          courseResponse,
+          lessonResponse,
+        });
+
+        if (!isCancelled) {
+          setBackendPageData(nextPageData);
+          setBackendResolvedLessonId(lessonId);
+          setBackendPageStatus("success");
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setBackendResolvedLessonId(null);
+          setBackendPageStatus("error");
+          setBackendPageError(
+            error?.message ?? "Не удалось загрузить урок из course_service.",
+          );
+        }
+      }
+    }
+
+    loadBackendLesson();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [courseId, lessonId, isBackendLessonRoute, backendRequestSeed]);
+
+  const pageData = useMemo(() => {
+    if (isBackendLessonRoute) {
+      if (backendPageData && backendResolvedLessonId === lessonId) {
+        return backendPageData;
+      }
+
+      return buildPendingBackendPageData(backendPageData, courseId, lessonId);
+    }
+
+    return getLessonPageData(lessonId);
+  }, [
+    backendPageData,
+    backendResolvedLessonId,
+    courseId,
+    isBackendLessonRoute,
+    lessonId,
+  ]);
 
   const course = pageData?.course ?? null;
   const lesson = pageData?.lesson ?? null;
-  const steps = pageData?.steps ?? [];
-
-  const currentStepId = useSelector((state) =>
-    lesson ? selectCurrentStepId(state, lesson.id) : null,
-  );
-  const viewedStepIds = useSelector(selectViewedStepIds);
-  const completedStepIds = useSelector(selectCompletedStepIds);
+  const viewedLessonIds = useSelector(selectViewedLessonIds);
+  const completedLessonIds = useSelector(selectCompletedLessonIds);
   const canViewContent = useSelector((state) =>
     course ? selectCanViewCourseContent(state, course.id) : false,
   );
-
-  const currentStep = useMemo(
-    () => steps.find((step) => step.id === currentStepId) ?? steps[0] ?? null,
-    [steps, currentStepId],
+  const lessonDraft = useSelector((state) =>
+    lesson ? selectLessonDraft(state, lesson.id) : null,
   );
-  const currentStepIndex = useMemo(
-    () =>
-      currentStep ? steps.findIndex((step) => step.id === currentStep.id) : -1,
-    [steps, currentStep],
+  const lessonSubmission = useSelector((state) =>
+    lesson ? selectLessonSubmission(state, lesson.id) : null,
   );
-  const previousStep =
-    currentStepIndex > 0 ? steps[currentStepIndex - 1] : null;
-  const nextStep =
-    currentStepIndex >= 0 && currentStepIndex < steps.length - 1
-      ? steps[currentStepIndex + 1]
-      : null;
-
-  const stepDraft = useSelector((state) =>
-    currentStep ? selectStepDraft(state, currentStep.id) : null,
-  );
-
-  const stepSubmission = useSelector((state) =>
-    currentStep ? selectStepSubmission(state, currentStep.id) : null,
-  );
-  const stepRunResult = useSelector((state) =>
-    currentStep ? selectStepRunResult(state, currentStep.id) : null,
+  const lessonRunResult = useSelector((state) =>
+    lesson ? selectLessonRunResult(state, lesson.id) : null,
   );
 
   const [contentStatus, setContentStatus] = useState("idle");
@@ -87,20 +219,21 @@ function LessonPage() {
   const [contentError, setContentError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const completedStepsCount = useSelector((state) =>
-    lesson ? selectLessonCompletedStepsCount(state, lesson) : 0,
-  );
-  const isCurrentStepCompleted = currentStep
-    ? completedStepIds.includes(currentStep.id)
+  const isLessonViewed = lesson ? viewedLessonIds.includes(lesson.id) : false;
+  const isLessonCompleted = lesson
+    ? completedLessonIds.includes(lesson.id)
     : false;
+  const isBackendCourse = Boolean(course?.isBackendCourse);
+  const canUseCourseContent = isBackendCourse ? true : canViewContent;
 
   const syllabus = useMemo(
-    () => (course ? getCourseSyllabus(course.id) : null),
-    [course],
-  );
-  const lessonProgressByLessonId = useMemo(
-    () => getLessonProgressMap(completedStepIds),
-    [completedStepIds],
+    () =>
+      isBackendLessonRoute
+        ? pageData?.syllabus ?? null
+        : course
+          ? getCourseSyllabus(course.id)
+          : null,
+    [course, isBackendLessonRoute, pageData],
   );
   const syllabusLessonIds = useMemo(
     () =>
@@ -109,7 +242,16 @@ function LessonPage() {
         .filter(Boolean),
     [syllabus],
   );
-  const completedLessonIds = useMemo(
+  const lessonProgressByLessonId = useMemo(
+    () =>
+      getLessonProgressMap(
+        viewedLessonIds,
+        completedLessonIds,
+        syllabusLessonIds,
+      ),
+    [viewedLessonIds, completedLessonIds, syllabusLessonIds],
+  );
+  const completedSyllabusLessonIds = useMemo(
     () =>
       syllabusLessonIds.filter((id) => {
         const progress = lessonProgressByLessonId[id];
@@ -118,16 +260,16 @@ function LessonPage() {
       }),
     [lessonProgressByLessonId, syllabusLessonIds],
   );
-  const completedLessonsCount = completedLessonIds.length;
+  const completedLessonsCount = completedSyllabusLessonIds.length;
   const courseProgressPercent = course?.lessonsCount
-    ? (completedLessonsCount / course.lessonsCount) * 100
+    ? Math.round((completedLessonsCount / course.lessonsCount) * 100)
     : 0;
   const contentBlocks = useMemo(
     () => parseLessonMarkdown(contentMarkdown),
     [contentMarkdown],
   );
   const assistantContextKey =
-    lesson && currentStep ? `${lesson.id}:${currentStep.id}` : null;
+    lesson && !lesson.isPendingPreview ? lesson.id : null;
   const isAssistantOpen = useSelector(selectAssistantIsOpen);
   const assistantThread = useSelector((state) =>
     assistantContextKey
@@ -143,52 +285,76 @@ function LessonPage() {
   const assistantStatus = assistantThread.status;
   const assistantError = assistantThread.error;
   const assistantThreadId = assistantThread.threadId;
+  const navigableLessons = useMemo(
+    () => getNavigableLessons(syllabus),
+    [syllabus],
+  );
+  const currentLessonIndex = useMemo(
+    () => navigableLessons.findIndex((item) => item.lessonId === lesson?.id),
+    [lesson?.id, navigableLessons],
+  );
+  const previousLesson =
+    currentLessonIndex > 0 ? navigableLessons[currentLessonIndex - 1] : null;
+  const nextLesson =
+    currentLessonIndex >= 0 && currentLessonIndex < navigableLessons.length - 1
+      ? navigableLessons[currentLessonIndex + 1]
+      : null;
   const assistantTitle = "Ассистент";
-  const assistantSubtitle = currentStep
-    ? `${lesson?.title ?? ""} · ${currentStep.title}`
-    : lesson?.title ?? "";
+  const assistantSubtitle = lesson?.title ?? "";
 
   useEffect(() => {
-    if (!lesson || !steps.length || currentStepId) {
+    if (!lesson || lesson.isPendingPreview) {
       return;
     }
 
-    const firstStep = steps[0];
-
-    dispatch(
-      openLessonStep({
-        lessonId: lesson.id,
-        stepId: firstStep.id,
-        stepType: firstStep.type,
-      }),
-    );
-  }, [dispatch, lesson, steps, currentStepId]);
+    dispatch(openLesson({ lesson }));
+  }, [dispatch, lesson]);
 
   useEffect(() => {
-    if (!assistantContextKey) {
+    if (!assistantContextKey || lesson?.isPendingPreview) {
       return;
     }
 
     dispatch(setActiveAssistantContext(assistantContextKey));
-  }, [dispatch, assistantContextKey]);
+  }, [dispatch, assistantContextKey, lesson]);
 
   useEffect(() => {
-    if (!currentStep) {
+    if (!lesson) {
       setContentStatus("idle");
       setContentMarkdown("");
       setContentError("");
       return;
     }
 
+    if (lesson.isPendingPreview) {
+      setContentMarkdown("");
+      setContentStatus(backendPageStatus === "error" ? "error" : "loading");
+      setContentError(
+        backendPageStatus === "error"
+          ? backendPageError || "Не удалось загрузить содержимое урока."
+          : "",
+      );
+      return;
+    }
+
+    const cachedMarkdown = getCachedLessonContentMarkdown(lesson);
+
+    if (cachedMarkdown) {
+      setContentMarkdown(cachedMarkdown);
+      setContentStatus("success");
+      setContentError("");
+      return;
+    }
+
     let isCancelled = false;
 
-    async function loadStepContent() {
+    async function loadLessonContent() {
       setContentStatus("loading");
       setContentMarkdown("");
       setContentError("");
 
       try {
-        const markdown = await getStepContentMarkdown(currentStep.id);
+        const markdown = await getLessonContentMarkdown(lesson);
 
         if (!isCancelled) {
           setContentMarkdown(markdown);
@@ -199,62 +365,36 @@ function LessonPage() {
           setContentMarkdown("");
           setContentStatus("error");
           setContentError(
-            error?.message ?? "Не удалось загрузить содержимое шага.",
+            error?.message ?? "Не удалось загрузить содержимое урока.",
           );
         }
       }
     }
 
-    loadStepContent();
+    loadLessonContent();
 
     return () => {
       isCancelled = true;
     };
-  }, [currentStep?.id]);
+  }, [backendPageError, backendPageStatus, lesson]);
 
   useEffect(() => {
     if (
-      !currentStep ||
-      currentStep.type !== "code" ||
-      stepDraft ||
-      !currentStep.grader?.starterCode
+      !lesson ||
+      lesson.type !== "code" ||
+      lessonDraft ||
+      !lesson.grader?.starterCode
     ) {
       return;
     }
 
     dispatch(
       saveCodeDraft({
-        stepId: currentStep.id,
-        code: currentStep.grader.starterCode,
-      }),
-    );
-  }, [dispatch, currentStep, stepDraft]);
-
-  function handleOpenStep(step) {
-    if (!lesson || !step) {
-      return;
-    }
-
-    dispatch(
-      openLessonStep({
         lessonId: lesson.id,
-        stepId: step.id,
-        stepType: step.type,
+        code: lesson.grader.starterCode,
       }),
     );
-  }
-
-  function handleOpenPreviousStep() {
-    if (previousStep) {
-      handleOpenStep(previousStep);
-    }
-  }
-
-  function handleOpenNextStep() {
-    if (nextStep) {
-      handleOpenStep(nextStep);
-    }
-  }
+  }, [dispatch, lesson, lessonDraft]);
 
   function handleOpenAssistant() {
     if (!assistantContextKey) {
@@ -269,13 +409,20 @@ function LessonPage() {
     dispatch(closeAssistant());
   }
 
-  function handleChoiceChange(optionId) {
-    if (!currentStep || currentStep.type !== "quiz_choice") {
+  function handleChoiceChange(questionId, optionId) {
+    if (!lesson || lesson.type !== "quiz") {
       return;
     }
 
-    const selectedOptionIds = stepDraft?.selectedOptionIds ?? [];
-    const isMultiple = currentStep.grader?.multiple ?? false;
+    const question = lesson.questions?.find((item) => item.id === questionId);
+
+    if (!question) {
+      return;
+    }
+
+    const selectedOptionIds =
+      lessonDraft?.answersByQuestionId?.[questionId]?.selectedOptionIds ?? [];
+    const isMultiple = question.type === "multiple_choice";
 
     const nextSelectedOptionIds = isMultiple
       ? selectedOptionIds.includes(optionId)
@@ -285,68 +432,92 @@ function LessonPage() {
 
     dispatch(
       saveChoiceDraft({
-        stepId: currentStep.id,
+        lessonId: lesson.id,
+        questionId,
         selectedOptionIds: nextSelectedOptionIds,
       }),
     );
   }
 
-  function handleTextChange(answer) {
-    if (!currentStep || currentStep.type !== "quiz_text") {
+  function handleTextChange(questionId, answer) {
+    if (!lesson || lesson.type !== "quiz") {
       return;
     }
 
     dispatch(
       saveTextDraft({
-        stepId: currentStep.id,
+        lessonId: lesson.id,
+        questionId,
         answer,
       }),
     );
   }
 
   function handleCodeChange(code) {
-    if (!currentStep || currentStep.type !== "code") {
+    if (!lesson || lesson.type !== "code") {
       return;
     }
 
     dispatch(
       saveCodeDraft({
-        stepId: currentStep.id,
+        lessonId: lesson.id,
         code,
       }),
     );
   }
 
   async function handleRunCode() {
-    if (!currentStep || currentStep.type !== "code") {
+    if (!lesson || lesson.type !== "code") {
       return;
     }
 
     setIsRunning(true);
 
     try {
-      await dispatch(runCodeStep({ step: currentStep }));
+      await dispatch(runCodeLesson({ lesson }));
     } finally {
       setIsRunning(false);
     }
   }
 
-  async function handleSubmitStep() {
-    if (!currentStep) {
+  async function handleSubmitLesson() {
+    if (!lesson) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await dispatch(submitStepAnswer({ step: currentStep }));
+      await dispatch(submitLessonAnswer({ lesson }));
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  function openLessonRoute(targetLesson) {
+    if (!course || !targetLesson?.lessonId) {
+      return;
+    }
+
+    startLessonNavigationTransition(() => {
+      navigate(`/courses/${course.id}/lessons/${targetLesson.lessonId}`);
+    });
+  }
+
+  function handleOpenPreviousLesson() {
+    if (previousLesson) {
+      openLessonRoute(previousLesson);
+    }
+  }
+
+  function handleOpenNextLesson() {
+    if (nextLesson) {
+      openLessonRoute(nextLesson);
+    }
+  }
+
   async function handleSubmitAssistantMessage(messageText) {
-    if (!course || !lesson || !currentStep || !assistantContextKey) {
+    if (!course || !lesson || !assistantContextKey) {
       return;
     }
 
@@ -356,13 +527,56 @@ function LessonPage() {
         threadId: assistantThreadId,
         courseId: course.id,
         lessonId: lesson.id,
-        stepId: currentStep.id,
+        stepId: lesson.id,
         userMessage: messageText,
-        lessonTitle: lesson.title,
-        stepTitle: currentStep.title,
-        stepType: currentStep.type,
+        lessonTitle: course.title,
+        stepTitle: lesson.title,
+        stepType: lesson.type,
         stepMarkdown: contentMarkdown,
       }),
+    );
+  }
+
+  function handlePageRetry() {
+    setBackendRequestSeed((value) => value + 1);
+  }
+
+  if (
+    isBackendLessonRoute &&
+    !pageData &&
+    (backendPageStatus === "idle" || backendPageStatus === "loading")
+  ) {
+    return (
+      <div className="lesson-page">
+        <section className="lesson-card">
+          <p className="lesson-label">Загрузка урока</p>
+          <h1 className="lesson-title">Подключаем course_service</h1>
+          <p className="lesson-text">
+            Получаем курс, содержание и выбранный урок по UUID.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
+  if (isBackendLessonRoute && backendPageStatus === "error" && !pageData) {
+    return (
+      <div className="lesson-page">
+        <section className="lesson-card">
+          <p className="lesson-label">Ошибка загрузки</p>
+          <h1 className="lesson-title">Не удалось получить урок</h1>
+          <p className="lesson-text">
+            {backendPageError || "course_service не вернул данные урока."}
+          </p>
+          <button
+            type="button"
+            className="course-inline-btn"
+            onClick={handlePageRetry}
+          >
+            Повторить
+          </button>
+        </section>
+      </div>
     );
   }
 
@@ -373,7 +587,7 @@ function LessonPage() {
           <p className="lesson-label">Ошибка навигации</p>
           <h1 className="lesson-title">Урок не найден</h1>
           <p className="lesson-text">
-            Возможно, урок еще не подключен к демо-сценарию.
+            Возможно, урок еще не подключен к текущему сценарию.
           </p>
           <Link
             to={`/courses/${courseId}?tab=content`}
@@ -386,7 +600,7 @@ function LessonPage() {
     );
   }
 
-  if (course.id !== numericCourseId) {
+  if (!isBackendCourse && course.id !== numericCourseId) {
     return (
       <div className="lesson-page">
         <section className="lesson-card">
@@ -406,79 +620,90 @@ function LessonPage() {
     );
   }
 
+  const isLessonTransitioning =
+    isLessonNavigationPending ||
+    (isBackendLessonRoute &&
+      backendPageStatus === "loading" &&
+      Boolean(lesson?.isPendingPreview));
+  const canRenderAssistantLauncher =
+    typeof document !== "undefined" && !isAssistantOpen && lesson;
+
   return (
-    <div
-      className={`lesson-layout ${
-        isAssistantOpen ? "lesson-layout-assistant-open" : ""
-      }`}
-    >
-      <CourseOutline
-        course={course}
-        syllabus={syllabus}
-        currentLessonId={lesson.id}
-        completedLessonIds={completedLessonIds}
-        completedLessonsCount={completedLessonsCount}
-        courseProgressPercent={courseProgressPercent}
-        lessonProgressByLessonId={lessonProgressByLessonId}
-        showLessonProgress={canViewContent}
-      />
-
-      <div className="lesson-workspace">
-        <LessonStepSection
-          lesson={lesson}
-          steps={steps}
-          currentStep={currentStep}
-          onOpenStep={handleOpenStep}
-          onOpenPreviousStep={handleOpenPreviousStep}
-          onOpenNextStep={handleOpenNextStep}
-          previousStep={previousStep}
-          nextStep={nextStep}
-          contentStatus={contentStatus}
-          contentBlocks={contentBlocks}
-          contentError={contentError}
-          viewedStepIds={viewedStepIds}
-          completedStepIds={completedStepIds}
-          completedStepsCount={completedStepsCount}
-          isCurrentStepCompleted={isCurrentStepCompleted}
-          stepDraft={stepDraft}
-          stepSubmission={stepSubmission}
-          stepRunResult={stepRunResult}
-          onChoiceChange={handleChoiceChange}
-          onTextChange={handleTextChange}
-          onCodeChange={handleCodeChange}
-          onRunCode={handleRunCode}
-          onSubmitStep={handleSubmitStep}
-          isSubmitting={isSubmitting}
-          isRunning={isRunning}
+    <>
+      <div
+        className={`lesson-layout ${
+          isAssistantOpen ? "lesson-layout-assistant-open" : ""
+        }`}
+      >
+        <CourseOutline
+          course={course}
+          syllabus={syllabus}
+          currentLessonId={lesson.id}
+          completedLessonIds={completedSyllabusLessonIds}
+          completedLessonsCount={completedLessonsCount}
+          courseProgressPercent={courseProgressPercent}
+          lessonProgressByLessonId={lessonProgressByLessonId}
+          showLessonProgress={canUseCourseContent}
         />
-      </div>
 
-      {isAssistantOpen ? (
-        <div className="lesson-assistant-rail">
-          <AssistantPanel
-            title={assistantTitle}
-            subtitle={assistantSubtitle}
-            messages={assistantMessages}
-            status={assistantStatus}
-            error={assistantError}
-            onSubmitMessage={handleSubmitAssistantMessage}
-            onClose={handleCloseAssistant}
+        <div className="lesson-workspace">
+          <LessonContentSection
+            lesson={lesson}
+            contentStatus={contentStatus}
+            contentBlocks={contentBlocks}
+            contentError={contentError}
+            isLessonViewed={isLessonViewed}
+            isLessonCompleted={isLessonCompleted}
+            lessonDraft={lessonDraft}
+            lessonSubmission={lessonSubmission}
+            lessonRunResult={lessonRunResult}
+            onChoiceChange={handleChoiceChange}
+            onTextChange={handleTextChange}
+            onCodeChange={handleCodeChange}
+            onRunCode={handleRunCode}
+            onSubmitLesson={handleSubmitLesson}
+            previousLesson={previousLesson}
+            nextLesson={nextLesson}
+            onOpenPreviousLesson={handleOpenPreviousLesson}
+            onOpenNextLesson={handleOpenNextLesson}
+            isSubmitting={isSubmitting}
+            isRunning={isRunning}
+            isTransitioning={isLessonTransitioning}
           />
         </div>
-      ) : null}
 
-      {!isAssistantOpen && currentStep ? (
-        <button
-          type="button"
-          className="assistant-launcher-btn"
-          onClick={handleOpenAssistant}
-          aria-label="Открыть чат с ассистентом"
-        >
-          <span className="assistant-launcher-icon">AI</span>
-          <span className="assistant-launcher-text">Спросить ассистента</span>
-        </button>
-      ) : null}
-    </div>
+        {isAssistantOpen ? (
+          <div className="lesson-assistant-rail">
+            <AssistantPanel
+              title={assistantTitle}
+              subtitle={assistantSubtitle}
+              messages={assistantMessages}
+              status={assistantStatus}
+              error={assistantError}
+              onSubmitMessage={handleSubmitAssistantMessage}
+              onClose={handleCloseAssistant}
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {canRenderAssistantLauncher
+        ? createPortal(
+            <button
+              type="button"
+              className="assistant-launcher-btn"
+              onClick={handleOpenAssistant}
+              aria-label="Открыть чат с ассистентом"
+            >
+              <span className="assistant-launcher-icon">AI</span>
+              <span className="assistant-launcher-text">
+                Спросить ассистента
+              </span>
+            </button>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
 

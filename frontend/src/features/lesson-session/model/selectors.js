@@ -1,41 +1,31 @@
 export const selectLessonSession = (state) => state.lessonSession;
 
-export const selectCurrentStepIdByLessonId = (state) =>
-  selectLessonSession(state).currentStepIdByLessonId;
+export const selectViewedLessonIds = (state) =>
+  selectLessonSession(state).viewedLessonIds;
 
-export const selectViewedStepIds = (state) =>
-  selectLessonSession(state).viewedStepIds;
+export const selectCompletedLessonIds = (state) =>
+  selectLessonSession(state).completedLessonIds;
 
-export const selectCompletedStepIds = (state) =>
-  selectLessonSession(state).completedStepIds;
+export const selectDraftsByLessonId = (state) =>
+  selectLessonSession(state).draftsByLessonId;
 
-export const selectDraftsByStepId = (state) =>
-  selectLessonSession(state).draftsByStepId;
+export const selectSubmissionsByLessonId = (state) =>
+  selectLessonSession(state).submissionsByLessonId;
 
-export const selectSubmissionsByStepId = (state) =>
-  selectLessonSession(state).submissionsByStepId;
+export const selectRunResultsByLessonId = (state) =>
+  selectLessonSession(state).runResultsByLessonId;
 
-export const selectRunResultsByStepId = (state) =>
-  selectLessonSession(state).runResultsByStepId;
+export const selectLessonDraft = (state, lessonId) =>
+  selectDraftsByLessonId(state)[lessonId] ?? null;
 
-export const selectCurrentStepId = (state, lessonId) =>
-  selectCurrentStepIdByLessonId(state)[lessonId] ?? null;
+export const selectLessonSubmission = (state, lessonId) =>
+  selectSubmissionsByLessonId(state)[lessonId] ?? null;
 
-export const selectStepDraft = (state, stepId) =>
-  selectDraftsByStepId(state)[stepId] ?? null;
+export const selectLessonRunResult = (state, lessonId) =>
+  selectRunResultsByLessonId(state)[lessonId] ?? null;
 
-export const selectStepSubmission = (state, stepId) =>
-  selectSubmissionsByStepId(state)[stepId] ?? null;
+export const selectIsLessonViewed = (state, lessonId) =>
+  selectViewedLessonIds(state).includes(lessonId);
 
-export const selectStepRunResult = (state, stepId) =>
-  selectRunResultsByStepId(state)[stepId] ?? null;
-
-export const selectIsStepViewed = (state, stepId) =>
-  selectViewedStepIds(state).includes(stepId);
-
-export const selectIsStepCompleted = (state, stepId) =>
-  selectCompletedStepIds(state).includes(stepId);
-
-export const selectLessonCompletedStepsCount = (state, lesson) =>
-  (lesson?.stepIds ?? []).filter((stepId) => selectIsStepCompleted(state, stepId))
-    .length;
+export const selectIsLessonCompleted = (state, lessonId) =>
+  selectCompletedLessonIds(state).includes(lessonId);

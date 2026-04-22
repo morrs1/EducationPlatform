@@ -56,7 +56,7 @@ function evaluateMockExecution(code, grader) {
   if (!strategy) {
     return {
       ok: false,
-      reason: "Для шага пока не настроен mock-runner.",
+      reason: "Для урока пока не настроен mock-runner.",
     };
   }
 
@@ -90,12 +90,12 @@ function buildRunResponse({ cases, evaluation }) {
   };
 }
 
-function buildSubmissionResponse({ step, code, cases, evaluation }) {
+function buildSubmissionResponse({ lesson, code, cases, evaluation }) {
   if (!evaluation.ok) {
     return {
       status: "incorrect",
       score: 0,
-      maxScore: step.points ?? 0,
+      maxScore: lesson.points ?? 0,
       feedback: evaluation.reason,
       answerSnapshot: {
         code,
@@ -108,8 +108,8 @@ function buildSubmissionResponse({ step, code, cases, evaluation }) {
 
   return {
     status: "correct",
-    score: step.points ?? 0,
-    maxScore: step.points ?? 0,
+    score: lesson.points ?? 0,
+    maxScore: lesson.points ?? 0,
     feedback: "Все тесты пройдены.",
     answerSnapshot: {
       code,
@@ -120,7 +120,7 @@ function buildSubmissionResponse({ step, code, cases, evaluation }) {
   };
 }
 
-function runMockCodeExecution({ step, grader, code, mode }) {
+function runMockCodeExecution({ lesson, grader, code, mode }) {
   const cases =
     mode === "run"
       ? grader.visibleCases ?? []
@@ -131,11 +131,11 @@ function runMockCodeExecution({ step, grader, code, mode }) {
     return buildRunResponse({ cases, evaluation });
   }
 
-  return buildSubmissionResponse({ step, code, cases, evaluation });
+  return buildSubmissionResponse({ lesson, code, cases, evaluation });
 }
 
-export async function executeCodeStep({ step, grader, code, mode }) {
+export async function executeCodeStep({ lesson, grader, code, mode }) {
   // Backend-ready boundary:
-  // replace this local mock with POST /steps/:stepId/run or /submissions later.
-  return Promise.resolve(runMockCodeExecution({ step, grader, code, mode }));
+  // replace this local mock with a real lesson run/submission API later.
+  return Promise.resolve(runMockCodeExecution({ lesson, grader, code, mode }));
 }

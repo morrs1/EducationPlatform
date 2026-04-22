@@ -26,17 +26,26 @@ export const selectProgressByCourseId = (state) =>
 
 const selectViewerSessionActive = (state) => state.auth?.isLogged ?? false;
 const selectViewerState = (state) => state.viewer;
-const selectCompletedStepIds = (state) =>
-  state.lessonSession?.completedStepIds ?? [];
+const selectViewedLessonIds = (state) =>
+  state.lessonSession?.viewedLessonIds ?? [];
+const selectCompletedLessonIds = (state) =>
+  state.lessonSession?.completedLessonIds ?? [];
 const selectCourseIdParam = (_state, courseId) => courseId;
 
-function attachViewerState(course, viewer, sessionIsActive, completedStepIds) {
+function attachViewerState(
+  course,
+  viewer,
+  sessionIsActive,
+  viewedLessonIds,
+  completedLessonIds,
+) {
   const enrichedCourse = enrichCourse(course);
   const progress = sessionIsActive
     ? getCourseProgressByCourseId({
         courseId: course.id,
         viewerProgress: viewer.progressByCourseId[course.id] ?? null,
-        completedStepIds,
+        viewedLessonIds,
+        completedLessonIds,
       })
     : null;
 
@@ -74,46 +83,80 @@ export const selectViewerCourseProgress = (state, courseId) =>
     ? getCourseProgressByCourseId({
         courseId,
         viewerProgress: state.viewer.progressByCourseId[courseId] ?? null,
-        completedStepIds: selectCompletedStepIds(state),
+        viewedLessonIds: selectViewedLessonIds(state),
+        completedLessonIds: selectCompletedLessonIds(state),
       })
     : null;
 
 export const selectCurrentCourses = createSelector(
-  [selectViewerSessionActive, selectViewerState, selectCompletedStepIds],
-  (sessionIsActive, viewer, completedStepIds) =>
+  [
+    selectViewerSessionActive,
+    selectViewerState,
+    selectViewedLessonIds,
+    selectCompletedLessonIds,
+  ],
+  (sessionIsActive, viewer, viewedLessonIds, completedLessonIds) =>
     !sessionIsActive
       ? []
       : viewer.enrolledCourseIds
           .map(getCourseById)
           .filter(Boolean)
           .map((course) =>
-            attachViewerState(course, viewer, sessionIsActive, completedStepIds),
+            attachViewerState(
+              course,
+              viewer,
+              sessionIsActive,
+              viewedLessonIds,
+              completedLessonIds,
+            ),
           ),
 );
 
 export const selectFavouriteCourses = createSelector(
-  [selectViewerSessionActive, selectViewerState, selectCompletedStepIds],
-  (sessionIsActive, viewer, completedStepIds) =>
+  [
+    selectViewerSessionActive,
+    selectViewerState,
+    selectViewedLessonIds,
+    selectCompletedLessonIds,
+  ],
+  (sessionIsActive, viewer, viewedLessonIds, completedLessonIds) =>
     !sessionIsActive
       ? []
       : viewer.favouriteCourseIds
           .map(getCourseById)
           .filter(Boolean)
           .map((course) =>
-            attachViewerState(course, viewer, sessionIsActive, completedStepIds),
+            attachViewerState(
+              course,
+              viewer,
+              sessionIsActive,
+              viewedLessonIds,
+              completedLessonIds,
+            ),
           ),
 );
 
 export const selectCompletedCourses = createSelector(
-  [selectViewerSessionActive, selectViewerState, selectCompletedStepIds],
-  (sessionIsActive, viewer, completedStepIds) =>
+  [
+    selectViewerSessionActive,
+    selectViewerState,
+    selectViewedLessonIds,
+    selectCompletedLessonIds,
+  ],
+  (sessionIsActive, viewer, viewedLessonIds, completedLessonIds) =>
     !sessionIsActive
       ? []
       : viewer.completedCourseIds
           .map(getCourseById)
           .filter(Boolean)
           .map((course) =>
-            attachViewerState(course, viewer, sessionIsActive, completedStepIds),
+            attachViewerState(
+              course,
+              viewer,
+              sessionIsActive,
+              viewedLessonIds,
+              completedLessonIds,
+            ),
           ),
 );
 
@@ -121,14 +164,21 @@ export const selectViewerCourseById = createSelector(
   [
     selectViewerSessionActive,
     selectViewerState,
-    selectCompletedStepIds,
+    selectViewedLessonIds,
+    selectCompletedLessonIds,
     selectCourseIdParam,
   ],
-  (sessionIsActive, viewer, completedStepIds, courseId) => {
+  (sessionIsActive, viewer, viewedLessonIds, completedLessonIds, courseId) => {
     const course = getCourseById(courseId);
 
     return course
-      ? attachViewerState(course, viewer, sessionIsActive, completedStepIds)
+      ? attachViewerState(
+          course,
+          viewer,
+          sessionIsActive,
+          viewedLessonIds,
+          completedLessonIds,
+        )
       : null;
   },
 );

@@ -20,12 +20,21 @@ export function normalizeLessonSessionState(value) {
   }
 
   return {
-    currentStepIdByLessonId: normalizeObject(value.currentStepIdByLessonId),
-    viewedStepIds: normalizeArray(value.viewedStepIds),
-    completedStepIds: normalizeArray(value.completedStepIds),
-    draftsByStepId: normalizeObject(value.draftsByStepId),
-    submissionsByStepId: normalizeObject(value.submissionsByStepId),
-    runResultsByStepId: normalizeObject(value.runResultsByStepId),
+    viewedLessonIds: normalizeArray(
+      value.viewedLessonIds ?? value.viewedStepIds,
+    ),
+    completedLessonIds: normalizeArray(
+      value.completedLessonIds ?? value.completedStepIds,
+    ),
+    draftsByLessonId: normalizeObject(
+      value.draftsByLessonId ?? value.draftsByStepId,
+    ),
+    submissionsByLessonId: normalizeObject(
+      value.submissionsByLessonId ?? value.submissionsByStepId,
+    ),
+    runResultsByLessonId: normalizeObject(
+      value.runResultsByLessonId ?? value.runResultsByStepId,
+    ),
   };
 }
 

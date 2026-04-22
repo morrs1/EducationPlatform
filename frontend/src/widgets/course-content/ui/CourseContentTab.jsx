@@ -84,13 +84,10 @@ function CourseContentTab({
                 const lessonProgress = lesson.lessonId
                   ? lessonProgressByLessonId[lesson.lessonId] ?? null
                   : null;
-                const totalStepsCount =
-                  lesson.stepsCount ?? lessonProgress?.totalStepsCount ?? 0;
-                const completedStepsCount =
-                  lessonProgress?.completedStepsCount ?? 0;
-                const stepsCountLabel =
-                  totalStepsCount > 0
-                    ? `${completedStepsCount}/${totalStepsCount} шагов`
+                const lessonStatusLabel = lessonProgress?.isCompleted
+                  ? "Пройден"
+                  : lessonProgress?.isStarted
+                    ? "Начат"
                     : null;
 
                 return (
@@ -99,7 +96,7 @@ function CourseContentTab({
                       <span className="course-lesson-index">
                         {index + 1}.{lessonIndex + 1}
                       </span>
-                      {index === 0 && lessonIndex === 0 && lesson.lessonId ? (
+                      {lesson.lessonId ? (
                         <Link
                           to={`/courses/${course.id}/lessons/${lesson.lessonId}`}
                           className="course-lesson-title"
@@ -112,9 +109,9 @@ function CourseContentTab({
                     </div>
 
                     <div className="course-lesson-trailing">
-                      {stepsCountLabel ? (
+                      {lessonStatusLabel ? (
                         <span className="course-lesson-steps-count">
-                          {stepsCountLabel}
+                          {lessonStatusLabel}
                         </span>
                       ) : null}
 

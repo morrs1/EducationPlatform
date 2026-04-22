@@ -1,21 +1,19 @@
 export { default as lessonSessionReducer } from "./model/lessonSessionSlice";
 export {
-  openLessonStep,
-  runCodeStep,
-  submitStepAnswer,
+  openLesson,
+  runCodeLesson,
+  submitLessonAnswer,
 } from "./model/thunks";
 
 export {
-  setCurrentStep,
-  markStepViewed,
-  markStepCompleted,
+  markLessonViewed,
+  markLessonCompleted,
   saveChoiceDraft,
   saveTextDraft,
   saveCodeDraft,
   setRunResult,
   setSubmissionResult,
   restoreLessonSession,
-  resetStepSession,
   resetLessonSession,
   resetAllLessonSessions,
   createInitialLessonSessionState,
@@ -23,19 +21,16 @@ export {
 
 export {
   selectLessonSession,
-  selectCurrentStepIdByLessonId,
-  selectViewedStepIds,
-  selectCompletedStepIds,
-  selectDraftsByStepId,
-  selectSubmissionsByStepId,
-  selectRunResultsByStepId,
-  selectCurrentStepId,
-  selectStepDraft,
-  selectStepSubmission,
-  selectStepRunResult,
-  selectIsStepViewed,
-  selectIsStepCompleted,
-  selectLessonCompletedStepsCount,
+  selectViewedLessonIds,
+  selectCompletedLessonIds,
+  selectDraftsByLessonId,
+  selectSubmissionsByLessonId,
+  selectRunResultsByLessonId,
+  selectLessonDraft,
+  selectLessonSubmission,
+  selectLessonRunResult,
+  selectIsLessonViewed,
+  selectIsLessonCompleted,
 } from "./model/selectors";
 
 export {

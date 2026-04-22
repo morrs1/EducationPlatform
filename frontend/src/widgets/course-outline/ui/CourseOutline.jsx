@@ -55,13 +55,11 @@ function CourseOutline({
                     showLessonProgress && lesson.lessonId
                       ? lessonProgressByLessonId[lesson.lessonId] ?? null
                       : null;
-                  const totalStepsCount =
-                    lesson.stepsCount ?? lessonProgress?.totalStepsCount ?? 0;
-                  const completedStepsCount =
-                    lessonProgress?.completedStepsCount ?? 0;
                   const progressTooltip =
-                    showLessonProgress && totalStepsCount > 0
-                      ? `${completedStepsCount} из ${totalStepsCount} шагов пройдено`
+                    showLessonProgress && lessonProgress?.isCompleted
+                      ? "Урок пройден"
+                      : showLessonProgress && lessonProgress?.isStarted
+                        ? "Урок начат"
                       : undefined;
 
                   if (lesson.lessonId) {

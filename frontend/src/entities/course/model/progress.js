@@ -15,7 +15,8 @@ function getInteractiveLessonIds(syllabus) {
 export function getCourseProgressByCourseId({
   courseId,
   viewerProgress = null,
-  completedStepIds = [],
+  viewedLessonIds = [],
+  completedLessonIds = [],
 }) {
   const course = mockCoursesById.get(courseId) ?? null;
 
@@ -27,7 +28,10 @@ export function getCourseProgressByCourseId({
   const lessonsCount = course.lessonsCount ?? 0;
   const syllabus = getCourseSyllabus(course.id);
   const interactiveLessonIds = getInteractiveLessonIds(syllabus);
-  const lessonProgressByLessonId = getLessonProgressMap(completedStepIds);
+  const lessonProgressByLessonId = getLessonProgressMap(
+    viewedLessonIds,
+    completedLessonIds,
+  );
 
   const completedInteractiveLessonsCount = interactiveLessonIds.filter(
     (lessonId) => lessonProgressByLessonId[lessonId]?.isCompleted,
@@ -35,29 +39,6 @@ export function getCourseProgressByCourseId({
   const startedInteractiveLessonsCount = interactiveLessonIds.filter(
     (lessonId) => lessonProgressByLessonId[lessonId]?.isStarted,
   ).length;
-  const interactiveStepTotals = interactiveLessonIds.reduce(
-    (accumulator, lessonId) => {
-      const lessonProgress = lessonProgressByLessonId[lessonId];
-
-      if (!lessonProgress) {
-        return accumulator;
-      }
-
-      accumulator.completedSteps += lessonProgress.completedStepsCount ?? 0;
-      accumulator.totalSteps += lessonProgress.totalStepsCount ?? 0;
-      accumulator.completedLessonEquivalent +=
-        lessonProgress.totalStepsCount > 0
-          ? lessonProgress.completedStepsCount / lessonProgress.totalStepsCount
-          : 0;
-
-      return accumulator;
-    },
-    {
-      completedSteps: 0,
-      totalSteps: 0,
-      completedLessonEquivalent: 0,
-    },
-  );
 
   const interactiveLessonsCount = interactiveLessonIds.length;
   const maxPersistedCompletedLessons = Math.max(
@@ -74,12 +55,7 @@ export function getCourseProgressByCourseId({
   );
   const progressPercent =
     lessonsCount > 0
-      ? Math.round(
-          ((baseCompletedLessons +
-            interactiveStepTotals.completedLessonEquivalent) /
-            lessonsCount) *
-            100,
-        )
+      ? Math.round((completedLessons / lessonsCount) * 100)
       : 0;
 
   return {
@@ -95,7 +71,5 @@ export function getCourseProgressByCourseId({
     interactiveLessonsCount,
     startedInteractiveLessonsCount,
     completedInteractiveLessonsCount,
-    interactiveCompletedSteps: interactiveStepTotals.completedSteps,
-    interactiveTotalSteps: interactiveStepTotals.totalSteps,
   };
 }
