@@ -1,8 +1,10 @@
 package com.example.course_service.presentation.http.v1.handlers.lesson.read_by_id;
 
+import com.example.course_service.domain.asset.Asset;
 import com.example.course_service.domain.lesson.payload.LessonPayload;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record ReadLessonByIdResponse(
@@ -10,6 +12,7 @@ public record ReadLessonByIdResponse(
         String type,
         String title,
         LessonPayload content,
+        List<Asset> assets,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
