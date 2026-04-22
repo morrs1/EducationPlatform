@@ -647,10 +647,10 @@
   }
 
   .account-sidebar-navlink.active {
-    @apply text-teal-800;
-    border-color: rgba(15, 118, 110, 0.14);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(226, 248, 244, 0.96));
-    box-shadow: 0 18px 30px -26px rgba(15, 118, 110, 0.55);
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(37, 99, 235, 0.1));
+    box-shadow: 0 18px 30px -26px rgba(37, 99, 235, 0.38);
   }
 
   /*EditProfileSidebar*/
@@ -666,10 +666,10 @@
   }
 
   .edit-profile-sidebar-navlink.active {
-    @apply text-teal-800;
-    border-color: rgba(15, 118, 110, 0.14);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(226, 248, 244, 0.96));
-    box-shadow: 0 18px 30px -26px rgba(15, 118, 110, 0.55);
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(37, 99, 235, 0.1));
+    box-shadow: 0 18px 30px -26px rgba(37, 99, 235, 0.38);
   }
 
   /*Settings*/
@@ -683,7 +683,8 @@
   }
 
   .settings-section-label {
-    @apply text-sm font-semibold tracking-[0.22em] uppercase text-teal-700/70;
+    @apply text-sm font-semibold tracking-[0.22em] uppercase;
+    color: var(--app-accent-strong);
   }
 
   .settings-section-title {
@@ -732,8 +733,8 @@
 
   .settings-avatar-picker {
     @apply flex flex-col gap-4 rounded-[1.75rem] border p-4 md:flex-row;
-    border-color: rgba(15, 118, 110, 0.1);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 252, 251, 0.78));
+    border-color: var(--app-border-strong);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(242, 247, 255, 0.86));
   }
 
   .settings-avatar-preview {
@@ -764,8 +765,8 @@
 
   .settings-note {
     @apply rounded-[1.5rem] border px-4 py-3 text-sm text-slate-700;
-    border-color: rgba(15, 118, 110, 0.16);
-    background: rgba(226, 248, 244, 0.74);
+    border-color: var(--app-border-strong);
+    background: rgba(37, 99, 235, 0.08);
   }
 
   .settings-current-value {
@@ -788,9 +789,22 @@
 
   .settings-submit-btn {
     @apply cursor-pointer rounded-2xl border px-5 py-3 text-sm font-semibold text-white transition duration-300;
-    border-color: rgba(15, 118, 110, 0.1);
-    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
-    box-shadow: 0 18px 32px -24px rgba(15, 118, 110, 0.82);
+    border-color: var(--app-border-strong);
+    background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
+    box-shadow: 0 18px 32px -24px rgba(37, 99, 235, 0.42);
+  }
+
+  .settings-feedback-error,
+  .settings-feedback-success {
+    @apply text-sm font-medium;
+  }
+
+  .settings-feedback-error {
+    color: #dc2626;
+  }
+
+  .settings-feedback-success {
+    color: var(--app-accent-strong);
   }
 
   /*ProfileCard*/
@@ -812,7 +826,8 @@
   }
 
   .profile-card-label {
-    @apply text-sm font-semibold tracking-[0.22em] uppercase text-teal-700/70;
+    @apply text-sm font-semibold tracking-[0.22em] uppercase;
+    color: var(--app-accent-strong);
   }
 
   .profile-card-title {
@@ -851,7 +866,8 @@
   }
 
   .profile-activity-label {
-    @apply block text-sm font-semibold tracking-[0.22em] uppercase text-teal-700/70;
+    @apply block text-sm font-semibold tracking-[0.22em] uppercase;
+    color: var(--app-accent-strong);
   }
 
   .profile-activity-title {
@@ -914,19 +930,19 @@
   }
 
   .profile-activity-cell.level-0 {
-    @apply bg-slate-200;
+    background: var(--activity-level-0);
   }
 
   .profile-activity-cell.level-1 {
-    @apply bg-teal-200;
+    background: var(--activity-level-1);
   }
 
   .profile-activity-cell.level-2 {
-    @apply bg-teal-400;
+    background: var(--activity-level-2);
   }
 
   .profile-activity-cell.level-3 {
-    @apply bg-teal-700;
+    background: var(--activity-level-3);
   }
 
   .profile-activity-tooltip-popup {
@@ -1000,11 +1016,16 @@
   }
 
   .current-courses-search-input {
-    @apply w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 outline-none rounded-2xl placeholder:text-gray-400 focus:border-green-500 sm:text-base;
+    @apply w-full px-4 py-3 text-sm text-gray-900 outline-none rounded-2xl placeholder:text-gray-400 sm:text-base;
+    border-color: rgba(16, 33, 61, 0.1);
+    background: rgba(255, 255, 255, 0.84);
   }
 
   .current-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium transition border cursor-pointer rounded-2xl sm:text-base xl:shrink-0;
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.72);
   }
 
   .current-courses-list {
@@ -1032,7 +1053,7 @@
   }
 
   .current-course-card-title {
-    @apply w-fit text-2xl font-bold text-slate-900 transition hover:text-teal-700 hover:underline;
+    @apply w-fit text-2xl font-bold text-slate-900 transition hover:underline;
   }
 
   .current-course-card-author {
@@ -1056,13 +1077,15 @@
   }
 
   .current-course-progressbar-fill {
-    @apply h-full transition-all duration-300 bg-green-500 rounded-full;
+    @apply h-full rounded-full transition-all duration-300;
+    background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
   }
 
   .current-course-review-btn {
-    @apply cursor-pointer rounded-2xl border px-4 py-2.5 text-sm font-semibold text-teal-700 transition sm:w-fit sm:text-base;
-    border-color: rgba(15, 118, 110, 0.2);
-    background: rgba(255, 255, 255, 0.7);
+    @apply cursor-pointer rounded-2xl border px-4 py-2.5 text-sm font-semibold transition sm:w-fit sm:text-base;
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.72);
   }
 
   .current-course-menu-wrap {
@@ -1070,7 +1093,9 @@
   }
 
   .current-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex h-11 w-11 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border transition;
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.82);
   }
 
   .current-course-menu-btn span {
@@ -1104,11 +1129,16 @@
   }
 
   .completed-courses-search-input {
-    @apply w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 outline-none rounded-2xl placeholder:text-gray-400 focus:border-green-500 sm:text-base;
+    @apply w-full px-4 py-3 text-sm text-gray-900 outline-none rounded-2xl placeholder:text-gray-400 sm:text-base;
+    border-color: rgba(16, 33, 61, 0.1);
+    background: rgba(255, 255, 255, 0.84);
   }
 
   .completed-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium transition border cursor-pointer rounded-2xl sm:text-base xl:shrink-0;
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.72);
   }
 
   .completed-courses-list {
@@ -1136,7 +1166,7 @@
   }
 
   .completed-course-card-title {
-    @apply w-fit text-2xl font-bold text-slate-900 transition hover:text-teal-700 hover:underline;
+    @apply w-fit text-2xl font-bold text-slate-900 transition hover:underline;
   }
 
   .completed-course-card-author {
@@ -1160,13 +1190,15 @@
   }
 
   .completed-course-progressbar-fill {
-    @apply h-full transition-all duration-300 bg-green-500 rounded-full;
+    @apply h-full rounded-full transition-all duration-300;
+    background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
   }
 
   .completed-course-review-btn {
-    @apply cursor-pointer rounded-2xl border px-4 py-2.5 text-sm font-semibold text-teal-700 transition sm:w-fit sm:text-base;
-    border-color: rgba(15, 118, 110, 0.2);
-    background: rgba(255, 255, 255, 0.7);
+    @apply cursor-pointer rounded-2xl border px-4 py-2.5 text-sm font-semibold transition sm:w-fit sm:text-base;
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.72);
   }
 
   .completed-course-menu-wrap {
@@ -1174,7 +1206,9 @@
   }
 
   .completed-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex h-11 w-11 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border transition;
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.82);
   }
 
   .completed-course-menu-btn span {
@@ -1208,11 +1242,16 @@
   }
 
   .favourite-courses-search-input {
-    @apply w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 outline-none rounded-2xl placeholder:text-gray-400 focus:border-green-500 sm:text-base;
+    @apply w-full px-4 py-3 text-sm text-gray-900 outline-none rounded-2xl placeholder:text-gray-400 sm:text-base;
+    border-color: rgba(16, 33, 61, 0.1);
+    background: rgba(255, 255, 255, 0.84);
   }
 
   .favourite-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium text-green-600 transition border border-green-500 cursor-pointer rounded-2xl hover:bg-green-500 hover:text-white sm:text-base xl:shrink-0;
+    @apply px-5 py-3 text-sm font-medium transition border cursor-pointer rounded-2xl sm:text-base xl:shrink-0;
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.72);
   }
 
   .favourite-courses-list {
@@ -1240,7 +1279,7 @@
   }
 
   .favourite-course-card-title {
-    @apply w-fit text-2xl font-bold text-slate-900 transition hover:text-teal-700 hover:underline;
+    @apply w-fit text-2xl font-bold text-slate-900 transition hover:underline;
   }
 
   .favourite-course-card-author {
@@ -1252,7 +1291,9 @@
   }
 
   .favourite-course-menu-btn {
-    @apply flex flex-col items-center justify-center gap-1 transition bg-white border border-green-500 cursor-pointer h-11 w-11 rounded-xl hover:border-green-700 hover:bg-gray-50;
+    @apply flex h-11 w-11 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border transition;
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.82);
   }
 
   .favourite-course-menu-btn span {
@@ -1280,10 +1321,10 @@
   }
 
   .edit-profile-sidebar-navlink.active {
-    @apply text-teal-800;
-    border-color: rgba(15, 118, 110, 0.14);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(226, 248, 244, 0.96));
-    box-shadow: 0 18px 30px -26px rgba(15, 118, 110, 0.55);
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(37, 99, 235, 0.1));
+    box-shadow: 0 18px 30px -26px rgba(37, 99, 235, 0.38);
   }
 
   /*Home page*/
@@ -2071,6 +2112,34 @@
     background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
   }
 
+  .current-courses-search-input:focus,
+  .completed-courses-search-input:focus,
+  .favourite-courses-search-input:focus {
+    border-color: var(--app-border-strong);
+    box-shadow: 0 0 0 4px var(--app-accent-soft);
+  }
+
+  .current-courses-search-btn:hover,
+  .completed-courses-search-btn:hover,
+  .favourite-courses-search-btn:hover {
+    color: #ffffff;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
+  }
+
+  .current-course-card-title:hover,
+  .completed-course-card-title:hover,
+  .favourite-course-card-title:hover {
+    color: var(--app-accent-strong);
+  }
+
+  .current-course-menu-btn:hover,
+  .completed-course-menu-btn:hover,
+  .favourite-course-menu-btn:hover {
+    border-color: var(--app-border-strong);
+    background: rgba(37, 99, 235, 0.08);
+  }
+
   .profile-activity-cell.level-0 {
     background: var(--activity-level-0);
   }
@@ -2469,6 +2538,7 @@
   :root[data-theme="dark"] .settings-helper-text,
   :root[data-theme="dark"] .settings-file-name,
   :root[data-theme="dark"] .settings-note,
+  :root[data-theme="dark"] .settings-feedback-error,
   :root[data-theme="dark"] .settings-current-value-label,
   :root[data-theme="dark"] .profile-card-description,
   :root[data-theme="dark"] .profile-activity-summary,
@@ -2504,6 +2574,10 @@
   :root[data-theme="dark"] .auth-modal-avatar-hint,
   :root[data-theme="dark"] .auth-modal-avatar-name {
     color: var(--app-muted);
+  }
+
+  :root[data-theme="dark"] .settings-feedback-error {
+    color: #fca5a5;
   }
 
   :root[data-theme="dark"] .settings-label,

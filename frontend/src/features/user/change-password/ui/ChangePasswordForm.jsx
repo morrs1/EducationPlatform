@@ -90,9 +90,9 @@ function ChangePasswordForm({ onSubmit }) {
         />
       </label>
 
-      {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
+      {submitError ? <p className="settings-feedback-error">{submitError}</p> : null}
       {submitSuccess ? (
-        <p className="text-sm text-green-600">{submitSuccess}</p>
+        <p className="settings-feedback-success">{submitSuccess}</p>
       ) : null}
 
       <div className="settings-actions">
