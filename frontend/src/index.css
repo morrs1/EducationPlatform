@@ -3321,6 +3321,265 @@
   @apply block;
 }
 
+:root[data-theme="dark"] .course-tab-btn {
+  color: rgba(242, 245, 251, 0.84);
+  border-color: rgba(148, 163, 184, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .course-tab-btn:hover {
+  color: var(--app-ink);
+  border-color: var(--app-border-strong);
+  background: rgba(91, 124, 240, 0.08);
+}
+
+:root[data-theme="dark"] .course-tab-btn.locked {
+  color: rgba(150, 161, 183, 0.72);
+}
+
+:root[data-theme="dark"] .lesson-card,
+:root[data-theme="dark"] .course-outline-card,
+:root[data-theme="dark"] .lesson-step-section-card,
+:root[data-theme="dark"] .lesson-answer-card,
+:root[data-theme="dark"] .assistant-panel {
+  border-color: var(--app-border);
+  background: var(--app-surface-strong);
+  box-shadow: var(--app-shadow);
+}
+
+:root[data-theme="dark"] .course-outline-head,
+:root[data-theme="dark"] .lesson-step-section-head,
+:root[data-theme="dark"] .lesson-step-footer,
+:root[data-theme="dark"] .assistant-panel-header,
+:root[data-theme="dark"] .assistant-panel-form,
+:root[data-theme="dark"] .assistant-panel-form-footer {
+  border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .lesson-step-tabs {
+  border-color: var(--app-border);
+  background: rgba(11, 16, 27, 0.92);
+}
+
+:root[data-theme="dark"] .course-outline-lesson,
+:root[data-theme="dark"] .lesson-step-tab,
+:root[data-theme="dark"] .lesson-step-content-placeholder,
+:root[data-theme="dark"] .lesson-choice-option,
+:root[data-theme="dark"] .assistant-panel-empty,
+:root[data-theme="dark"] .assistant-panel-composer,
+:root[data-theme="dark"] .assistant-message-assistant,
+:root[data-theme="dark"] .assistant-message-pending {
+  border-color: var(--app-border);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .course-outline-progressbar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .course-outline-lesson {
+  color: rgba(242, 245, 251, 0.84);
+}
+
+:root[data-theme="dark"] .course-outline-lesson:hover,
+:root[data-theme="dark"] .course-outline-lesson:focus-visible {
+  background: rgba(91, 124, 240, 0.08);
+}
+
+:root[data-theme="dark"] .course-outline-lesson.active {
+  color: var(--app-ink);
+  background: rgba(91, 124, 240, 0.22);
+}
+
+:root[data-theme="dark"] .course-outline-lesson.completed {
+  color: #bfd0ff;
+  background: rgba(91, 124, 240, 0.12);
+}
+
+:root[data-theme="dark"] .course-outline-lesson.active.completed {
+  color: var(--app-ink);
+  background: rgba(91, 124, 240, 0.22);
+}
+
+:root[data-theme="dark"] .course-outline-lesson.disabled {
+  color: rgba(150, 161, 183, 0.56);
+}
+
+:root[data-theme="dark"] .course-outline-lesson-hover-progress {
+  border-color: var(--app-border);
+  background: rgba(6, 11, 19, 0.96);
+  color: var(--app-ink);
+}
+
+:root[data-theme="dark"] .lesson-step-tab {
+  color: rgba(242, 245, 251, 0.84);
+}
+
+:root[data-theme="dark"] .lesson-step-tab.active {
+  color: var(--app-ink);
+  border-color: var(--app-border-strong);
+  background: rgba(91, 124, 240, 0.16);
+}
+
+:root[data-theme="dark"] .lesson-step-tab.completed {
+  color: #bfd0ff;
+  border-color: rgba(91, 124, 240, 0.16);
+  background: rgba(91, 124, 240, 0.1);
+}
+
+:root[data-theme="dark"] .lesson-step-tab.active.completed {
+  color: var(--app-ink);
+  border-color: var(--app-border-strong);
+  background: rgba(91, 124, 240, 0.18);
+}
+
+:root[data-theme="dark"] .lesson-step-tab.viewed {
+  color: var(--app-ink);
+  border-color: var(--app-border);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+:root[data-theme="dark"] .lesson-markdown-inline-code,
+:root[data-theme="dark"] .lesson-code-language,
+:root[data-theme="dark"] .lesson-result-case-status {
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .lesson-text-answer,
+:root[data-theme="dark"] .lesson-code-editor {
+  border-color: var(--app-border);
+  background: rgba(10, 15, 24, 0.92);
+  color: var(--app-ink);
+}
+
+:root[data-theme="dark"] .lesson-choice-option input {
+  accent-color: var(--app-accent);
+}
+
+:root[data-theme="dark"] .lesson-submission-result.correct,
+:root[data-theme="dark"] .lesson-result-case.passed {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+:root[data-theme="dark"] .lesson-submission-result.incorrect,
+:root[data-theme="dark"] .lesson-result-case.failed {
+  border-color: rgba(251, 113, 133, 0.24);
+  background: rgba(251, 113, 133, 0.12);
+}
+
+:root[data-theme="dark"] .lesson-run-result.success {
+  border-color: rgba(96, 165, 250, 0.24);
+  background: rgba(96, 165, 250, 0.12);
+}
+
+:root[data-theme="dark"] .lesson-run-result.failed {
+  border-color: rgba(245, 158, 11, 0.24);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+:root[data-theme="dark"] .lesson-result-case.not_run {
+  border-color: var(--app-border);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .lesson-result-case-block {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .lesson-step-status.completed {
+  color: #bfd0ff;
+  background: rgba(91, 124, 240, 0.16);
+}
+
+:root[data-theme="dark"] .lesson-step-status.in-progress {
+  color: var(--app-muted);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .assistant-panel-body {
+  background: linear-gradient(180deg, rgba(17, 24, 38, 0.92) 0%, rgba(12, 18, 29, 1) 34%);
+}
+
+:root[data-theme="dark"] .assistant-panel-form {
+  background: rgba(11, 16, 27, 0.84);
+}
+
+:root[data-theme="dark"] .assistant-panel-close-btn {
+  color: var(--app-muted);
+  border-color: var(--app-border);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .assistant-panel-close-btn:hover {
+  color: var(--app-accent-strong);
+  border-color: var(--app-border-strong);
+  background: rgba(91, 124, 240, 0.08);
+}
+
+:root[data-theme="dark"] .assistant-panel-input {
+  color: var(--app-ink);
+}
+
+:root[data-theme="dark"] .assistant-panel-input::placeholder {
+  color: rgba(150, 161, 183, 0.78);
+}
+
+:root[data-theme="dark"] .assistant-panel-form-hint span {
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .assistant-panel-submit-btn,
+:root[data-theme="dark"] .assistant-message-user {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
+}
+
+:root[data-theme="dark"] .lesson-title,
+:root[data-theme="dark"] .course-outline-course-title,
+:root[data-theme="dark"] .course-outline-module-title,
+:root[data-theme="dark"] .lesson-step-section-title,
+:root[data-theme="dark"] .lesson-step-content-title,
+:root[data-theme="dark"] .lesson-markdown-h1,
+:root[data-theme="dark"] .lesson-markdown-h2,
+:root[data-theme="dark"] .lesson-answer-label,
+:root[data-theme="dark"] .lesson-submission-feedback,
+:root[data-theme="dark"] .lesson-run-result-title,
+:root[data-theme="dark"] .lesson-result-cases-title,
+:root[data-theme="dark"] .lesson-result-case-index,
+:root[data-theme="dark"] .assistant-panel-title,
+:root[data-theme="dark"] .assistant-panel-empty-title {
+  color: var(--app-ink);
+}
+
+:root[data-theme="dark"] .lesson-label,
+:root[data-theme="dark"] .lesson-step-section-module,
+:root[data-theme="dark"] .lesson-step-content-label,
+:root[data-theme="dark"] .assistant-panel-label {
+  color: var(--app-accent-strong);
+}
+
+:root[data-theme="dark"] .lesson-text,
+:root[data-theme="dark"] .course-outline-progress,
+:root[data-theme="dark"] .lesson-step-section-description,
+:root[data-theme="dark"] .lesson-step-content-text,
+:root[data-theme="dark"] .lesson-markdown-paragraph,
+:root[data-theme="dark"] .lesson-markdown-list,
+:root[data-theme="dark"] .lesson-markdown-list-decimal,
+:root[data-theme="dark"] .lesson-submission-meta,
+:root[data-theme="dark"] .lesson-run-result-meta,
+:root[data-theme="dark"] .lesson-result-case-message,
+:root[data-theme="dark"] .lesson-result-case-label,
+:root[data-theme="dark"] .lesson-result-case-block pre,
+:root[data-theme="dark"] .assistant-panel-subtitle,
+:root[data-theme="dark"] .assistant-panel-empty-text,
+:root[data-theme="dark"] .assistant-panel-form-hint,
+:root[data-theme="dark"] .assistant-message-meta {
+  color: var(--app-muted);
+}
+
 @keyframes assistant-typing {
   0%,
   80%,
