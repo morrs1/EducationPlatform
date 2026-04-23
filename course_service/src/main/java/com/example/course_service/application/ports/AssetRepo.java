@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface AssetRepo {
     List<Asset> readAssetByLessonId(UUID lessonId);
+
+    void add(Asset asset);
 }
