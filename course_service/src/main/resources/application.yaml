@@ -15,3 +15,14 @@ spring:
       max-request-size: 10MB
 server:
   port: 8081
+
+temp:
+  s3:
+    enabled: ${TEMP_S3_ENABLED:false}
+    region: ${TEMP_S3_REGION:eu-central-1}
+    bucket: ${TEMP_S3_BUCKET:}
+    endpoint: ${TEMP_S3_ENDPOINT:}
+    access-key: ${TEMP_S3_ACCESS_KEY:}
+    secret-key: ${TEMP_S3_SECRET_KEY:}
+    public-base-url: ${TEMP_S3_PUBLIC_BASE_URL:}
+    path-style-access: ${TEMP_S3_PATH_STYLE_ACCESS:false}
