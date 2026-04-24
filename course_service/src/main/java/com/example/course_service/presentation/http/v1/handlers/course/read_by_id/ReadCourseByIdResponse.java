@@ -1,8 +1,7 @@
 package com.example.course_service.presentation.http.v1.handlers.course.read_by_id;
 
-import com.example.course_service.domain.course.vo.*;
 import com.example.course_service.domain.module.Module;
-import com.example.course_service.domain.tag.Tag;
+import com.example.course_service.presentation.http.v1.handlers.course.CourseTagRef;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +18,6 @@ public record ReadCourseByIdResponse(
         List<Module> structure,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        List<Tag> tags
+        List<CourseTagRef> tags
 ) {
 }
