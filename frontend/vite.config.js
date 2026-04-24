@@ -115,6 +115,24 @@ function setHeaderIfPresent(response, headerName, value) {
   response.setHeader(headerName, String(value));
 }
 
+function buildGetObjectInput(mediaPath, request) {
+  const input = {
+    Bucket: mediaPath.bucket,
+    Key: mediaPath.key,
+  };
+
+  const rangeHeader =
+    typeof request.headers.range === "string"
+      ? request.headers.range.trim()
+      : "";
+
+  if (rangeHeader) {
+    input.Range = rangeHeader;
+  }
+
+  return input;
+}
+
 function createS3MediaProxyPlugin(env) {
   const s3Client = createS3MediaClient(env);
   const courseServiceBucket = getCourseServiceMediaBucket(env);
@@ -152,18 +170,29 @@ function createS3MediaProxyPlugin(env) {
 
       try {
         const objectResponse = await s3Client.send(
-          new GetObjectCommand({
-            Bucket: mediaPath.bucket,
-            Key: mediaPath.key,
-          }),
+          new GetObjectCommand(buildGetObjectInput(mediaPath, request)),
         );
 
-        response.statusCode = 200;
+        response.statusCode =
+          objectResponse.ContentRange ||
+          objectResponse.$metadata?.httpStatusCode === 206
+            ? 206
+            : 200;
         setHeaderIfPresent(response, "Content-Type", objectResponse.ContentType);
         setHeaderIfPresent(
           response,
           "Content-Length",
           objectResponse.ContentLength,
+        );
+        setHeaderIfPresent(
+          response,
+          "Accept-Ranges",
+          objectResponse.AcceptRanges || "bytes",
+        );
+        setHeaderIfPresent(
+          response,
+          "Content-Range",
+          objectResponse.ContentRange,
         );
         setHeaderIfPresent(response, "ETag", objectResponse.ETag);
         setHeaderIfPresent(
@@ -175,6 +204,11 @@ function createS3MediaProxyPlugin(env) {
           response,
           "Cache-Control",
           objectResponse.CacheControl || "public, max-age=300",
+        );
+        setHeaderIfPresent(
+          response,
+          "Content-Disposition",
+          objectResponse.ContentDisposition,
         );
 
         if (request.method === "HEAD") {
@@ -203,12 +237,18 @@ function createS3MediaProxyPlugin(env) {
         response.end();
       } catch (error) {
         const statusCode =
-          error?.$metadata?.httpStatusCode === 404 ? 404 : 502;
+          error?.$metadata?.httpStatusCode === 404
+            ? 404
+            : error?.$metadata?.httpStatusCode === 416
+              ? 416
+              : 502;
 
         response.statusCode = statusCode;
         response.end(
           statusCode === 404
             ? "S3 object not found."
+            : statusCode === 416
+              ? "Requested media range is not satisfiable."
             : "Unable to load image from S3.",
         );
       }

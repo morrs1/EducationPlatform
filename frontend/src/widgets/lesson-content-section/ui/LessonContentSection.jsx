@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 function renderInlineText(text) {
   return text
@@ -170,6 +170,223 @@ function getLessonTypeLabel(lesson) {
   return "Теоретический урок";
 }
 
+function LessonAssetVideo({ asset }) {
+  const assetKey =
+    asset?.isResolved && asset?.url
+      ? `${asset.id ?? "lesson-asset"}:${asset.url}`
+      : "";
+  const [posterState, setPosterState] = useState({
+    key: "",
+    url: "",
+  });
+  const previewVideoRef = useRef(null);
+  const captureTimeoutRef = useRef(0);
+  const frameRequestIdRef = useRef(null);
+  const hasCapturedPosterRef = useRef(false);
+
+  useEffect(() => {
+    hasCapturedPosterRef.current = false;
+    const previewVideo = previewVideoRef.current;
+
+    return () => {
+      if (captureTimeoutRef.current) {
+        clearTimeout(captureTimeoutRef.current);
+        captureTimeoutRef.current = 0;
+      }
+
+      if (
+        previewVideo &&
+        frameRequestIdRef.current !== null &&
+        typeof previewVideo.cancelVideoFrameCallback === "function"
+      ) {
+        previewVideo.cancelVideoFrameCallback(frameRequestIdRef.current);
+      }
+
+      frameRequestIdRef.current = null;
+    };
+  }, [assetKey]);
+
+  const getPreviewTimestamp = (duration) => {
+    const normalizedDuration = Number.isFinite(duration) ? duration : 0;
+
+    if (normalizedDuration <= 0) {
+      return 0;
+    }
+
+    const midpoint = normalizedDuration * 0.5;
+    const lowerBound = normalizedDuration >= 2 ? 1 : normalizedDuration * 0.25;
+    const upperBound = Math.max(normalizedDuration - 0.35, 0);
+
+    return Math.min(Math.max(midpoint, lowerBound), upperBound);
+  };
+
+  const capturePoster = () => {
+    const previewVideo = previewVideoRef.current;
+
+    if (
+      !assetKey ||
+      !previewVideo ||
+      hasCapturedPosterRef.current ||
+      !previewVideo.videoWidth ||
+      !previewVideo.videoHeight
+    ) {
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = previewVideo.videoWidth;
+    canvas.height = previewVideo.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return;
+    }
+
+    try {
+      context.drawImage(
+        previewVideo,
+        0,
+        0,
+        previewVideo.videoWidth,
+        previewVideo.videoHeight,
+      );
+
+      hasCapturedPosterRef.current = true;
+      setPosterState({
+        key: assetKey,
+        url: canvas.toDataURL("image/jpeg", 0.82),
+      });
+    } catch {
+      setPosterState((previousState) =>
+        previousState.key === assetKey
+          ? {
+              key: assetKey,
+              url: "",
+            }
+          : previousState,
+      );
+    }
+  };
+
+  const schedulePosterCapture = () => {
+    const previewVideo = previewVideoRef.current;
+
+    if (!previewVideo || hasCapturedPosterRef.current) {
+      return;
+    }
+
+    if (captureTimeoutRef.current) {
+      clearTimeout(captureTimeoutRef.current);
+      captureTimeoutRef.current = 0;
+    }
+
+    if (typeof previewVideo.requestVideoFrameCallback === "function") {
+      if (frameRequestIdRef.current !== null) {
+        previewVideo.cancelVideoFrameCallback?.(frameRequestIdRef.current);
+      }
+
+      frameRequestIdRef.current = previewVideo.requestVideoFrameCallback(() => {
+        frameRequestIdRef.current = null;
+        previewVideo.pause();
+        capturePoster();
+      });
+      return;
+    }
+
+    captureTimeoutRef.current = window.setTimeout(() => {
+      captureTimeoutRef.current = 0;
+      previewVideo.pause();
+      capturePoster();
+    }, 180);
+  };
+
+  const handleLoadedMetadata = () => {
+    const previewVideo = previewVideoRef.current;
+
+    if (!previewVideo || !asset?.isResolved || !asset.url) {
+      return;
+    }
+
+    const previewTimestamp = getPreviewTimestamp(previewVideo.duration);
+
+    if (previewTimestamp <= 0) {
+      schedulePosterCapture();
+      return;
+    }
+
+    try {
+      previewVideo.currentTime = previewTimestamp;
+    } catch {
+      schedulePosterCapture();
+    }
+  };
+
+  const handleSeeked = () => {
+    const previewVideo = previewVideoRef.current;
+
+    if (!previewVideo || hasCapturedPosterRef.current) {
+      return;
+    }
+
+    const playPromise = previewVideo.play();
+
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => {
+          schedulePosterCapture();
+        })
+        .catch(() => {
+          schedulePosterCapture();
+        });
+      return;
+    }
+
+    schedulePosterCapture();
+  };
+
+  const handlePreviewError = () => {
+    setPosterState((previousState) =>
+      previousState.key === assetKey
+        ? {
+            key: assetKey,
+            url: "",
+          }
+        : previousState,
+    );
+  };
+
+  const posterUrl = posterState.key === assetKey ? posterState.url : "";
+
+  return (
+    <>
+      <video
+        key={`preview-${assetKey}`}
+        ref={previewVideoRef}
+        className="lesson-asset-video-preview"
+        src={asset.url}
+        preload="auto"
+        muted
+        playsInline
+        aria-hidden="true"
+        tabIndex={-1}
+        onLoadedMetadata={handleLoadedMetadata}
+        onSeeked={handleSeeked}
+        onError={handlePreviewError}
+      />
+      <video
+        key={`player-${assetKey}`}
+        className="lesson-asset-video"
+        src={asset.url}
+        poster={posterUrl || undefined}
+        controls
+        preload="metadata"
+        playsInline
+      />
+    </>
+  );
+}
+
 function renderLessonAssetEmbed(asset) {
   if (asset.type === "file") {
     return asset.isResolved ? (
@@ -221,12 +438,7 @@ function renderLessonAssetEmbed(asset) {
       {asset.type === "video" ? (
         <div className="lesson-asset-visual-wrap">
           {asset.isResolved ? (
-            <video
-              className="lesson-asset-video"
-              src={asset.url}
-              controls
-              preload="metadata"
-            />
+            <LessonAssetVideo asset={asset} />
           ) : (
             <div className="lesson-asset-unavailable">
               Не удалось определить адрес видео.
@@ -332,10 +544,10 @@ function LessonContentSection({
 
           {contentStatus === "success" ? (
             <div className="lesson-markdown">
+              {renderLessonAssets(lessonAssets)}
               {contentBlocks.map((block, index) =>
                 renderMarkdownBlock(block, index),
               )}
-              {renderLessonAssets(lessonAssets)}
             </div>
           ) : null}
 

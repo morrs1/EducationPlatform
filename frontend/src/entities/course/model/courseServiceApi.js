@@ -138,6 +138,65 @@ function buildBucketMediaProxyUrl(bucket, key) {
     .join("/")}`;
 }
 
+function parseStorageReference(value) {
+  const normalizedValue = normalizeText(value);
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(normalizedValue, window.location.origin);
+
+    if (parsedUrl.pathname.startsWith(USER_SERVICE_MEDIA_PROXY_PATH)) {
+      return null;
+    }
+
+    if (parsedUrl.protocol === "s3:") {
+      const key = parsedUrl.pathname.split("/").filter(Boolean).join("/");
+
+      if (!parsedUrl.hostname || !key) {
+        return null;
+      }
+
+      return {
+        bucket: parsedUrl.hostname,
+        key,
+      };
+    }
+
+    const isLocalStorageHost =
+      parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1";
+
+    if (!isLocalStorageHost) {
+      return null;
+    }
+
+    const pathSegments = parsedUrl.pathname
+      .split("/")
+      .filter(Boolean)
+      .map((segment) => decodeURIComponent(segment));
+
+    if (pathSegments[0] === "buckets" && pathSegments.length >= 3) {
+      return {
+        bucket: pathSegments[1],
+        key: pathSegments.slice(2).join("/"),
+      };
+    }
+
+    if (pathSegments.length >= 2) {
+      return {
+        bucket: pathSegments[0],
+        key: pathSegments.slice(1).join("/"),
+      };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeDirectAssetUrl(url) {
   const normalizedUrl = normalizeText(url);
 
@@ -220,16 +279,28 @@ function getLessonAssetSortWeight(type) {
 }
 
 function resolveLessonAssetUrl(publicUrl, storageKey) {
+  const normalizedStorageKey = normalizeText(storageKey);
+  const storageReference = parseStorageReference(publicUrl);
+
+  if (normalizedStorageKey) {
+    const bucketProxyUrl = storageReference?.bucket
+      ? buildBucketMediaProxyUrl(storageReference.bucket, normalizedStorageKey)
+      : "";
+    const courseProxyUrl = buildCourseServiceMediaProxyUrl(normalizedStorageKey);
+
+    if (bucketProxyUrl) {
+      return bucketProxyUrl;
+    }
+
+    if (courseProxyUrl) {
+      return courseProxyUrl;
+    }
+  }
+
   const normalizedPublicUrl = normalizeDirectAssetUrl(publicUrl);
 
   if (normalizedPublicUrl && !isPlaceholderAssetUrl(normalizedPublicUrl)) {
     return normalizedPublicUrl;
-  }
-
-  const storageProxyUrl = buildCourseServiceMediaProxyUrl(storageKey);
-
-  if (storageProxyUrl) {
-    return storageProxyUrl;
   }
 
   return normalizedPublicUrl;

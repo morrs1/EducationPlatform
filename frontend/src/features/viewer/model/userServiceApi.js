@@ -75,6 +75,86 @@ function getUserServiceApiBaseUrl() {
   return configuredBaseUrl || DEFAULT_USER_SERVICE_API_BASE_URL;
 }
 
+export function buildUserServiceMediaProxyUrl(bucket, key) {
+  const normalizedBucket = normalizeText(bucket);
+  const normalizedKey = normalizeText(key);
+
+  if (!normalizedBucket || !normalizedKey) {
+    return "";
+  }
+
+  return `${USER_SERVICE_MEDIA_PROXY_PATH}/${encodeURIComponent(
+    normalizedBucket,
+  )}/${normalizedKey
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/")}`;
+}
+
+function parseUserServiceStorageReference(value) {
+  const normalizedUrl = normalizeText(value);
+
+  if (!normalizedUrl) {
+    return null;
+  }
+
+  if (normalizedUrl.startsWith(USER_SERVICE_MEDIA_PROXY_PATH)) {
+    return null;
+  }
+
+  try {
+    const sourceUrl = new URL(normalizedUrl, window.location.origin);
+
+    if (sourceUrl.pathname.startsWith(USER_SERVICE_MEDIA_PROXY_PATH)) {
+      return null;
+    }
+
+    if (sourceUrl.protocol === "s3:") {
+      const key = sourceUrl.pathname.split("/").filter(Boolean).join("/");
+
+      if (!sourceUrl.hostname || !key) {
+        return null;
+      }
+
+      return {
+        bucket: sourceUrl.hostname,
+        key,
+      };
+    }
+
+    const sourcePathSegments = sourceUrl.pathname
+      .split("/")
+      .filter(Boolean)
+      .map((segment) => decodeURIComponent(segment));
+
+    const isLocalStorageHost =
+      sourceUrl.hostname === "localhost" || sourceUrl.hostname === "127.0.0.1";
+
+    if (!isLocalStorageHost) {
+      return null;
+    }
+
+    if (sourcePathSegments[0] === "buckets" && sourcePathSegments.length >= 3) {
+      return {
+        bucket: sourcePathSegments[1],
+        key: sourcePathSegments.slice(2).join("/"),
+      };
+    }
+
+    if (sourcePathSegments.length >= 2) {
+      return {
+        bucket: sourcePathSegments[0],
+        key: sourcePathSegments.slice(1).join("/"),
+      };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function normalizeUserServicePhotoUrl(value) {
   const normalizedUrl = normalizeText(value);
 
@@ -82,38 +162,16 @@ export function normalizeUserServicePhotoUrl(value) {
     return "";
   }
 
-  try {
-    const sourceUrl = new URL(normalizedUrl);
-    const sourcePathSegments = sourceUrl.pathname.split("/").filter(Boolean);
+  const storageReference = parseUserServiceStorageReference(normalizedUrl);
 
-    if (sourceUrl.protocol === "s3:") {
-      if (!sourceUrl.hostname || !sourcePathSegments.length) {
-        return normalizedUrl;
-      }
-
-      return `${USER_SERVICE_MEDIA_PROXY_PATH}/${encodeURIComponent(
-        sourceUrl.hostname,
-      )}/${sourcePathSegments
-        .map((segment) => encodeURIComponent(segment))
-        .join("/")}`;
-    }
-
-    if (!sourcePathSegments.length) {
-      return normalizedUrl;
-    }
-
-    if (sourcePathSegments.length < 2) {
-      return normalizedUrl;
-    }
-
-    const [bucket, ...keySegments] = sourcePathSegments;
-
-    return `${USER_SERVICE_MEDIA_PROXY_PATH}/${encodeURIComponent(
-      bucket,
-    )}/${keySegments.map((segment) => encodeURIComponent(segment)).join("/")}`;
-  } catch {
-    return normalizedUrl;
+  if (storageReference) {
+    return buildUserServiceMediaProxyUrl(
+      storageReference.bucket,
+      storageReference.key,
+    );
   }
+
+  return normalizedUrl;
 }
 
 export function resolveRemoteViewerId(

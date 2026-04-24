@@ -1,5 +1,6 @@
 import { updateViewerProfile, restoreViewer } from "./viewerSlice";
 import {
+  buildUserServiceMediaProxyUrl,
   mapReadUserByIdResponseToViewerProfile,
   normalizeUserServicePhotoUrl,
   requestViewerProfileById,
@@ -153,7 +154,11 @@ export function submitViewerProfileUpdate(payload) {
           remoteViewerId,
           nextAvatarFile,
         );
-        uploadedPhotoUrl = uploadResult?.url ?? null;
+        uploadedPhotoUrl =
+          buildUserServiceMediaProxyUrl(
+            uploadResult?.bucket,
+            uploadResult?.key,
+          ) || normalizeUserServicePhotoUrl(uploadResult?.url);
       });
     }
 

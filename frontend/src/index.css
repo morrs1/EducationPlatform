@@ -2991,6 +2991,15 @@
   max-height: 28rem;
 }
 
+.lesson-asset-video-preview {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .lesson-asset-unavailable {
   @apply flex items-center justify-center px-5 py-12 text-center text-sm leading-6 text-gray-500;
   min-height: 14rem;
