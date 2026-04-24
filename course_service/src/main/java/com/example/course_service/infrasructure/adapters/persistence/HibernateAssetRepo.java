@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,5 +26,22 @@ public class HibernateAssetRepo implements AssetRepo {
                 .setParameter("lessonId", lessonId).getResultStream()
                 .map(mapper::toDomainAsset)
                 .toList();
+    }
+
+    @Override
+    public void add(Asset asset) {
+        var hibernateAsset = new HibernateAsset();
+        hibernateAsset.setId(asset.getId());
+        hibernateAsset.setCourseId(asset.getCourseId());
+        hibernateAsset.setLessonId(asset.getLesson_id());
+        hibernateAsset.setAssetType(asset.getType().getAssetType());
+        hibernateAsset.setStorageKey(asset.getStorageKey().getStorageKey());
+        hibernateAsset.setPublicUrl(asset.getPublicUrl().getPublicUrl());
+        hibernateAsset.setMimeType(asset.getMimeType().getMimeType());
+        hibernateAsset.setSizeBytes(asset.getSizeBytes().getSizeBytes());
+        hibernateAsset.setOriginalFilename(asset.getOriginalFilename().getOriginalFilename());
+        hibernateAsset.setTitle(asset.getTitle().getTitle());
+        hibernateAsset.setCreated_at(asset.getCreatedAt() == null ? LocalDateTime.now() : asset.getCreatedAt());
+        entityManager.persist(hibernateAsset);
     }
 }
