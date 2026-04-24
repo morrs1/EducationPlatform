@@ -1,6 +1,8 @@
 package com.example.course_service.presentation.http.v1.mappers;
 
 import com.example.course_service.application.interactors.course.add_course.AddCourseCommand;
+import com.example.course_service.domain.tag.Tag;
+import com.example.course_service.presentation.http.v1.handlers.course.CourseTagRef;
 import com.example.course_service.presentation.http.v1.handlers.course.add_course.AddCourseRequest;
 import org.mapstruct.Mapper;
 
@@ -8,5 +10,12 @@ import org.mapstruct.Mapper;
 public interface CourseMapperCommand {
 
     AddCourseCommand toAddCourseCommand(AddCourseRequest request);
+
+    default Tag toTag(CourseTagRef tagRef) {
+        if (tagRef == null) {
+            return null;
+        }
+        return new Tag(tagRef.id(), null);
+    }
 
 }

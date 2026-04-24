@@ -1,15 +1,20 @@
 package com.example.course_service.infrasructure.adapters.persistence;
 
+import com.example.course_service.application.exceptions.TagNotFoundException;
 import com.example.course_service.application.ports.CourseRepo;
 import com.example.course_service.domain.course.Course;
 import com.example.course_service.infrasructure.persistence.mappers.CourseHibernateMapper;
 import com.example.course_service.infrasructure.persistence.models.course.HibernateCourse;
+import com.example.course_service.infrasructure.persistence.models.course.HibernateTag;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,11 +35,19 @@ public class HibernateCourseRepo implements CourseRepo {
                 .findFirst()
                 .map(mapper::toDomainCourse);
     }
-//TODO проверить корректно ли я пушу сущности через хибер
+
     @Override
     public UUID add(Course course) {
         var hibernateCourse = mapper.toHibernateCourse(course);
-        hibernateCourse.getTags().forEach(entityManager::persist);
+        Set<HibernateTag> managedTags;
+        try {
+            managedTags = hibernateCourse.getTags().stream()
+                    .map(tag -> entityManager.getReference(HibernateTag.class, tag.getId()))
+                    .collect(Collectors.toSet());
+        } catch (EntityNotFoundException ex) {
+            throw new TagNotFoundException("Tag with this id was not found");
+        }
+        hibernateCourse.setTags(managedTags);
         entityManager.persist(hibernateCourse);
         return hibernateCourse.getId();
     }
