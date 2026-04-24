@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface CourseRepo {
     Optional<Course> readById(UUID id);
+
+    UUID add(Course course);
 }

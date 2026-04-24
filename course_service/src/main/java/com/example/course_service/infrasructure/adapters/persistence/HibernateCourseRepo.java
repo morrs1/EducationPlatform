@@ -30,4 +30,12 @@ public class HibernateCourseRepo implements CourseRepo {
                 .findFirst()
                 .map(mapper::toDomainCourse);
     }
+//TODO проверить корректно ли я пушу сущности через хибер
+    @Override
+    public UUID add(Course course) {
+        var hibernateCourse = mapper.toHibernateCourse(course);
+        hibernateCourse.getTags().forEach(entityManager::persist);
+        entityManager.persist(hibernateCourse);
+        return hibernateCourse.getId();
+    }
 }
