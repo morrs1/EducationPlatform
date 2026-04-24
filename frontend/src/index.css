@@ -2970,6 +2970,45 @@
   @apply flex flex-col gap-5 mt-4;
 }
 
+.lesson-asset-embed {
+  @apply mt-3 flex flex-col gap-3;
+}
+
+.lesson-asset-visual-wrap {
+  @apply overflow-hidden rounded-[1.25rem] border border-gray-200;
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.88) 0%, rgba(255, 255, 255, 0.94) 100%);
+}
+
+.lesson-asset-image {
+  @apply block w-full;
+  max-height: 28rem;
+  object-fit: contain;
+  background: rgba(248, 250, 252, 0.76);
+}
+
+.lesson-asset-video {
+  @apply block w-full bg-slate-950;
+  max-height: 28rem;
+}
+
+.lesson-asset-unavailable {
+  @apply flex items-center justify-center px-5 py-12 text-center text-sm leading-6 text-gray-500;
+  min-height: 14rem;
+}
+
+.lesson-asset-file-link {
+  @apply inline-flex w-fit items-center gap-2 text-base font-semibold underline decoration-2 underline-offset-4 transition duration-200;
+  color: var(--app-accent-strong);
+  text-decoration-color: rgba(37, 99, 235, 0.34);
+}
+
+.lesson-asset-file-link:hover,
+.lesson-asset-file-link:focus-visible {
+  @apply outline-none;
+  color: var(--app-accent);
+  text-decoration-color: currentColor;
+}
+
 .lesson-markdown-h1 {
   @apply text-3xl font-bold text-gray-900;
 }
@@ -3508,6 +3547,7 @@
 :root[data-theme="dark"] .course-outline-lesson,
 :root[data-theme="dark"] .lesson-content-panel,
 :root[data-theme="dark"] .lesson-choice-option,
+:root[data-theme="dark"] .lesson-asset-visual-wrap,
 :root[data-theme="dark"] .assistant-panel-empty,
 :root[data-theme="dark"] .assistant-panel-composer,
 :root[data-theme="dark"] .assistant-message-assistant,
@@ -3715,6 +3755,7 @@
 :root[data-theme="dark"] .course-outline-progress,
 :root[data-theme="dark"] .lesson-content-description,
 :root[data-theme="dark"] .lesson-content-copy,
+:root[data-theme="dark"] .lesson-asset-unavailable,
 :root[data-theme="dark"] .lesson-markdown-paragraph,
 :root[data-theme="dark"] .lesson-markdown-list,
 :root[data-theme="dark"] .lesson-markdown-list-decimal,
@@ -3728,6 +3769,21 @@
 :root[data-theme="dark"] .assistant-panel-form-hint,
 :root[data-theme="dark"] .assistant-message-meta {
   color: var(--app-muted);
+}
+
+:root[data-theme="dark"] .lesson-asset-image {
+  background: rgba(6, 11, 19, 0.96);
+}
+
+:root[data-theme="dark"] .lesson-asset-file-link {
+  color: var(--app-accent-strong);
+  text-decoration-color: rgba(140, 166, 255, 0.44);
+}
+
+:root[data-theme="dark"] .lesson-asset-file-link:hover,
+:root[data-theme="dark"] .lesson-asset-file-link:focus-visible {
+  color: #ffffff;
+  text-decoration-color: currentColor;
 }
 
 @keyframes lesson-skeleton-wave {

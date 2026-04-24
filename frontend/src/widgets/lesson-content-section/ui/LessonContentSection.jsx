@@ -170,6 +170,82 @@ function getLessonTypeLabel(lesson) {
   return "Теоретический урок";
 }
 
+function renderLessonAssetEmbed(asset) {
+  if (asset.type === "file") {
+    return asset.isResolved ? (
+      <a
+        key={asset.id}
+        href={asset.url}
+        target="_blank"
+        rel="noreferrer"
+        className="lesson-asset-file-link"
+      >
+        Открыть файл
+      </a>
+    ) : (
+      <div
+        key={asset.id}
+        className={`lesson-asset-embed asset-file${
+          !asset.isResolved ? " is-unavailable" : ""
+        }`}
+      >
+        <div className="lesson-asset-unavailable">Не удалось загрузить файл.</div>
+      </div>
+    );
+  }
+
+  return (
+    <figure
+      key={asset.id}
+      className={`lesson-asset-embed asset-${asset.type}${
+        !asset.isResolved ? " is-unavailable" : ""
+      }`}
+    >
+      {asset.type === "image" ? (
+        <div className="lesson-asset-visual-wrap">
+          {asset.isResolved ? (
+            <img
+              src={asset.url}
+              alt="Иллюстрация к уроку"
+              className="lesson-asset-image"
+              loading="lazy"
+            />
+          ) : (
+            <div className="lesson-asset-unavailable">
+              Не удалось определить адрес изображения.
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {asset.type === "video" ? (
+        <div className="lesson-asset-visual-wrap">
+          {asset.isResolved ? (
+            <video
+              className="lesson-asset-video"
+              src={asset.url}
+              controls
+              preload="metadata"
+            />
+          ) : (
+            <div className="lesson-asset-unavailable">
+              Не удалось определить адрес видео.
+            </div>
+          )}
+        </div>
+      ) : null}
+    </figure>
+  );
+}
+
+function renderLessonAssets(assets) {
+  if (!assets?.length) {
+    return null;
+  }
+
+  return assets.map(renderLessonAssetEmbed);
+}
+
 function LessonContentSection({
   lesson,
   contentStatus,
@@ -205,6 +281,7 @@ function LessonContentSection({
   const isQuizLesson = lesson?.type === "quiz";
   const isCodeLesson = lesson?.type === "code";
   const isTheoryLesson = lesson?.type === "theory";
+  const lessonAssets = lesson?.assets ?? [];
   const answersByQuestionId = lessonDraft?.answersByQuestionId ?? {};
   const codeValue = lessonDraft?.code ?? "";
   const contentPanelClassName = [
@@ -258,6 +335,7 @@ function LessonContentSection({
               {contentBlocks.map((block, index) =>
                 renderMarkdownBlock(block, index),
               )}
+              {renderLessonAssets(lessonAssets)}
             </div>
           ) : null}
 

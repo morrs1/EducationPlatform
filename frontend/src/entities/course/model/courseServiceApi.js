@@ -1,4 +1,6 @@
 const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course-service";
+const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
+const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const courseRequestCache = new Map();
@@ -103,6 +105,181 @@ function buildCourseServiceUrl(pathname = "") {
     `${getCourseServiceApiBaseUrl()}${pathname}`,
     window.location.origin,
   );
+}
+
+function buildCourseServiceMediaProxyUrl(storageKey) {
+  const normalizedStorageKey = normalizeText(storageKey);
+
+  if (!normalizedStorageKey) {
+    return "";
+  }
+
+  return `${COURSE_SERVICE_MEDIA_PROXY_PATH}/${normalizedStorageKey
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/")}`;
+}
+
+function buildBucketMediaProxyUrl(bucket, key) {
+  const normalizedBucket = normalizeText(bucket);
+  const normalizedKey = normalizeText(key);
+
+  if (!normalizedBucket || !normalizedKey) {
+    return "";
+  }
+
+  return `${USER_SERVICE_MEDIA_PROXY_PATH}/${encodeURIComponent(
+    normalizedBucket,
+  )}/${normalizedKey
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/")}`;
+}
+
+function normalizeDirectAssetUrl(url) {
+  const normalizedUrl = normalizeText(url);
+
+  if (!normalizedUrl) {
+    return "";
+  }
+
+  try {
+    const parsedUrl = new URL(normalizedUrl, window.location.origin);
+
+    if (parsedUrl.protocol === "s3:") {
+      return buildBucketMediaProxyUrl(
+        parsedUrl.hostname,
+        parsedUrl.pathname.split("/").filter(Boolean).join("/"),
+      );
+    }
+
+    return parsedUrl.toString();
+  } catch {
+    return normalizedUrl;
+  }
+}
+
+function isPlaceholderAssetUrl(url) {
+  const normalizedUrl = normalizeText(url);
+
+  if (!normalizedUrl) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(normalizedUrl, window.location.origin);
+
+    return (
+      parsedUrl.hostname === "cdn.example.local" ||
+      parsedUrl.hostname.endsWith(".example.local")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function normalizeLessonAssetType(type, mimeType) {
+  const normalizedType = normalizeText(type).toLowerCase();
+  const normalizedMimeType = normalizeText(mimeType).toLowerCase();
+
+  if (normalizedType === "image" || normalizedType === "cover") {
+    return "image";
+  }
+
+  if (normalizedType === "video") {
+    return "video";
+  }
+
+  if (normalizedType === "file") {
+    return "file";
+  }
+
+  if (normalizedMimeType.startsWith("image/")) {
+    return "image";
+  }
+
+  if (normalizedMimeType.startsWith("video/")) {
+    return "video";
+  }
+
+  return "file";
+}
+
+function getLessonAssetSortWeight(type) {
+  if (type === "image") {
+    return 0;
+  }
+
+  if (type === "video") {
+    return 1;
+  }
+
+  return 2;
+}
+
+function resolveLessonAssetUrl(publicUrl, storageKey) {
+  const normalizedPublicUrl = normalizeDirectAssetUrl(publicUrl);
+
+  if (normalizedPublicUrl && !isPlaceholderAssetUrl(normalizedPublicUrl)) {
+    return normalizedPublicUrl;
+  }
+
+  const storageProxyUrl = buildCourseServiceMediaProxyUrl(storageKey);
+
+  if (storageProxyUrl) {
+    return storageProxyUrl;
+  }
+
+  return normalizedPublicUrl;
+}
+
+function mapLessonAsset(asset, assetIndex) {
+  const mimeType = unwrapString(asset?.mimeType, "mimeType");
+  const type = normalizeLessonAssetType(
+    unwrapString(asset?.type, "assetType"),
+    mimeType,
+  );
+  const storageKey = unwrapString(asset?.storageKey, "storageKey");
+  const publicUrl = unwrapString(asset?.publicUrl, "publicUrl");
+  const originalFilename = unwrapString(
+    asset?.originalFilename,
+    "originalFilename",
+  );
+  const resolvedUrl = resolveLessonAssetUrl(publicUrl, storageKey);
+
+  return {
+    id: normalizeText(asset?.id) || `backend-asset-${assetIndex + 1}`,
+    type,
+    title:
+      unwrapString(asset?.title, "title") ||
+      originalFilename ||
+      `Материал ${assetIndex + 1}`,
+    originalFilename,
+    mimeType,
+    sizeBytes: unwrapInteger(asset?.sizeBytes, "sizeBytes"),
+    storageKey,
+    publicUrl,
+    url: resolvedUrl,
+    isResolved: Boolean(resolvedUrl),
+    createdAt: normalizeText(asset?.createdAt),
+  };
+}
+
+function mapLessonAssets(assets) {
+  return normalizeArray(assets)
+    .map(mapLessonAsset)
+    .sort((left, right) => {
+      const typeDifference =
+        getLessonAssetSortWeight(left.type) - getLessonAssetSortWeight(right.type);
+
+      if (typeDifference !== 0) {
+        return typeDifference;
+      }
+
+      return left.title.localeCompare(right.title, "ru");
+    });
 }
 
 function formatDifficultyLabel(difficulty) {
@@ -320,6 +497,7 @@ function mapBackendLesson({
 }) {
   const lessonType = normalizeText(lessonResponse?.type).toLowerCase();
   const lessonContent = normalizeObject(lessonResponse?.content);
+  const assets = mapLessonAssets(lessonResponse?.assets);
   const title =
     unwrapString(lessonResponse?.title, "title") ||
     lessonPreview?.title ||
@@ -342,6 +520,7 @@ function mapBackendLesson({
       contentMarkdown:
         unwrapString(lessonContent?.taskMarkdown, "taskMarkdown") ||
         "Задание пока не заполнено.",
+      assets,
       grader: {
         language:
           unwrapString(primaryLanguage?.language, "language") || "code",
@@ -397,6 +576,7 @@ function mapBackendLesson({
       contentMarkdown:
         unwrapString(lessonContent?.introMarkdown, "introMarkdown") ||
         "Вопросы урока пока не заполнены.",
+      assets,
       questions,
       isBackendLesson: true,
     };
@@ -414,6 +594,7 @@ function mapBackendLesson({
     contentMarkdown:
       unwrapString(lessonContent?.markdown, "markdown") ||
       "Содержимое урока пока не заполнено.",
+    assets,
     isBackendLesson: true,
   };
 }

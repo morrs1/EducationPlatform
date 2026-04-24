@@ -8,6 +8,8 @@ import tailwindcss from "@tailwindcss/vite";
 const USER_SERVICE_API_PROXY_PATH = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const COURSE_SERVICE_API_PROXY_PATH = "/api/course-service";
+const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
+const DEFAULT_COURSE_SERVICE_S3_BUCKET = "user-service-local";
 
 function normalizeBoolean(value, fallback = false) {
   if (typeof value !== "string") {
@@ -76,6 +78,35 @@ function parseMediaRequestPath(url) {
   };
 }
 
+function parseCourseServiceMediaRequestPath(url) {
+  if (
+    typeof url !== "string" ||
+    !url.startsWith(COURSE_SERVICE_MEDIA_PROXY_PATH)
+  ) {
+    return null;
+  }
+
+  const requestUrl = new URL(url, "http://localhost");
+  const pathname = requestUrl.pathname.slice(COURSE_SERVICE_MEDIA_PROXY_PATH.length);
+  const keySegments = pathname.split("/").filter(Boolean);
+
+  if (!keySegments.length) {
+    return null;
+  }
+
+  return {
+    key: decodeURIComponent(keySegments.join("/")),
+  };
+}
+
+function getCourseServiceMediaBucket(env) {
+  const configuredBucket = env.COURSE_SERVICE_S3_BUCKET?.trim();
+
+  return hasText(configuredBucket)
+    ? configuredBucket
+    : DEFAULT_COURSE_SERVICE_S3_BUCKET;
+}
+
 function setHeaderIfPresent(response, headerName, value) {
   if (value === undefined || value === null || value === "") {
     return;
@@ -84,18 +115,30 @@ function setHeaderIfPresent(response, headerName, value) {
   response.setHeader(headerName, String(value));
 }
 
-function createUserServiceMediaProxyPlugin(env) {
+function createS3MediaProxyPlugin(env) {
   const s3Client = createS3MediaClient(env);
+  const courseServiceBucket = getCourseServiceMediaBucket(env);
 
   if (!s3Client) {
     return {
-      name: "user-service-media-proxy",
+      name: "s3-media-proxy",
     };
   }
 
   const attachProxy = (middlewares) => {
     middlewares.use(async (request, response, next) => {
-      const mediaPath = parseMediaRequestPath(request.url);
+      const userServiceMediaPath = parseMediaRequestPath(request.url);
+      const courseServiceMediaPath =
+        parseCourseServiceMediaRequestPath(request.url);
+
+      const mediaPath = userServiceMediaPath
+        ? userServiceMediaPath
+        : courseServiceMediaPath
+          ? {
+              bucket: courseServiceBucket,
+              key: courseServiceMediaPath.key,
+            }
+          : null;
 
       if (!mediaPath) {
         return next();
@@ -173,7 +216,7 @@ function createUserServiceMediaProxyPlugin(env) {
   };
 
   return {
-    name: "user-service-media-proxy",
+    name: "s3-media-proxy",
     configureServer(server) {
       attachProxy(server.middlewares);
     },
@@ -212,7 +255,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      createUserServiceMediaProxyPlugin(env),
+      createS3MediaProxyPlugin(env),
     ],
     server: Object.keys(proxy).length
       ? {
