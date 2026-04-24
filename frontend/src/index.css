@@ -1630,11 +1630,11 @@
 
   .course-page {
     @apply mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 xl:flex-row xl:items-start;
-    animation: page-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: course-page-fade 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .course-page-nav-rail {
-    @apply w-full xl:sticky xl:w-64 xl:shrink-0;
+    @apply w-full xl:sticky xl:w-64 xl:shrink-0 xl:self-start;
   }
 
   .course-page-main {
@@ -1642,7 +1642,7 @@
   }
 
   .course-page-sidebar-rail {
-    @apply w-full xl:sticky xl:w-[320px] xl:shrink-0;
+    @apply w-full xl:sticky xl:w-[320px] xl:shrink-0 xl:self-start;
   }
 
   .course-hero {
@@ -2701,6 +2701,16 @@
   }
 }
 
+@keyframes course-page-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-courses-grid,
   .app-shell-glow,
@@ -3255,27 +3265,27 @@
 
   .course-page-nav-rail,
   .course-page-sidebar-rail {
+    position: static;
+    top: auto;
+    height: auto;
+    max-height: none;
+  }
+
+  .course-page-nav-rail > .course-tabs,
+  .course-page-sidebar-rail > .course-sidebar {
+    position: fixed;
     top: calc(var(--app-header-height, 0px) + 1.5rem);
+    z-index: 20;
   }
 
-  .course-outline-card {
-    display: flex;
-    max-height: calc(100dvh - 8rem);
-    flex-direction: column;
-    overflow: hidden;
+  .course-page-nav-rail > .course-tabs {
+    left: max(1.5rem, calc((100vw - 80rem) / 2 + 1.5rem));
+    width: 16rem;
   }
 
-  .course-outline-modules {
-    min-height: 0;
-    flex: 1 1 auto;
-    overflow-y: hidden;
-    overscroll-behavior: contain;
-    padding-right: 0.25rem;
-  }
-
-  .course-outline-card:hover .course-outline-modules,
-  .course-outline-card:focus-within .course-outline-modules {
-    overflow-y: auto;
+  .course-page-sidebar-rail > .course-sidebar {
+    right: max(1.5rem, calc((100vw - 80rem) / 2 + 1.5rem));
+    width: 20rem;
   }
 
   .lesson-content-card {
