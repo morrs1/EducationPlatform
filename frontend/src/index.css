@@ -2988,25 +2988,84 @@
   @apply flex flex-col gap-5 mt-4;
 }
 
+.lesson-media-carousel {
+  @apply mt-3 flex flex-col gap-4;
+}
+
+.lesson-media-carousel-stage {
+  @apply relative overflow-hidden;
+}
+
+.lesson-media-carousel-track {
+  display: flex;
+  align-items: stretch;
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.lesson-media-carousel .lesson-asset-embed {
+  @apply mt-0;
+}
+
+.lesson-media-carousel-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+.lesson-media-carousel-control {
+  @apply absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border text-3xl leading-none transition duration-200;
+  border-color: rgba(23, 34, 59, 0.08);
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 18px 38px -30px rgba(15, 23, 42, 0.52);
+}
+
+.lesson-media-carousel-control.previous {
+  left: 1rem;
+}
+
+.lesson-media-carousel-control.next {
+  right: 1rem;
+}
+
+.lesson-media-carousel-control:hover,
+.lesson-media-carousel-control:focus-visible {
+  @apply outline-none;
+  border-color: var(--app-border-strong);
+  color: var(--app-accent-strong);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.lesson-media-carousel-counter {
+  @apply absolute bottom-4 right-4 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.14em];
+  color: rgba(255, 255, 255, 0.94);
+  background: rgba(6, 11, 19, 0.72);
+  backdrop-filter: blur(12px);
+}
+
 .lesson-asset-embed {
   @apply mt-3 flex flex-col gap-3;
 }
 
+.lesson-asset-file-list {
+  @apply mt-3 flex flex-wrap gap-3;
+}
+
 .lesson-asset-visual-wrap {
   @apply overflow-hidden rounded-[1.25rem] border border-gray-200;
+  aspect-ratio: 16 / 9;
   background: linear-gradient(180deg, rgba(241, 245, 249, 0.88) 0%, rgba(255, 255, 255, 0.94) 100%);
 }
 
 .lesson-asset-image {
-  @apply block w-full;
-  max-height: 28rem;
+  @apply block h-full w-full;
   object-fit: contain;
   background: rgba(248, 250, 252, 0.76);
 }
 
 .lesson-asset-video {
-  @apply block w-full bg-slate-950;
-  max-height: 28rem;
+  @apply block h-full w-full bg-slate-950;
+  object-fit: contain;
 }
 
 .lesson-asset-video-preview {
@@ -3821,6 +3880,24 @@
   background: rgba(6, 11, 19, 0.96);
 }
 
+:root[data-theme="dark"] .lesson-media-carousel-control {
+  border-color: var(--app-border);
+  color: var(--app-ink);
+  background: rgba(11, 16, 27, 0.82);
+}
+
+:root[data-theme="dark"] .lesson-media-carousel-control:hover,
+:root[data-theme="dark"] .lesson-media-carousel-control:focus-visible {
+  border-color: var(--app-border-strong);
+  color: var(--app-accent-strong);
+  background: rgba(17, 24, 38, 0.94);
+}
+
+:root[data-theme="dark"] .lesson-media-carousel-counter {
+  color: rgba(242, 245, 251, 0.94);
+  background: rgba(6, 11, 19, 0.78);
+}
+
 :root[data-theme="dark"] .lesson-asset-file-link {
   color: var(--app-accent-strong);
   text-decoration-color: rgba(140, 166, 255, 0.44);
@@ -3839,6 +3916,12 @@
 
   100% {
     background-position: -120% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-media-carousel-track {
+    transition: none !important;
   }
 }
 

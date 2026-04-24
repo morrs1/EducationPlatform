@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 function renderInlineText(text) {
   return text
@@ -170,7 +170,7 @@ function getLessonTypeLabel(lesson) {
   return "Теоретический урок";
 }
 
-function LessonAssetVideo({ asset }) {
+const LessonAssetVideo = memo(function LessonAssetVideo({ asset }) {
   const assetKey =
     asset?.isResolved && asset?.url
       ? `${asset.id ?? "lesson-asset"}:${asset.url}`
@@ -385,35 +385,11 @@ function LessonAssetVideo({ asset }) {
       />
     </>
   );
-}
+});
 
-function renderLessonAssetEmbed(asset) {
-  if (asset.type === "file") {
-    return asset.isResolved ? (
-      <a
-        key={asset.id}
-        href={asset.url}
-        target="_blank"
-        rel="noreferrer"
-        className="lesson-asset-file-link"
-      >
-        Открыть файл
-      </a>
-    ) : (
-      <div
-        key={asset.id}
-        className={`lesson-asset-embed asset-file${
-          !asset.isResolved ? " is-unavailable" : ""
-        }`}
-      >
-        <div className="lesson-asset-unavailable">Не удалось загрузить файл.</div>
-      </div>
-    );
-  }
-
+function renderLessonAssetVisual(asset) {
   return (
     <figure
-      key={asset.id}
       className={`lesson-asset-embed asset-${asset.type}${
         !asset.isResolved ? " is-unavailable" : ""
       }`}
@@ -450,12 +426,123 @@ function renderLessonAssetEmbed(asset) {
   );
 }
 
+function renderLessonFileAsset(asset) {
+  return asset.isResolved ? (
+    <a
+      key={asset.id}
+      href={asset.url}
+      target="_blank"
+      rel="noreferrer"
+      className="lesson-asset-file-link"
+    >
+      Открыть файл
+    </a>
+  ) : (
+    <div
+      key={asset.id}
+      className={`lesson-asset-embed asset-file${
+        !asset.isResolved ? " is-unavailable" : ""
+      }`}
+    >
+      <div className="lesson-asset-unavailable">Не удалось загрузить файл.</div>
+    </div>
+  );
+}
+
+const LessonMediaCarousel = memo(function LessonMediaCarousel({ assets }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  if (!assets.length) {
+    return null;
+  }
+
+  const safeIndex = Math.min(activeIndex, assets.length - 1);
+  const hasMultipleAssets = assets.length > 1;
+  const trackStyle = {
+    transform: `translate3d(-${safeIndex * 100}%, 0, 0)`,
+  };
+
+  function goToPreviousSlide() {
+    setActiveIndex((currentIndex) =>
+      currentIndex === 0 ? assets.length - 1 : currentIndex - 1,
+    );
+  }
+
+  function goToNextSlide() {
+    setActiveIndex((currentIndex) =>
+      currentIndex === assets.length - 1 ? 0 : currentIndex + 1,
+    );
+  }
+
+  return (
+    <div className="lesson-media-carousel">
+      <div className="lesson-media-carousel-stage">
+        <div className="lesson-media-carousel-track" style={trackStyle}>
+          {assets.map((asset, index) => (
+            <div
+              key={asset.id ?? `${asset.type ?? "lesson-asset"}-${index}`}
+              className="lesson-media-carousel-slide"
+            >
+              {renderLessonAssetVisual(asset)}
+            </div>
+          ))}
+        </div>
+
+        {hasMultipleAssets ? (
+          <>
+            <button
+              type="button"
+              className="lesson-media-carousel-control previous"
+              onClick={goToPreviousSlide}
+              aria-label="Предыдущее медиа"
+            >
+              ‹
+            </button>
+
+            <button
+              type="button"
+              className="lesson-media-carousel-control next"
+              onClick={goToNextSlide}
+              aria-label="Следующее медиа"
+            >
+              ›
+            </button>
+
+            <div className="lesson-media-carousel-counter" aria-live="polite">
+              {safeIndex + 1} / {assets.length}
+            </div>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+});
+
 function renderLessonAssets(assets) {
   if (!assets?.length) {
     return null;
   }
 
-  return assets.map(renderLessonAssetEmbed);
+  const mediaAssets = assets.filter(
+    (asset) => asset.type === "image" || asset.type === "video",
+  );
+  const fileAssets = assets.filter((asset) => asset.type === "file");
+  const mediaAssetSetKey = mediaAssets
+    .map((asset) => `${asset.id ?? "lesson-asset"}:${asset.url ?? asset.type}`)
+    .join("|");
+
+  return (
+    <>
+      {mediaAssets.length ? (
+        <LessonMediaCarousel key={mediaAssetSetKey} assets={mediaAssets} />
+      ) : null}
+      {fileAssets.length ? (
+        <div className="lesson-asset-file-list">
+          {fileAssets.map(renderLessonFileAsset)}
+        </div>
+      ) : null}
+    </>
+  );
 }
 
 function LessonContentSection({
@@ -481,19 +568,10 @@ function LessonContentSection({
   isRunning,
   isTransitioning,
 }) {
-  const sectionCardRef = useRef(null);
-
-  useLayoutEffect(() => {
-    sectionCardRef.current?.scrollIntoView({
-      block: "start",
-      behavior: "auto",
-    });
-  }, [lesson?.id]);
-
   const isQuizLesson = lesson?.type === "quiz";
   const isCodeLesson = lesson?.type === "code";
   const isTheoryLesson = lesson?.type === "theory";
-  const lessonAssets = lesson?.assets ?? [];
+  const lessonAssets = useMemo(() => lesson?.assets ?? [], [lesson]);
   const answersByQuestionId = lessonDraft?.answersByQuestionId ?? {};
   const codeValue = lessonDraft?.code ?? "";
   const contentPanelClassName = [
@@ -502,11 +580,18 @@ function LessonContentSection({
   ]
     .filter(Boolean)
     .join(" ");
+  const renderedLessonAssets = useMemo(
+    () => renderLessonAssets(lessonAssets),
+    [lessonAssets],
+  );
+  const renderedContentBlocks = useMemo(
+    () => contentBlocks.map((block, index) => renderMarkdownBlock(block, index)),
+    [contentBlocks],
+  );
 
   return (
     <main className="lesson-content-section">
       <section
-        ref={sectionCardRef}
         className="lesson-content-card"
         aria-busy={contentStatus === "loading" || isTransitioning}
       >
@@ -544,10 +629,8 @@ function LessonContentSection({
 
           {contentStatus === "success" ? (
             <div className="lesson-markdown">
-              {renderLessonAssets(lessonAssets)}
-              {contentBlocks.map((block, index) =>
-                renderMarkdownBlock(block, index),
-              )}
+              {renderedLessonAssets}
+              {renderedContentBlocks}
             </div>
           ) : null}
 

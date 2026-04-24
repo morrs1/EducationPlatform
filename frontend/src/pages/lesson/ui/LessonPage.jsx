@@ -56,66 +56,6 @@ function getNavigableLessons(syllabus) {
   );
 }
 
-function mapSyllabusLessonTypeToLessonType(type) {
-  if (type === "coding") {
-    return "code";
-  }
-
-  if (type === "quiz") {
-    return "quiz";
-  }
-
-  return "theory";
-}
-
-function getSyllabusLessonLocation(syllabus, lessonId) {
-  for (const module of syllabus?.modules ?? []) {
-    const lesson = module.lessons.find((item) => item.lessonId === lessonId);
-
-    if (lesson) {
-      return { module, lesson };
-    }
-  }
-
-  return {
-    module: null,
-    lesson: null,
-  };
-}
-
-function buildPendingBackendPageData(currentPageData, courseId, lessonId) {
-  if (!currentPageData?.course || currentPageData.course.id !== courseId) {
-    return null;
-  }
-
-  const { module, lesson } = getSyllabusLessonLocation(
-    currentPageData.syllabus,
-    lessonId,
-  );
-
-  if (!module || !lesson) {
-    return null;
-  }
-
-  return {
-    course: currentPageData.course,
-    syllabus: currentPageData.syllabus,
-    lesson: {
-      id: lesson.lessonId,
-      courseId,
-      moduleId: module.id,
-      moduleTitle: module.title,
-      title: lesson.title,
-      position: lesson.position ?? 1,
-      type: mapSyllabusLessonTypeToLessonType(lesson.type),
-      points: 0,
-      contentMarkdown: "",
-      isBackendLesson: true,
-      isPendingPreview: true,
-    },
-  };
-}
-
 function LessonPage() {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
@@ -181,18 +121,12 @@ function LessonPage() {
 
   const pageData = useMemo(() => {
     if (isBackendLessonRoute) {
-      if (backendPageData && backendResolvedLessonId === lessonId) {
-        return backendPageData;
-      }
-
-      return buildPendingBackendPageData(backendPageData, courseId, lessonId);
+      return backendPageData;
     }
 
     return getLessonPageData(lessonId);
   }, [
     backendPageData,
-    backendResolvedLessonId,
-    courseId,
     isBackendLessonRoute,
     lessonId,
   ]);
@@ -268,8 +202,7 @@ function LessonPage() {
     () => parseLessonMarkdown(contentMarkdown),
     [contentMarkdown],
   );
-  const assistantContextKey =
-    lesson && !lesson.isPendingPreview ? lesson.id : null;
+  const assistantContextKey = lesson ? lesson.id : null;
   const isAssistantOpen = useSelector(selectAssistantIsOpen);
   const assistantThread = useSelector((state) =>
     assistantContextKey
@@ -303,7 +236,7 @@ function LessonPage() {
   const assistantSubtitle = lesson?.title ?? "";
 
   useEffect(() => {
-    if (!lesson || lesson.isPendingPreview) {
+    if (!lesson) {
       return;
     }
 
@@ -311,7 +244,7 @@ function LessonPage() {
   }, [dispatch, lesson]);
 
   useEffect(() => {
-    if (!assistantContextKey || lesson?.isPendingPreview) {
+    if (!assistantContextKey) {
       return;
     }
 
@@ -323,17 +256,6 @@ function LessonPage() {
       setContentStatus("idle");
       setContentMarkdown("");
       setContentError("");
-      return;
-    }
-
-    if (lesson.isPendingPreview) {
-      setContentMarkdown("");
-      setContentStatus(backendPageStatus === "error" ? "error" : "loading");
-      setContentError(
-        backendPageStatus === "error"
-          ? backendPageError || "Не удалось загрузить содержимое урока."
-          : "",
-      );
       return;
     }
 
@@ -624,7 +546,7 @@ function LessonPage() {
     isLessonNavigationPending ||
     (isBackendLessonRoute &&
       backendPageStatus === "loading" &&
-      Boolean(lesson?.isPendingPreview));
+      backendResolvedLessonId !== lessonId);
   const canRenderAssistantLauncher =
     typeof document !== "undefined" && !isAssistantOpen && lesson;
 
