@@ -484,8 +484,8 @@ function LessonContentSection({
   const sectionCardRef = useRef(null);
 
   useLayoutEffect(() => {
-    sectionCardRef.current?.scrollTo({
-      top: 0,
+    sectionCardRef.current?.scrollIntoView({
+      block: "start",
       behavior: "auto",
     });
   }, [lesson?.id]);

@@ -2746,7 +2746,7 @@
 }
 
 .lesson-layout {
-  @apply relative mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-6 sm:px-6 xl:flex-row;
+  @apply relative mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-6 sm:px-6 xl:flex-row xl:items-start;
 }
 
 .lesson-workspace {
@@ -2769,7 +2769,14 @@
 }
 
 .course-outline {
-  @apply min-h-0 w-full xl:max-w-sm xl:flex-[0_0_360px];
+  @apply min-h-0 w-full xl:max-w-sm xl:flex-[0_0_360px] xl:self-start;
+}
+
+@media (min-width: 1280px) {
+  .course-outline {
+    position: sticky;
+    top: calc(var(--app-header-height, 0px) + 1.5rem);
+  }
 }
 
 .course-outline-card {
@@ -2886,6 +2893,7 @@
 .lesson-content-card {
   @apply rounded-[2rem] border border-gray-200 bg-white p-5 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.35)] sm:p-8;
   scrollbar-gutter: stable;
+  scroll-margin-top: calc(var(--app-header-height, 0px) + 1rem);
 }
 
 .lesson-content-head {
@@ -3250,10 +3258,29 @@
     top: calc(var(--app-header-height, 0px) + 1.5rem);
   }
 
-  .course-outline-card,
-  .lesson-content-card {
+  .course-outline-card {
+    display: flex;
     max-height: calc(100dvh - 8rem);
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .course-outline-modules {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: hidden;
+    overscroll-behavior: contain;
+    padding-right: 0.25rem;
+  }
+
+  .course-outline-card:hover .course-outline-modules,
+  .course-outline-card:focus-within .course-outline-modules {
     overflow-y: auto;
+  }
+
+  .lesson-content-card {
+    max-height: none;
+    overflow: visible;
   }
 
   .lesson-assistant-rail {
