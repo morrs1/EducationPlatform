@@ -59,7 +59,7 @@ public class Lesson extends BaseEntity {
             throw new ValidateException("Lesson title must not be null");
         }
         if (content == null) {
-            throw new ValidateException("Lesson content must not be null");
+            return;
         }
 
         boolean valid = switch (type.getLessonType()) {

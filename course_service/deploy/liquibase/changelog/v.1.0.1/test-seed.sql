@@ -32,6 +32,7 @@ VALUES (
              "modules": [
                {
                  "id": "6d0fdbbf-e4ba-433e-87e5-fbaef5feb8ea",
+                 "courseId": "4ec4e0ea-2d8f-4a55-b7d2-7be0b85d75d8",
                  "title": "Основы языка",
                  "description": "Синтаксис, типы данных и первая практика.",
                  "position": 1,
@@ -81,6 +82,7 @@ VALUES (
              "modules": [
                {
                  "id": "ab8d5ae2-c866-4946-ae20-23ec2e2b1645",
+                 "courseId": "51652887-b537-468f-91e0-bc4ee1ddb4fd",
                  "title": "REST API на Spring Boot",
                  "description": "Контроллеры, маршруты и структура простого сервиса.",
                  "position": 1,
@@ -342,3 +344,24 @@ VALUES (
            'Чеклист для задания hello endpoint',
            TIMESTAMPTZ '2026-04-22 09:41:00+03'
        );
+
+--changeset morrs:course-service-module-course-id
+
+UPDATE course
+SET structure = jsonb_set(
+        structure,
+        '{modules}',
+        (
+            SELECT jsonb_agg(
+                           CASE
+                               WHEN module ? 'courseId' THEN module
+                               ELSE jsonb_set(module, '{courseId}', to_jsonb(course.id::text), true)
+                               END
+                   )
+            FROM jsonb_array_elements(structure -> 'modules') AS module
+        ),
+        true
+                )
+WHERE jsonb_typeof(structure -> 'modules') = 'array';
+
+

@@ -29,4 +29,11 @@ public class HibernateLessonRepo implements LessonRepo {
                 .findFirst()
                 .map(mapper::toDomainLesson);
     }
+
+    @Override
+    public UUID add(Lesson lesson) {
+        var hibernateLesson = mapper.toHibernateLesson(lesson);
+        entityManager.persist(hibernateLesson);
+        return hibernateLesson.getId();
+    }
 }

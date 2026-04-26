@@ -114,6 +114,7 @@ public class CourseHibernateMapper {
     private HibernateCourse.ModuleJson mapModuleJson(Module module) {
         return new HibernateCourse.ModuleJson(
                 module.getId(),
+                module.getCourseId(),
                 Objects.isNull(module.getTitle()) ? null : module.getTitle().getTitle(),
                 Objects.isNull(module.getDescription()) ? null : module.getDescription().getDescription(),
                 Objects.isNull(module.getPosition()) ? null : module.getPosition().getPosition(),
@@ -157,6 +158,7 @@ public class CourseHibernateMapper {
     private Module mapModule(HibernateCourse.ModuleJson moduleJson) {
         return new Module(
                 moduleJson.id(),
+                moduleJson.courseId(),
                 new ModuleTitle(moduleJson.title()),
                 new ModuleDescription(moduleJson.description()),
                 new ModulePosition(moduleJson.position()),

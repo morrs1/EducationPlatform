@@ -60,6 +60,7 @@ public class HibernateCourse {
 
     public record ModuleJson(
             UUID id,
+            UUID courseId,
             String title,
             String description,
             Integer position,
