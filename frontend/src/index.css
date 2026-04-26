@@ -3730,6 +3730,17 @@
   accent-color: var(--app-accent);
 }
 
+:root[data-theme="dark"] .lesson-choice-option {
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .lesson-choice-option:hover,
+:root[data-theme="dark"] .lesson-choice-option:focus-within {
+  border-color: var(--app-border-strong);
+  background: rgba(91, 124, 240, 0.12);
+}
+
 :root[data-theme="dark"] .lesson-submission-result.correct,
 :root[data-theme="dark"] .lesson-result-case.passed {
   border-color: rgba(34, 197, 94, 0.24);
