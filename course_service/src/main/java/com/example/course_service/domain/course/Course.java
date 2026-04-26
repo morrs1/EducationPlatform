@@ -52,7 +52,7 @@ public class Course extends BaseEntity {
         this.difficulty = difficulty;
         this.languageCode = languageCode;
         this.estimatedMinutes = estimatedMinutes;
-        this.structure = structure;
+        this.structure = Objects.isNull(structure) ? new ArrayList<>() : new ArrayList<>(structure);
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.tags = Objects.isNull(tags) ? new ArrayList<>() : new ArrayList<>(tags);
