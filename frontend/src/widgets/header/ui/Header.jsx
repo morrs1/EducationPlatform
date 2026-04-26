@@ -54,6 +54,18 @@ function Header() {
           Каталог
         </button>
 
+        {isLogged ? (
+          <NavLink
+            to="/teach"
+            className={({ isActive }) =>
+              `header-teach-link${isActive ? " is-active" : ""}`
+            }
+            onClick={() => dispatch(closeCatalog())}
+          >
+            Преподавание
+          </NavLink>
+        ) : null}
+
         <NavLink
           className="header-brand"
           to="/"
@@ -61,7 +73,9 @@ function Header() {
         >
           <span className="header-brand-mark">EP</span>
           <span className="header-brand-copy">
-            <span className="header-brand-eyebrow">Трек, практика, прогресс</span>
+            <span className="header-brand-eyebrow">
+              Трек, практика, прогресс
+            </span>
             <span className="header-brand-title">EduPlatform</span>
           </span>
         </NavLink>
