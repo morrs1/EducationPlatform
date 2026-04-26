@@ -1,6 +1,7 @@
 package com.example.course_service.setup.config_beans.course;
 
 import com.example.course_service.application.interactors.course.add_course.AddCourseInteractor;
+import com.example.course_service.application.interactors.course.add_module_to_course.AddModuleInteractor;
 import com.example.course_service.application.interactors.course.read_course_by_id.ReadCourseByIdInteractor;
 import com.example.course_service.application.interactors.mappers.CourseViewMapper;
 import com.example.course_service.application.ports.TransactionManager;
@@ -19,5 +20,10 @@ public class CourseConfig {
     @Bean
     public AddCourseInteractor addCourseInteractor(HibernateCourseRepo hibernateCourseRepo, TransactionManager transactionManager) {
         return new AddCourseInteractor(transactionManager, hibernateCourseRepo, new CourseDomainService());
+    }
+
+    @Bean
+    public AddModuleInteractor addModuleInteractor(HibernateCourseRepo hibernateCourseRepo, TransactionManager transactionManager) {
+        return new AddModuleInteractor(hibernateCourseRepo, transactionManager, new CourseDomainService());
     }
 }

@@ -2,7 +2,12 @@ package com.example.course_service.domain.course.services;
 
 import com.example.course_service.domain.base.BaseDomainService;
 import com.example.course_service.domain.course.Course;
+import com.example.course_service.domain.module.Module;
 import com.example.course_service.domain.course.vo.*;
+import com.example.course_service.domain.module.vo.ModuleDescription;
+import com.example.course_service.domain.module.vo.ModuleEstimatedMinutes;
+import com.example.course_service.domain.module.vo.ModulePosition;
+import com.example.course_service.domain.module.vo.ModuleTitle;
 import com.example.course_service.domain.tag.Tag;
 
 import java.time.LocalDateTime;
@@ -36,4 +41,23 @@ public class CourseDomainService extends BaseDomainService {
                 tags
         );
     }
+
+    public Module createModule(
+            UUID courseId,
+            String title,
+            String description,
+            Integer position,
+            Integer estimatedMinutes
+    ) {
+        return new com.example.course_service.domain.module.Module(
+                UUID.randomUUID(),
+                courseId,
+                new ModuleTitle(title),
+                new ModuleDescription(description),
+                new ModulePosition(position),
+                new ModuleEstimatedMinutes(estimatedMinutes),
+                List.of()
+        );
+    }
+
 }
