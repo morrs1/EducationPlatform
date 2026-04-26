@@ -4,6 +4,12 @@ import com.example.course_service.domain.base.BaseDomainService;
 import com.example.course_service.domain.course.Course;
 import com.example.course_service.domain.module.Module;
 import com.example.course_service.domain.course.vo.*;
+import com.example.course_service.domain.lesson_preview.LessonPreview;
+import com.example.course_service.domain.lesson_preview.vo.LessonPreviewEstimatedMinutes;
+import com.example.course_service.domain.lesson_preview.vo.LessonPreviewIsPreview;
+import com.example.course_service.domain.lesson_preview.vo.LessonPreviewPosition;
+import com.example.course_service.domain.lesson_preview.vo.LessonPreviewTitle;
+import com.example.course_service.domain.lesson_preview.vo.LessonPreviewType;
 import com.example.course_service.domain.module.vo.ModuleDescription;
 import com.example.course_service.domain.module.vo.ModuleEstimatedMinutes;
 import com.example.course_service.domain.module.vo.ModulePosition;
@@ -57,6 +63,24 @@ public class CourseDomainService extends BaseDomainService {
                 new ModulePosition(position),
                 new ModuleEstimatedMinutes(estimatedMinutes),
                 List.of()
+        );
+    }
+
+    public LessonPreview createLessonPreview(
+            UUID lessonId,
+            String type,
+            String title,
+            Integer position,
+            Integer estimatedMinutes,
+            Boolean isPreview
+    ) {
+        return new LessonPreview(
+                lessonId,
+                new LessonPreviewType(type),
+                new LessonPreviewTitle(title),
+                new LessonPreviewPosition(position),
+                new LessonPreviewEstimatedMinutes(estimatedMinutes),
+                new LessonPreviewIsPreview(isPreview)
         );
     }
 

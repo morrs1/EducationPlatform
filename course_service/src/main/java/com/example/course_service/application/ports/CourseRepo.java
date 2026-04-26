@@ -1,6 +1,7 @@
 package com.example.course_service.application.ports;
 
 import com.example.course_service.domain.course.Course;
+import com.example.course_service.domain.lesson_preview.LessonPreview;
 import com.example.course_service.domain.module.Module;
 
 import java.util.Optional;
@@ -12,4 +13,6 @@ public interface CourseRepo {
     UUID add(Course course);
 
     UUID addModule(Module module);
+
+    void addLessonPreview(UUID courseId, UUID moduleId, LessonPreview lessonPreview);
 }

@@ -1,9 +1,11 @@
 package com.example.course_service.infrasructure.adapters.persistence;
 
 import com.example.course_service.application.exceptions.CourseNotFoundException;
+import com.example.course_service.application.exceptions.ModuleNotFoundException;
 import com.example.course_service.application.exceptions.TagNotFoundException;
 import com.example.course_service.application.ports.CourseRepo;
 import com.example.course_service.domain.course.Course;
+import com.example.course_service.domain.lesson_preview.LessonPreview;
 import com.example.course_service.domain.module.Module;
 import com.example.course_service.infrasructure.persistence.mappers.CourseHibernateMapper;
 import com.example.course_service.infrasructure.persistence.models.course.HibernateCourse;
@@ -69,5 +71,29 @@ public class HibernateCourseRepo implements CourseRepo {
         course.getStructure().add(module);
         entityManager.merge(mapper.toHibernateCourse(course));
         return module.getId();
+    }
+
+    @Override
+    public void addLessonPreview(UUID courseId, UUID moduleId, LessonPreview lessonPreview) {
+        var hibernateCourse = entityManager.find(HibernateCourse.class, courseId);
+        if (hibernateCourse == null) {
+            throw new CourseNotFoundException("Course with this id was not found");
+        }
+
+        var course = mapper.toDomainCourse(hibernateCourse);
+        if (course.getStructure() == null) {
+            course.setStructure(new ArrayList<>());
+        }
+
+        var module = course.getStructure().stream()
+                .filter(existingModule -> existingModule.getId().equals(moduleId))
+                .findFirst()
+                .orElseThrow(() -> new ModuleNotFoundException("Module with this id was not found"));
+
+        if (module.getLessons() == null) {
+            module.setLessons(new ArrayList<>());
+        }
+        module.getLessons().add(lessonPreview);
+        entityManager.merge(mapper.toHibernateCourse(course));
     }
 }

@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class LessonHibernateMapperTest {
 
@@ -104,5 +105,24 @@ class LessonHibernateMapperTest {
         assertEquals("stdin_stdout", payload.getCheckerType());
         assertEquals("java", payload.getLanguages().getFirst().getLanguage());
         assertEquals("1", payload.getTestCases().getFirst().getExpectedOutput());
+    }
+
+    @Test
+    void shouldPersistEmptyJsonForLessonWithoutContent() {
+        var lesson = new Lesson(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                new LessonType("theory"),
+                new LessonTitle("Draft lesson"),
+                null,
+                LocalDateTime.of(2026, 4, 20, 10, 0),
+                LocalDateTime.of(2026, 4, 20, 11, 0)
+        );
+
+        var hibernateLesson = mapper.toHibernateLesson(lesson);
+        var restoredLesson = mapper.toDomainLesson(hibernateLesson);
+
+        assertEquals("{}", hibernateLesson.getContent().toString());
+        assertNull(restoredLesson.getContent());
     }
 }
