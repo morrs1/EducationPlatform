@@ -9,9 +9,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ApiExceptionHandler {
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handleException(BaseException exception) {
+    public ResponseEntity<ErrorResponse> handleBaseException(BaseException exception) {
         return ResponseEntity.status(exception.getHttpCode()).body(new ErrorResponse(exception.getMessage()));
     }
-
 
 }

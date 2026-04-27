@@ -1,6 +1,7 @@
 package com.example.course_service.application.interactors.lesson.read_lesson_by_id;
 
 import com.example.course_service.application.exceptions.LessonNotFoundException;
+import com.example.course_service.application.interactors.lesson.read_lesson_by_id.views.ReadLessonByIdView;
 import com.example.course_service.application.interactors.mappers.LessonViewMapper;
 import com.example.course_service.application.ports.AssetRepo;
 import com.example.course_service.application.ports.LessonRepo;

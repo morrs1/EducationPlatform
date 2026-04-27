@@ -2,9 +2,11 @@ package com.example.course_service.setup.config_beans.lesson;
 
 import com.example.course_service.application.interactors.lesson.add_lesson.AddLessonInteractor;
 import com.example.course_service.application.interactors.lesson.read_lesson_by_id.ReadLessonByIdInteractor;
+import com.example.course_service.application.interactors.lesson.upload_content.UploadLessonContentInteractor;
 import com.example.course_service.application.interactors.mappers.LessonViewMapper;
 import com.example.course_service.application.ports.AssetRepo;
 import com.example.course_service.application.ports.CourseRepo;
+import com.example.course_service.application.ports.LessonPayloadMapper;
 import com.example.course_service.application.ports.LessonRepo;
 import com.example.course_service.application.ports.TransactionManager;
 import com.example.course_service.domain.course.services.CourseDomainService;
@@ -26,6 +28,20 @@ public class LessonConfig {
                 transactionManager,
                 new LessonDomainService(),
                 new CourseDomainService()
+        );
+    }
+
+    @Bean
+    public UploadLessonContentInteractor uploadLessonContentInteractor(
+            LessonRepo lessonRepo,
+            LessonPayloadMapper lessonPayloadMapper,
+            TransactionManager transactionManager
+    ) {
+        return new UploadLessonContentInteractor(
+                lessonRepo,
+                lessonPayloadMapper,
+                transactionManager,
+                new LessonDomainService()
         );
     }
 
