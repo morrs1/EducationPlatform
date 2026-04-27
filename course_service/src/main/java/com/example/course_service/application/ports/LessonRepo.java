@@ -10,4 +10,6 @@ public interface LessonRepo {
     Optional<Lesson> readById(UUID id);
 
     UUID add(Lesson lesson);
+
+    void uploadContent(Lesson lesson);
 }

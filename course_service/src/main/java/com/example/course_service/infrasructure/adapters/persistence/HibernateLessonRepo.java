@@ -36,4 +36,9 @@ public class HibernateLessonRepo implements LessonRepo {
         entityManager.persist(hibernateLesson);
         return hibernateLesson.getId();
     }
+
+    @Override
+    public void uploadContent(Lesson lesson) {
+        entityManager.merge(mapper.toHibernateLesson(lesson));
+    }
 }

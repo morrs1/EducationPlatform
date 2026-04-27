@@ -2,6 +2,7 @@ package com.example.course_service.domain.lesson.services;
 
 import com.example.course_service.domain.base.BaseDomainService;
 import com.example.course_service.domain.lesson.Lesson;
+import com.example.course_service.domain.lesson.payload.LessonPayload;
 import com.example.course_service.domain.lesson.vo.LessonTitle;
 import com.example.course_service.domain.lesson.vo.LessonType;
 
@@ -24,5 +25,9 @@ public class LessonDomainService extends BaseDomainService {
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
+    }
+
+    public void uploadContent(Lesson lesson, LessonPayload content) {
+        lesson.setContent(content);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.course_service.infrasructure.persistence.mappers;
 
+import com.example.course_service.application.exceptions.InvalidLessonContentException;
 import com.example.course_service.domain.lesson.Lesson;
 import com.example.course_service.domain.lesson.payload.CodingLanguageTemplate;
 import com.example.course_service.domain.lesson.payload.CodingLessonPayload;
@@ -15,15 +16,19 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LessonHibernateMapperTest {
 
-    private final LessonHibernateMapper mapper = new LessonHibernateMapper(new ObjectMapper());
+    private final JacksonLessonPayloadMapper payloadMapper = new JacksonLessonPayloadMapper(new ObjectMapper());
+    private final LessonHibernateMapper mapper =
+            new LessonHibernateMapper(payloadMapper);
 
     @Test
     void shouldMapTheoryLessonRoundTrip() {
@@ -124,5 +129,13 @@ class LessonHibernateMapperTest {
 
         assertEquals("{}", hibernateLesson.getContent().toString());
         assertNull(restoredLesson.getContent());
+    }
+
+    @Test
+    void shouldThrow422WhenContentDoesNotMatchLessonType() {
+        assertThrows(
+                InvalidLessonContentException.class,
+                () -> payloadMapper.fromMap("quiz", Map.of("markdown", "# Theory body"))
+        );
     }
 }
