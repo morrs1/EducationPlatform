@@ -1,7 +1,5 @@
 package com.example.course_service.presentation.http.v1.handlers.course.add_course;
 
-import com.example.course_service.presentation.http.v1.handlers.course.CourseTagRef;
-
 import java.util.List;
 import java.util.UUID;
 

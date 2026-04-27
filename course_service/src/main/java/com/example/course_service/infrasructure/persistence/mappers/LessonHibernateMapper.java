@@ -55,7 +55,7 @@ public class LessonHibernateMapper {
 
     private JsonNode mapContentJson(LessonPayload payload) {
         if (Objects.isNull(payload)) {
-            return null;
+            return objectMapper.createObjectNode();
         }
 
         return switch (payload) {
@@ -77,6 +77,10 @@ public class LessonHibernateMapper {
     }
 
     private LessonPayload mapPayload(String lessonType, JsonNode content) {
+        if (content == null || content.isNull() || content.isEmpty()) {
+            return null;
+        }
+
         return switch (lessonType) {
             case "theory" -> mapTheoryPayload(content);
             case "quiz" -> mapQuizPayload(content);

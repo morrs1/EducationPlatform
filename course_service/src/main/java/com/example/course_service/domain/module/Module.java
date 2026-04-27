@@ -20,6 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Module extends BaseEntity {
 
+    private UUID courseId;
     private ModuleTitle title;
     private ModuleDescription description;
     private ModulePosition position;
@@ -28,6 +29,7 @@ public class Module extends BaseEntity {
 
     public Module(
             UUID id,
+            UUID courseId,
             ModuleTitle title,
             ModuleDescription description,
             ModulePosition position,
@@ -35,6 +37,7 @@ public class Module extends BaseEntity {
             List<LessonPreview> lessons
     ) {
         super(id);
+        this.courseId = courseId;
         this.title = title;
         this.description = description;
         this.position = position;

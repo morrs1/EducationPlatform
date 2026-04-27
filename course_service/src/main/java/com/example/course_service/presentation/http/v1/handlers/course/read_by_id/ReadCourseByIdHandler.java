@@ -11,7 +11,7 @@ import java.util.UUID;
 @RequestMapping("/course")
 @RequiredArgsConstructor
 public class ReadCourseByIdHandler {
-
+    //TODO изменить дто так, чтобы они не были вложенными обьектами
     private final ReadCourseByIdInteractor interactor;
     private final CourseMapperQuery mapper;
 
