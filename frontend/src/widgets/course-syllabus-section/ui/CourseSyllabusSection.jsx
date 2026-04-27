@@ -135,6 +135,15 @@ function CourseSyllabusSection() {
                           {lesson.isPreview ? " · Превью" : ""}
                         </span>
                       </div>
+
+                      <div className="course-syllabus-lesson-edit-slot">
+                        <Link
+                          to={`../edit-lesson/${lesson.id}`}
+                          className="course-syllabus-lesson-edit-link-inline"
+                        >
+                          Редактировать
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>

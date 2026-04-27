@@ -17,6 +17,7 @@ import NotificationsPage from "../../pages/notifications/ui/NotificationsPage";
 import LessonPage from "../../pages/lesson/ui/LessonPage";
 import TeachPage from "../../pages/teach/ui/TeachPage";
 import CourseBuilderPage from "../../pages/course-builder/ui/CourseBuilderPage";
+import LessonEditorPage from "../../pages/lesson-editor/ui/LessonEditorPage";
 
 import ProfileSection from "../../widgets/profile-section/ui/ProfileSection";
 import CurrentCoursesSection from "../../widgets/current-courses-section/ui/CurrentCoursesSection";
@@ -32,6 +33,7 @@ import TeachCoursesSection from "../../widgets/teach-courses-section/ui/TeachCou
 import CourseDescriptionSection from "../../widgets/course-description-section/ui/CourseDescriptionSection";
 import CourseSyllabusSection from "../../widgets/course-syllabus-section/ui/CourseSyllabusSection";
 import CourseContentEditorSection from "../../widgets/course-content-editor-section/ui/CourseContentEditorSection";
+import LessonEditorSection from "../../widgets/lesson-editor-section/ui/LessonEditorSection";
 
 function ProtectedRoute() {
   const isLogged = useSelector(selectIsLogged);
@@ -95,6 +97,11 @@ const router = createBrowserRouter([
               { path: "syllabus", element: <CourseSyllabusSection /> },
               { path: "edit", element: <CourseContentEditorSection /> },
             ],
+          },
+          {
+            path: "course/:courseId/edit-lesson/:lessonId",
+            element: <LessonEditorPage />,
+            children: [{ index: true, element: <LessonEditorSection /> }],
           },
           {
             path: "teach",
