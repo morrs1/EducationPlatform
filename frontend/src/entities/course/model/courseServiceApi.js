@@ -92,6 +92,19 @@ function extractErrorMessage(response, responseBody) {
   return `course_service returned ${response.status}.`;
 }
 
+function normalizeUuidResponse(responseBody) {
+  const normalizedValue =
+    typeof responseBody === "string"
+      ? responseBody.trim()
+      : normalizeText(responseBody?.id);
+
+  if (!isUuid(normalizedValue)) {
+    throw new Error("course_service вернул некорректный UUID.");
+  }
+
+  return normalizedValue;
+}
+
 function getCourseServiceApiBaseUrl() {
   const configuredBaseUrl = normalizeText(
     import.meta.env.VITE_COURSE_SERVICE_API_BASE_URL,
@@ -104,6 +117,30 @@ function buildCourseServiceUrl(pathname = "") {
   return new URL(
     `${getCourseServiceApiBaseUrl()}${pathname}`,
     window.location.origin,
+  );
+}
+
+function invalidateCourseCache(courseId) {
+  const normalizedCourseId = normalizeText(courseId);
+
+  if (!normalizedCourseId) {
+    return;
+  }
+
+  courseRequestCache.delete(
+    buildCourseServiceUrl(`/course/${normalizedCourseId}`).toString(),
+  );
+}
+
+function invalidateLessonCache(lessonId) {
+  const normalizedLessonId = normalizeText(lessonId);
+
+  if (!normalizedLessonId) {
+    return;
+  }
+
+  lessonRequestCache.delete(
+    buildCourseServiceUrl(`/course/lesson/${normalizedLessonId}`).toString(),
   );
 }
 
@@ -674,6 +711,18 @@ export function isUuid(value) {
   return UUID_PATTERN.test(normalizeText(value));
 }
 
+async function requestCourseService(pathname, options = {}) {
+  const requestUrl = buildCourseServiceUrl(pathname).toString();
+  const response = await fetch(requestUrl, options);
+  const responseBody = await readResponseBody(response);
+
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(response, responseBody));
+  }
+
+  return responseBody;
+}
+
 async function requestCourseServiceJson(pathname, requestCache) {
   const requestUrl = buildCourseServiceUrl(pathname).toString();
   const cachedRequest = requestCache.get(requestUrl);
@@ -716,6 +765,56 @@ export async function requestLessonById(lessonId) {
     `/course/lesson/${lessonId}`,
     lessonRequestCache,
   );
+}
+
+export async function requestCourseCreation(payload) {
+  const responseBody = await requestCourseService("/course", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return normalizeUuidResponse(responseBody);
+}
+
+export async function requestAddModuleToCourse(courseId, payload) {
+  const normalizedCourseId = normalizeText(courseId);
+  const responseBody = await requestCourseService(
+    `/course/${normalizedCourseId}/module`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  invalidateCourseCache(normalizedCourseId);
+
+  return normalizeUuidResponse(responseBody);
+}
+
+export async function requestAddLessonToCourse(payload) {
+  const normalizedCourseId = normalizeText(payload?.courseId);
+  const responseBody = await requestCourseService("/course/lesson", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const lessonId = normalizeUuidResponse(responseBody);
+
+  invalidateCourseCache(normalizedCourseId);
+  invalidateLessonCache(lessonId);
+
+  return lessonId;
 }
 
 export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {

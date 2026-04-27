@@ -3,13 +3,12 @@ import {
   Link,
   NavLink,
   useLocation,
-  useParams,
   useResolvedPath,
 } from "react-router";
+import CourseDisplayCover from "../../../entities/course/ui/CourseDisplayCover";
 
-function CourseBuilderSidebar() {
+function CourseBuilderSidebar({ course, pageStatus }) {
   const location = useLocation();
-  const { courseId } = useParams();
   const descriptionPath = useResolvedPath("description");
   const syllabusPath = useResolvedPath("syllabus");
   const editPath = useResolvedPath("edit");
@@ -21,33 +20,70 @@ function CourseBuilderSidebar() {
     location.pathname.startsWith(syllabusPath.pathname) ||
     location.pathname.startsWith(editPath.pathname);
   const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(true);
+  const hasCourse = Boolean(course);
+  const resolvedCourseTitle =
+    course?.title ||
+    (pageStatus === "loading" ? "Загрузка курса" : "Курс пока не найден");
+  const resolvedDescription =
+    course?.shortDescription ||
+    (pageStatus === "loading"
+      ? "Подключаем метаданные курса."
+      : "Короткое описание появится после загрузки курса.");
+  const lessonsCount = Number(course?.lessonsCount) || 0;
+  const durationLabel = course?.durationLabel || "Длительность уточняется";
+  const languageLabel = course?.languageCode
+    ? course.languageCode.toUpperCase()
+    : "Язык не указан";
 
   return (
     <nav className="course-builder-sidebar" aria-label="Навигация по курсу">
       <div className="course-builder-sidebar-summary">
-        <span className="course-builder-sidebar-kicker">WORKSPACE</span>
-        <strong className="course-builder-sidebar-course-title">
-          Черновик курса
-        </strong>
-        <span className="course-builder-sidebar-course-id">
-          ID: {courseId}
-        </span>
+        <CourseDisplayCover
+          title={resolvedCourseTitle}
+          coverUrl={course?.coverUrl}
+          imageUrl={course?.imageUrl}
+          variant="sidebar"
+        />
 
-        <div className="course-builder-sidebar-statuses">
-          <span className="course-builder-sidebar-status">Не опубликован</span>
-          <span className="course-builder-sidebar-status accent">
-            Конструктор
-          </span>
+        <div className="course-builder-sidebar-summary-copy">
+          <span className="course-builder-sidebar-kicker">WORKSPACE</span>
+          <strong className="course-builder-sidebar-course-title">
+            {resolvedCourseTitle}
+          </strong>
+          <p className="course-builder-sidebar-course-description">
+            {resolvedDescription}
+          </p>
+
+          <div className="course-builder-sidebar-statuses">
+            <span className="course-builder-sidebar-status">
+              {hasCourse ? "Сохранено" : "Черновик"}
+            </span>
+            <span className="course-builder-sidebar-status accent">
+              {course?.categoryName || "Курс преподавателя"}
+            </span>
+          </div>
+
+          <div className="course-builder-sidebar-summary-meta">
+            <span>{durationLabel}</span>
+            <span>Уроков: {lessonsCount}</span>
+            <span>{languageLabel}</span>
+          </div>
         </div>
       </div>
 
       <div className="course-builder-sidebar-actions">
-        <button type="button" className="course-builder-sidebar-publish">
+        <button
+          type="button"
+          className="course-builder-sidebar-publish"
+          disabled
+        >
           Опубликовать
         </button>
 
         <p className="course-builder-sidebar-action-hint">
-          Сначала соберите структуру курса, затем вернемся к публикации.
+          Сейчас здесь можно собирать структуру курса и просматривать её в
+          реальном черновике. Публикацию подключим, когда появится отдельный
+          endpoint.
         </p>
       </div>
 
@@ -79,12 +115,12 @@ function CourseBuilderSidebar() {
             </NavLink>
             <Link
               to="syllabus"
-            className={`course-builder-sidebar-sublink${isSyllabusActive ? " is-active" : ""}`}
-            aria-current={isSyllabusActive ? "page" : undefined}
-          >
-            Содержание
-          </Link>
-        </div>
+              className={`course-builder-sidebar-sublink${isSyllabusActive ? " is-active" : ""}`}
+              aria-current={isSyllabusActive ? "page" : undefined}
+            >
+              Содержание
+            </Link>
+          </div>
         ) : null}
       </div>
     </nav>
