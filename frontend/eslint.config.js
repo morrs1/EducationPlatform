@@ -23,7 +23,14 @@ export default defineConfig([
       },
     },
     rules: {
-      "no-unused-vars": "warn",
+      "no-unused-vars": [
+        "warn",
+        {
+          // JSX component references are not tracked by core no-unused-vars.
+          // Ignore PascalCase identifiers while still linting regular variables.
+          varsIgnorePattern: "^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)*$",
+        },
+      ],
     },
   },
 ]);

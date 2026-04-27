@@ -15,6 +15,8 @@ import AccountPage from "../../pages/account/ui/AccountPage";
 import EditProfilePage from "../../pages/edit-profile/ui/EditProfilePage";
 import NotificationsPage from "../../pages/notifications/ui/NotificationsPage";
 import LessonPage from "../../pages/lesson/ui/LessonPage";
+import TeachPage from "../../pages/teach/ui/TeachPage";
+import CourseBuilderPage from "../../pages/course-builder/ui/CourseBuilderPage";
 
 import ProfileSection from "../../widgets/profile-section/ui/ProfileSection";
 import CurrentCoursesSection from "../../widgets/current-courses-section/ui/CurrentCoursesSection";
@@ -25,6 +27,11 @@ import { selectIsLogged } from "../../features/auth";
 import UpdateProfileSection from "../../widgets/update-profile-section/ui/UpdateProfileSection";
 import ChangePasswordSection from "../../widgets/change-password-section/ui/ChangePasswordSection";
 import ChangeEmailSection from "../../widgets/change-email-section/ui/ChangeEmailSection";
+import CreateCourseSection from "../../widgets/create-course-section/ui/CreateCourseSection";
+import TeachCoursesSection from "../../widgets/teach-courses-section/ui/TeachCoursesSection";
+import CourseDescriptionSection from "../../widgets/course-description-section/ui/CourseDescriptionSection";
+import CourseSyllabusSection from "../../widgets/course-syllabus-section/ui/CourseSyllabusSection";
+import CourseContentEditorSection from "../../widgets/course-content-editor-section/ui/CourseContentEditorSection";
 
 function ProtectedRoute() {
   const isLogged = useSelector(selectIsLogged);
@@ -78,6 +85,25 @@ const router = createBrowserRouter([
           {
             path: "courses/:courseId/lessons/:lessonId",
             element: <LessonPage />,
+          },
+          {
+            path: "course/:courseId",
+            element: <CourseBuilderPage />,
+            children: [
+              { index: true, element: <Navigate to="syllabus" replace /> },
+              { path: "description", element: <CourseDescriptionSection /> },
+              { path: "syllabus", element: <CourseSyllabusSection /> },
+              { path: "edit", element: <CourseContentEditorSection /> },
+            ],
+          },
+          {
+            path: "teach",
+            element: <TeachPage />,
+            children: [
+              { index: true, element: <Navigate to="courses" replace /> },
+              { path: "courses", element: <TeachCoursesSection /> },
+              { path: "courses/new", element: <CreateCourseSection /> },
+            ],
           },
         ],
       },
