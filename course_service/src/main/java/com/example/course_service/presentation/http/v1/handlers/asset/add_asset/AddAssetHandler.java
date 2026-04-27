@@ -30,7 +30,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/course/lesson")
 @RequiredArgsConstructor
-@Tag(name = "Lesson Assets", description = "Upload lesson asset files and store their metadata")
+@Tag(name = "Assets", description = "Operations for managing lesson assets")
 public class AddAssetHandler {
 
     private static final Map<String, Set<String>> ALLOWED_EXTENSIONS_BY_ASSET_TYPE = Map.of(
@@ -59,7 +59,11 @@ public class AddAssetHandler {
             )
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Asset uploaded successfully"),
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Asset uploaded successfully",
+                    content = @Content(schema = @Schema(implementation = AddAssetResponse.class))
+            ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Lesson not found",

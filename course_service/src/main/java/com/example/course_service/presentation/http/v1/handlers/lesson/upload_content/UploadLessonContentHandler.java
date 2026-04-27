@@ -111,7 +111,11 @@ public class UploadLessonContentHandler {
             )
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lesson content uploaded successfully"),
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Lesson content uploaded successfully",
+                    content = @Content(schema = @Schema(type = "string", example = "Lesson content uploaded successfully"))
+            ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Lesson not found",

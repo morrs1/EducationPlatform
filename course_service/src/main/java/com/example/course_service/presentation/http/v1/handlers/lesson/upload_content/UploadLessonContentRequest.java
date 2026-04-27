@@ -8,7 +8,12 @@ import java.util.Map;
 public record UploadLessonContentRequest(
         @Schema(
                 description = "Lesson content body. Its structure must match the target lesson type: theory, quiz, or coding.",
-                requiredMode = Schema.RequiredMode.REQUIRED
+                requiredMode = Schema.RequiredMode.REQUIRED,
+                example = """
+                        {
+                          "markdown": "# Variables\\nTheory lesson body"
+                        }
+                        """
         )
         @NotNull Map<String, Object> content
 ) {
