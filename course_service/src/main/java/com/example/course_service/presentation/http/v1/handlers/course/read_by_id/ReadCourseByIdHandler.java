@@ -1,6 +1,7 @@
 package com.example.course_service.presentation.http.v1.handlers.course.read_by_id;
 
 import com.example.course_service.application.interactors.course.read_course_by_id.ReadCourseByIdInteractor;
+import com.example.course_service.presentation.http.v1.handlers.course.read_by_id.dto.response.ReadCourseByIdResponse;
 import com.example.course_service.presentation.http.v1.mappers.CourseMapperQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

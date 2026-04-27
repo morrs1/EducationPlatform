@@ -6,7 +6,7 @@ import com.example.course_service.application.interactors.asset.add_asset_to_les
 import com.example.course_service.domain.base.exceptions.ValidateException;
 import com.example.course_service.presentation.http.v1.exceptions.AssetContentReadException;
 import com.example.course_service.presentation.http.v1.exceptions.EmptyFileException;
-import com.example.course_service.presentation.http.v1.handlers.course.read_by_id.AddAssetRequest;
+import com.example.course_service.presentation.http.v1.handlers.course.read_by_id.dto.request.AddAssetRequest;
 import com.example.course_service.presentation.http.v1.exceptions_handlers.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

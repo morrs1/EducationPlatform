@@ -1,13 +1,10 @@
-package com.example.course_service.presentation.http.v1.handlers.course.read_by_id;
-
-import com.example.course_service.domain.module.Module;
-import com.example.course_service.presentation.http.v1.handlers.course.add_course.CourseTagRef;
+package com.example.course_service.application.interactors.course.read_course_by_id.views;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public record ReadCourseByIdResponse(
+public record ReadCourseByIdView(
         UUID authorId,
         String title,
         String shortDescription,
@@ -15,9 +12,9 @@ public record ReadCourseByIdResponse(
         String difficulty,
         String languageCode,
         Integer estimatedMinutes,
-        List<Module> structure,
+        List<ModuleView> structure,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        List<CourseTagRef> tags
+        List<TagView> tags
 ) {
 }

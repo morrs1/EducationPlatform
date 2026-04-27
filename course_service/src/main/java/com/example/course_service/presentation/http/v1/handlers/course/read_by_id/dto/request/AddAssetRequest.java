@@ -1,4 +1,4 @@
-package com.example.course_service.presentation.http.v1.handlers.course.read_by_id;
+package com.example.course_service.presentation.http.v1.handlers.course.read_by_id.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
