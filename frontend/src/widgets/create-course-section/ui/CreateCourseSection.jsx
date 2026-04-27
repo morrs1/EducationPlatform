@@ -1,4 +1,10 @@
+import { useNavigate } from "react-router";
+
+const draftCourseId = "course-draft-001";
+
 function CreateCourseSection() {
+  const navigate = useNavigate();
+
   return (
     <section className="create-course-section">
       <div className="create-course-section-head">
@@ -15,7 +21,11 @@ function CreateCourseSection() {
         />
       </label>
 
-      <button type="button" className="create-course-section-submit">
+      <button
+        type="button"
+        className="create-course-section-submit"
+        onClick={() => navigate(`/course/${draftCourseId}/syllabus`)}
+      >
         Создать курс
       </button>
     </section>
