@@ -25,23 +25,6 @@ function UpdateProfileForm({ viewer, onSubmit }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-    }
-
-    setPreviewSrc(viewer.avatarUrl);
-    setFormState({
-      firstName: viewer.firstName ?? "",
-      lastName: viewer.lastName ?? "",
-      patronymic: viewer.patronymic ?? "",
-      status: viewer.status ?? viewer.headline ?? "",
-    });
-    setAvatarFile(null);
-    setSelectedFileName("Файл не выбран");
-  }, [viewer]);
-
   function clearFeedback() {
     setSubmitError(null);
     setSubmitSuccess(null);
@@ -111,10 +94,6 @@ function UpdateProfileForm({ viewer, onSubmit }) {
         <div className="settings-avatar-picker-body">
           <div className="settings-avatar-picker-text">
             <span className="settings-label">Фото профиля</span>
-            <p className="settings-helper-text">
-              Фото загрузится в S3 через user_service, а после сохранения в
-              профиле появится ссылка, которую вернет backend.
-            </p>
           </div>
 
           <input
@@ -181,13 +160,11 @@ function UpdateProfileForm({ viewer, onSubmit }) {
           value={formState.status}
           onChange={handleFieldChange}
         />
-        <span className="settings-helper-text">
-          Используйте латинские заглавные буквы и символы подчеркивания:
-          `STUDENT`, `ACTIVE_USER`.
-        </span>
       </label>
 
-      {submitError ? <p className="settings-feedback-error">{submitError}</p> : null}
+      {submitError ? (
+        <p className="settings-feedback-error">{submitError}</p>
+      ) : null}
       {submitSuccess ? (
         <p className="settings-feedback-success">{submitSuccess}</p>
       ) : null}

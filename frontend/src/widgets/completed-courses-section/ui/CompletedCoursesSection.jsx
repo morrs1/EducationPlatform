@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { filterCoursesByQuery } from "../../../entities/course/model/filterCoursesByQuery";
 import CompletedCoursesList from "../../../entities/course/ui/completed/CompletedCoursesList";
@@ -22,12 +22,6 @@ function CompletedCoursesSection() {
       ? "Пока нет завершенных курсов."
       : `По запросу «${searchQuery}» ничего не найдено.`;
 
-  useEffect(() => {
-    if (inputValue.trim() === "") {
-      setSearchQuery("");
-    }
-  }, [inputValue]);
-
   function handleSearchSubmit(event) {
     event.preventDefault();
     setSearchQuery(inputValue.trim());
@@ -45,7 +39,15 @@ function CompletedCoursesSection() {
             placeholder="Найти курс"
             aria-label="Поиск по пройденным курсам"
             value={inputValue}
-            onChange={(event) => setInputValue(event.target.value)}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+
+              setInputValue(nextValue);
+
+              if (nextValue.trim() === "") {
+                setSearchQuery("");
+              }
+            }}
           />
 
           <button type="submit" className="completed-courses-search-btn">

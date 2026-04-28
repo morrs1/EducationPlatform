@@ -109,7 +109,7 @@ function CourseDescriptionSection() {
             Состояние черновика
           </strong>
           <p className="course-description-card-text">
-            Автор: {course?.authorName || course?.authorId || "не определён"}
+            Автор: {course?.authorName || "не определён"}
             <br />
             Создан: {formatDateTime(course?.createdAt)}
             <br />

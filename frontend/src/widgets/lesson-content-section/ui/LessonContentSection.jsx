@@ -1,80 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-
-function renderInlineText(text) {
-  return text
-    .split(/(`[^`]+`)/g)
-    .filter(Boolean)
-    .map((part, index) =>
-      part.startsWith("`") && part.endsWith("`") ? (
-        <code key={`${part}-${index}`} className="lesson-markdown-inline-code">
-          {part.slice(1, -1)}
-        </code>
-      ) : (
-        <span key={`${part}-${index}`}>{part}</span>
-      ),
-    );
-}
-
-function renderMarkdownBlock(block, index) {
-  if (block.type === "heading-1") {
-    return (
-      <h2 key={`heading-1-${index}`} className="lesson-markdown-h1">
-        {renderInlineText(block.content)}
-      </h2>
-    );
-  }
-
-  if (block.type === "heading-2") {
-    return (
-      <h3 key={`heading-2-${index}`} className="lesson-markdown-h2">
-        {renderInlineText(block.content)}
-      </h3>
-    );
-  }
-
-  if (block.type === "unordered-list") {
-    return (
-      <ul key={`unordered-list-${index}`} className="lesson-markdown-list">
-        {block.items.map((item, itemIndex) => (
-          <li key={`${item}-${itemIndex}`}>{renderInlineText(item)}</li>
-        ))}
-      </ul>
-    );
-  }
-
-  if (block.type === "ordered-list") {
-    return (
-      <ol
-        key={`ordered-list-${index}`}
-        className="lesson-markdown-list-decimal"
-      >
-        {block.items.map((item, itemIndex) => (
-          <li key={`${item}-${itemIndex}`}>{renderInlineText(item)}</li>
-        ))}
-      </ol>
-    );
-  }
-
-  if (block.type === "code-block") {
-    return (
-      <div key={`code-block-${index}`} className="lesson-markdown-code-wrap">
-        {block.language ? (
-          <div className="lesson-markdown-code-label">{block.language}</div>
-        ) : null}
-
-        <pre className="lesson-markdown-code">
-          <code>{block.content}</code>
-        </pre>
-      </div>
-    );
-  }
-
-  return (
-    <p key={`paragraph-${index}`} className="lesson-markdown-paragraph">
-      {renderInlineText(block.content)}
-    </p>
-  );
-}
+import LessonMarkdownPreview from "../../../entities/lesson/ui/LessonMarkdownPreview";
 
 function renderSubmissionResult(lessonSubmission) {
   if (!lessonSubmission) {
@@ -584,11 +509,6 @@ function LessonContentSection({
     () => renderLessonAssets(lessonAssets),
     [lessonAssets],
   );
-  const renderedContentBlocks = useMemo(
-    () => contentBlocks.map((block, index) => renderMarkdownBlock(block, index)),
-    [contentBlocks],
-  );
-
   return (
     <main className="lesson-content-section">
       <section
@@ -628,10 +548,10 @@ function LessonContentSection({
           ) : null}
 
           {contentStatus === "success" ? (
-            <div className="lesson-markdown">
+            <>
               {renderedLessonAssets}
-              {renderedContentBlocks}
-            </div>
+              <LessonMarkdownPreview blocks={contentBlocks} />
+            </>
           ) : null}
 
           {isTheoryLesson ? (

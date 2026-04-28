@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CurrentCoursesList from "../../../entities/course/ui/current/CurrentCoursesList";
 import { filterCoursesByQuery } from "../../../entities/course/model/filterCoursesByQuery";
@@ -23,12 +23,6 @@ function CurrentCoursesSection() {
       ? "Пока нет курсов в разделе «Прохожу сейчас»."
       : `По запросу «${searchQuery}» ничего не найдено.`;
 
-  useEffect(() => {
-    if (inputValue.trim() === "") {
-      setSearchQuery("");
-    }
-  }, [inputValue]);
-
   function handleSearchSubmit(e) {
     e.preventDefault();
     setSearchQuery(inputValue.trim());
@@ -46,7 +40,15 @@ function CurrentCoursesSection() {
             placeholder="Найти курс"
             aria-label="Поиск по текущим курсам"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+
+              setInputValue(nextValue);
+
+              if (nextValue.trim() === "") {
+                setSearchQuery("");
+              }
+            }}
           />
 
           <button type="submit" className="current-courses-search-btn">

@@ -7,8 +7,8 @@ function Footer() {
           <div className="site-footer-copy">
             <strong className="site-footer-title">EduPlatform</strong>
             <p className="site-footer-text">
-              Мягкий визуальный ритм, понятные треки и пространство, где
-              учеба ощущается собранной, а не перегруженной.
+              Мягкий визуальный ритм, понятные треки и пространство, где учеба
+              ощущается собранной, а не перегруженной.
             </p>
           </div>
         </div>
@@ -21,7 +21,7 @@ function Footer() {
 
         <div className="site-footer-meta">
           <span>© 2026 Образовательная платформа</span>
-          <span>Учитесь в своем темпе, без лишнего визуального шума.</span>
+          <span>Учитесь в своем темпе.</span>
         </div>
       </div>
     </footer>

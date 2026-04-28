@@ -8,7 +8,7 @@ import {
   getCachedLessonContentMarkdown,
   getLessonContentMarkdown,
 } from "../lib/getLessonContentMarkdown";
-import { parseLessonMarkdown } from "../lib/parseLessonMarkdown";
+import { parseLessonMarkdown } from "../../../entities/lesson/model/parseLessonMarkdown";
 import { getCourseSyllabus } from "../../../entities/course/model/mockCourseSyllabus";
 import { getLessonProgressMap } from "../../../entities/lesson/model/progress";
 import {

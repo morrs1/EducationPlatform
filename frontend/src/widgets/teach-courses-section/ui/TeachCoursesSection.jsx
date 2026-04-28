@@ -19,9 +19,7 @@ function TeachCoursesSection() {
     () =>
       Object.values(viewer.courseSnapshotsById)
         .filter(
-          (course) =>
-            course.isBackendCourse &&
-            course.authorId === authorId,
+          (course) => course.isBackendCourse && course.authorId === authorId,
         )
         .sort((left, right) => left.title.localeCompare(right.title, "ru")),
     [authorId, viewer.courseSnapshotsById],
@@ -34,10 +32,6 @@ function TeachCoursesSection() {
           <strong className="teach-courses-section-empty-title">
             У вас пока нет курсов
           </strong>
-          <p className="teach-courses-section-empty">
-            Новый курс можно создать через кнопку слева. Как только он появится
-            в `course_service`, мы покажем его здесь.
-          </p>
         </div>
       </section>
     );
@@ -48,11 +42,6 @@ function TeachCoursesSection() {
       <div className="teach-courses-section-list-head">
         <span className="teach-panel-kicker">ПРЕПОДАВАНИЕ</span>
         <h1 className="teach-panel-title">Ваши курсы</h1>
-        <p className="teach-panel-description">
-          Здесь собраны курсы, которые вы уже создали в рабочем пространстве
-          преподавателя. Отсюда можно быстро вернуться к конструктору или
-          открыть готовую страницу курса.
-        </p>
       </div>
 
       <div className="teach-courses-grid">
@@ -89,7 +78,8 @@ function TeachCoursesSection() {
               </div>
 
               <p className="teach-course-card-text">
-                {course.shortDescription || "Короткое описание пока не указано."}
+                {course.shortDescription ||
+                  "Короткое описание пока не указано."}
               </p>
 
               <div className="teach-course-card-actions">

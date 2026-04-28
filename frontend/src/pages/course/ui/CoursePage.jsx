@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import { selectIsLogged, openLoginModal } from "../../../features/auth";
@@ -9,6 +9,7 @@ import {
 import {
   enrollInCourse,
   createViewerCourseSnapshot,
+  requestViewerDisplayProfileById,
   upsertViewerCourseSnapshot,
   selectIsCompletedCourse,
   selectIsFavouriteCourse,
@@ -90,6 +91,32 @@ function CoursePage() {
   const [backendPageError, setBackendPageError] = useState("");
   const [backendRequestSeed, setBackendRequestSeed] = useState(0);
 
+  const enrichBackendCourseAuthor = useCallback(async (nextPageData) => {
+    const authorId = nextPageData?.course?.authorId;
+
+    if (!authorId) {
+      return nextPageData;
+    }
+
+    try {
+      const authorProfile = await requestViewerDisplayProfileById(authorId);
+
+      if (!authorProfile?.name) {
+        return nextPageData;
+      }
+
+      return {
+        ...nextPageData,
+        course: {
+          ...nextPageData.course,
+          authorName: authorProfile.name,
+        },
+      };
+    } catch {
+      return nextPageData;
+    }
+  }, []);
+
   useEffect(() => {
     if (!isBackendCourseRoute || !courseIdParam) {
       return;
@@ -103,9 +130,11 @@ function CoursePage() {
 
       try {
         const response = await requestCourseById(courseIdParam);
-        const nextPageData = mapReadCourseByIdResponseToCoursePageData(
-          response,
-          courseIdParam,
+        const nextPageData = await enrichBackendCourseAuthor(
+          mapReadCourseByIdResponseToCoursePageData(
+            response,
+            courseIdParam,
+          ),
         );
 
         if (!isCancelled) {
@@ -128,7 +157,12 @@ function CoursePage() {
     return () => {
       isCancelled = true;
     };
-  }, [courseIdParam, isBackendCourseRoute, backendRequestSeed]);
+  }, [
+    courseIdParam,
+    isBackendCourseRoute,
+    backendRequestSeed,
+    enrichBackendCourseAuthor,
+  ]);
 
   const pageData = useMemo(() => {
     if (isBackendCourseRoute) {

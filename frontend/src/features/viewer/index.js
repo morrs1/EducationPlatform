@@ -32,6 +32,8 @@ export {
   saveViewerProfile,
 } from "./model/persistence";
 
+export { requestViewerDisplayProfileById } from "./model/userServiceApi";
+
 export {
   selectViewer,
   selectViewerId,

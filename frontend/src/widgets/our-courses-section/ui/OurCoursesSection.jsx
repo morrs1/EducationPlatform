@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import CoursePreviewCard from "../../../entities/course/ui/preview/CoursePreviewCard";
 
 const COURSES_PER_PAGE = 6;
@@ -15,6 +15,9 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
   const resolvedActiveCategoryId = hasActiveCategory
     ? activeCategoryId
     : (courseCategories[0]?.id ?? null);
+  const effectiveCurrentPage = hasActiveCategory
+    ? currentPage
+    : 0;
 
   const activeCategoryCourses = resolvedActiveCategoryId
     ? (coursesByCategory[resolvedActiveCategoryId] ?? [])
@@ -23,23 +26,20 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
     1,
     Math.ceil(activeCategoryCourses.length / COURSES_PER_PAGE),
   );
+  const safeCurrentPage = Math.min(effectiveCurrentPage, totalPages - 1);
   const visibleCourses = activeCategoryCourses.slice(
-    currentPage * COURSES_PER_PAGE,
-    currentPage * COURSES_PER_PAGE + COURSES_PER_PAGE,
+    safeCurrentPage * COURSES_PER_PAGE,
+    safeCurrentPage * COURSES_PER_PAGE + COURSES_PER_PAGE,
   );
-
-  useEffect(() => {
-    setCurrentPage(0);
-    setAnimationDirection("reset");
-  }, [resolvedActiveCategoryId]);
 
   function handleCategoryChange(categoryId) {
     setActiveCategoryId(categoryId);
+    setCurrentPage(0);
     setAnimationDirection("reset");
   }
 
   function handlePreviousPage() {
-    if (currentPage === 0) {
+    if (safeCurrentPage === 0) {
       return;
     }
 
@@ -48,7 +48,7 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
   }
 
   function handleNextPage() {
-    if (currentPage >= totalPages - 1) {
+    if (safeCurrentPage >= totalPages - 1) {
       return;
     }
 
@@ -65,13 +65,12 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
         </div>
 
         <p className="home-section-description">
-          Переключайтесь между направлениями и просматривайте подборки курсов
-          в одном ритме, как на витрине каталога.
+          Переключайтесь между направлениями и просматривайте подборки курсов.
         </p>
 
         <div className="home-section-controls">
           <span className="home-section-page-indicator">
-            {currentPage + 1} / {totalPages}
+            {safeCurrentPage + 1} / {totalPages}
           </span>
 
           <div className="home-section-nav">
@@ -79,7 +78,7 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
               type="button"
               className="home-section-nav-btn"
               onClick={handlePreviousPage}
-              disabled={currentPage === 0}
+              disabled={safeCurrentPage === 0}
               aria-label="Показать предыдущие курсы"
             >
               ←
@@ -89,7 +88,7 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
               type="button"
               className="home-section-nav-btn"
               onClick={handleNextPage}
-              disabled={currentPage >= totalPages - 1}
+              disabled={safeCurrentPage >= totalPages - 1}
               aria-label="Показать следующие курсы"
             >
               →
@@ -117,7 +116,7 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
 
       <div className="home-courses-viewport">
         <div
-          key={`${resolvedActiveCategoryId}-${currentPage}`}
+          key={`${resolvedActiveCategoryId}-${safeCurrentPage}`}
           className={`home-courses-grid is-${animationDirection}`}
         >
           {visibleCourses.map((course) => (

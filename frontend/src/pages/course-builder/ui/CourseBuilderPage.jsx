@@ -4,6 +4,7 @@ import { Outlet, useParams } from "react-router";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
   createViewerCourseSnapshot,
+  requestViewerDisplayProfileById,
   resolveCourseServiceAuthorId,
   selectViewer,
   selectViewerName,
@@ -44,14 +45,50 @@ function CourseBuilderPage() {
     [currentViewerId, viewer.remoteId],
   );
 
+  const enrichBackendCourseAuthor = useCallback(async (nextPageData) => {
+    const nextCourse = nextPageData?.course;
+
+    if (!nextCourse) {
+      return nextPageData;
+    }
+
+    if (viewerName && nextCourse.authorId === courseServiceAuthorId) {
+      return {
+        ...nextPageData,
+        course: {
+          ...nextCourse,
+          authorName: viewerName,
+        },
+      };
+    }
+
+    if (!nextCourse.authorId) {
+      return nextPageData;
+    }
+
+    try {
+      const authorProfile = await requestViewerDisplayProfileById(
+        nextCourse.authorId,
+      );
+
+      if (!authorProfile?.name) {
+        return nextPageData;
+      }
+
+      return {
+        ...nextPageData,
+        course: {
+          ...nextCourse,
+          authorName: authorProfile.name,
+        },
+      };
+    } catch {
+      return nextPageData;
+    }
+  }, [courseServiceAuthorId, viewerName]);
+
   const applyPageData = useCallback((nextPageData) => {
-    const nextCourse =
-      viewerName && nextPageData.course.authorId === courseServiceAuthorId
-        ? {
-            ...nextPageData.course,
-            authorName: viewerName,
-          }
-        : nextPageData.course;
+    const nextCourse = nextPageData.course;
     const nextModules = nextPageData.syllabus.modules;
     const syllabusLessonIds = collectSyllabusLessonIds(nextModules);
 
@@ -65,7 +102,7 @@ function CourseBuilderPage() {
         createViewerCourseSnapshot(nextCourse, syllabusLessonIds),
       ),
     );
-  }, [courseServiceAuthorId, dispatch, viewerName]);
+  }, [dispatch]);
 
   const syncCourse = useCallback(async () => {
     if (!hasValidCourseId) {
@@ -83,9 +120,11 @@ function CourseBuilderPage() {
 
     try {
       const response = await requestCourseById(courseId);
-      const nextPageData = mapReadCourseByIdResponseToCoursePageData(
-        response,
-        courseId,
+      const nextPageData = await enrichBackendCourseAuthor(
+        mapReadCourseByIdResponseToCoursePageData(
+          response,
+          courseId,
+        ),
       );
 
       applyPageData(nextPageData);
@@ -107,7 +146,7 @@ function CourseBuilderPage() {
         error: nextError,
       };
     }
-  }, [applyPageData, courseId, hasValidCourseId]);
+  }, [applyPageData, courseId, enrichBackendCourseAuthor, hasValidCourseId]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -128,9 +167,11 @@ function CourseBuilderPage() {
 
       try {
         const response = await requestCourseById(courseId);
-        const nextPageData = mapReadCourseByIdResponseToCoursePageData(
-          response,
-          courseId,
+        const nextPageData = await enrichBackendCourseAuthor(
+          mapReadCourseByIdResponseToCoursePageData(
+            response,
+            courseId,
+          ),
         );
 
         if (!isCancelled) {
@@ -153,7 +194,13 @@ function CourseBuilderPage() {
     return () => {
       isCancelled = true;
     };
-  }, [applyPageData, courseId, hasValidCourseId, requestSeed]);
+  }, [
+    applyPageData,
+    courseId,
+    enrichBackendCourseAuthor,
+    hasValidCourseId,
+    requestSeed,
+  ]);
 
   function reloadCourse() {
     setRequestSeed((value) => value + 1);

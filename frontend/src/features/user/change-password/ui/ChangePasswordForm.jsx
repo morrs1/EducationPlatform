@@ -71,9 +71,6 @@ function ChangePasswordForm({ onSubmit }) {
             setNextPassword(event.target.value);
           }}
         />
-        <span className="settings-helper-text">
-          Желательно использовать не менее 8 символов, включая буквы и цифры.
-        </span>
       </label>
 
       <label className="settings-field">
@@ -90,7 +87,9 @@ function ChangePasswordForm({ onSubmit }) {
         />
       </label>
 
-      {submitError ? <p className="settings-feedback-error">{submitError}</p> : null}
+      {submitError ? (
+        <p className="settings-feedback-error">{submitError}</p>
+      ) : null}
       {submitSuccess ? (
         <p className="settings-feedback-success">{submitSuccess}</p>
       ) : null}

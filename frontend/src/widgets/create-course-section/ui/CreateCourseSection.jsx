@@ -132,10 +132,6 @@ function CreateCourseSection() {
       <div className="create-course-section-head">
         <span className="create-course-section-kicker">НОВЫЙ КУРС</span>
         <h1 className="create-course-section-title">Создание курса</h1>
-        <p className="create-course-section-note">
-          Курс сразу создаётся в `course_service`, поэтому здесь собраны все
-          обязательные поля первого шага.
-        </p>
       </div>
 
       <form className="create-course-section-form" onSubmit={handleSubmit}>
@@ -151,9 +147,7 @@ function CreateCourseSection() {
         </label>
 
         <label className="create-course-section-field">
-          <span className="create-course-section-label">
-            Короткое описание
-          </span>
+          <span className="create-course-section-label">Короткое описание</span>
           <textarea
             value={formState.shortDescription}
             onChange={(event) =>
@@ -181,7 +175,9 @@ function CreateCourseSection() {
             <span className="create-course-section-label">Сложность</span>
             <select
               value={formState.difficulty}
-              onChange={(event) => updateField("difficulty", event.target.value)}
+              onChange={(event) =>
+                updateField("difficulty", event.target.value)
+              }
               className="create-course-section-input"
             >
               <option value="beginner">Начальный уровень</option>
@@ -195,7 +191,9 @@ function CreateCourseSection() {
             <input
               type="text"
               value={formState.languageCode}
-              onChange={(event) => updateField("languageCode", event.target.value)}
+              onChange={(event) =>
+                updateField("languageCode", event.target.value)
+              }
               placeholder="ru"
               className="create-course-section-input"
             />

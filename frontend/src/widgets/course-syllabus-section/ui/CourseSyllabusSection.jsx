@@ -1,4 +1,10 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, useOutletContext } from "react-router";
+
+import {
+  extractLessonCoverAssetFromLessonResponse,
+  requestLessonById,
+} from "../../../entities/course/model/courseServiceApi";
 
 function getLessonTypeLabel(type) {
   if (type === "quiz") {
@@ -12,14 +18,84 @@ function getLessonTypeLabel(type) {
   return "Теория";
 }
 
+function getUniqueLessonIds(modules) {
+  return Array.from(
+    new Set(
+      modules.flatMap((module) =>
+        module.lessons.map((lesson) => lesson.id || lesson.lessonId).filter(Boolean),
+      ),
+    ),
+  );
+}
+
+function LessonSyllabusCover({ title, coverUrl }) {
+  if (coverUrl) {
+    return (
+      <div className="course-syllabus-lesson-cover">
+        <img
+          src={coverUrl}
+          alt={`Обложка урока ${title || ""}`.trim()}
+          className="course-syllabus-lesson-cover-image"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="course-syllabus-lesson-cover">
+      <div className="course-syllabus-lesson-cover-fallback" aria-hidden="true">
+        <span className="course-syllabus-lesson-cover-mark">EP</span>
+      </div>
+    </div>
+  );
+}
+
 function CourseSyllabusSection() {
   const { course, modules, pageStatus, pageError, reloadCourse } =
     useOutletContext();
+  const [lessonCoverById, setLessonCoverById] = useState({});
   const hasModules = modules.length > 0;
   const lessonsCount = modules.reduce(
     (total, module) => total + module.lessons.length,
     0,
   );
+  const lessonIds = useMemo(() => getUniqueLessonIds(modules), [modules]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (pageStatus !== "success" || !lessonIds.length) {
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    async function loadLessonCovers() {
+      const entries = await Promise.all(
+        lessonIds.map(async (lessonId) => {
+          try {
+            const lessonResponse = await requestLessonById(lessonId);
+            const coverAsset =
+              extractLessonCoverAssetFromLessonResponse(lessonResponse);
+
+            return [lessonId, coverAsset?.url || ""];
+          } catch {
+            return [lessonId, ""];
+          }
+        }),
+      );
+
+      if (!isCancelled) {
+        setLessonCoverById(Object.fromEntries(entries));
+      }
+    }
+
+    loadLessonCovers();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [lessonIds, pageStatus]);
 
   if (pageStatus === "loading") {
     return (
@@ -122,11 +198,18 @@ function CourseSyllabusSection() {
                       key={lesson.id}
                       className="course-syllabus-lesson-item"
                     >
-                      <span className="course-syllabus-lesson-badge">
-                        {module.position ?? index + 1}.{lesson.position ?? lessonIndex + 1}
-                      </span>
+                      <LessonSyllabusCover
+                        title={lesson.title}
+                        coverUrl={lessonCoverById[lesson.id || lesson.lessonId] || ""}
+                      />
 
                       <div className="course-syllabus-lesson-copy">
+                        <div className="course-syllabus-lesson-copy-head">
+                          <span className="course-syllabus-lesson-badge">
+                            {module.position ?? index + 1}.
+                            {lesson.position ?? lessonIndex + 1}
+                          </span>
+                        </div>
                         <span className="course-syllabus-lesson-title">
                           {lesson.title}
                         </span>
