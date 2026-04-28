@@ -32,6 +32,16 @@ public class CourseMapperQuery {
         );
     }
 
+    public List<ReadCourseByIdResponse> toReadCourseByIdResponses(List<ReadCourseByIdView> readCourseByIdViews) {
+        if (Objects.isNull(readCourseByIdViews)) {
+            return List.of();
+        }
+
+        return readCourseByIdViews.stream()
+                .map(this::toReadCourseByIdResponse)
+                .toList();
+    }
+
     private List<ModuleResponse> mapModules(List<ModuleView> modules) {
         if (Objects.isNull(modules)) {
             return List.of();

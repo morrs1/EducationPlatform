@@ -2,6 +2,7 @@ package com.example.course_service.setup.config_beans.course;
 
 import com.example.course_service.application.interactors.course.add_course.AddCourseInteractor;
 import com.example.course_service.application.interactors.course.add_module_to_course.AddModuleInteractor;
+import com.example.course_service.application.interactors.course.read_all.ReadAllCoursesInteractor;
 import com.example.course_service.application.interactors.course.read_course_by_id.ReadCourseByIdInteractor;
 import com.example.course_service.application.interactors.mappers.CourseViewMapper;
 import com.example.course_service.application.ports.TransactionManager;
@@ -12,6 +13,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CourseConfig {
+    @Bean
+    public ReadAllCoursesInteractor readAllCoursesInteractor(HibernateCourseRepo hibernateCourseRepo, TransactionManager transactionManager) {
+        return new ReadAllCoursesInteractor(transactionManager, hibernateCourseRepo, new CourseViewMapper());
+    }
+
     @Bean
     public ReadCourseByIdInteractor readCourseByIdInteractor(HibernateCourseRepo hibernateCourseRepo, TransactionManager transactionManager) {
         return new ReadCourseByIdInteractor(hibernateCourseRepo, transactionManager, new CourseViewMapper());

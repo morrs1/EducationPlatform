@@ -15,10 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -95,5 +92,17 @@ public class HibernateCourseRepo implements CourseRepo {
         }
         module.getLessons().add(lessonPreview);
         entityManager.merge(mapper.toHibernateCourse(course));
+    }
+
+    @Override
+    public List<Course> readAll() {
+        return entityManager
+                .createQuery(
+                        "select distinct c from HibernateCourse c left join fetch c.tags order by c.createdAt desc",
+                        HibernateCourse.class
+                )
+                .getResultList()
+                .stream().map(mapper::toDomainCourse)
+                .toList();
     }
 }
