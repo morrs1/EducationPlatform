@@ -56,8 +56,6 @@ function AssistantPanel({
   }
 
   useLayoutEffect(() => {
-    setIsScrollReady(false);
-
     scrollMessagesToBottom();
 
     let nestedFrameId = null;

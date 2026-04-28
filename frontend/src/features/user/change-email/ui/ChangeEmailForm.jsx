@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function ChangeEmailForm({ currentEmail, onSubmit }) {
   const [nextEmail, setNextEmail] = useState("");
@@ -6,11 +6,6 @@ function ChangeEmailForm({ currentEmail, onSubmit }) {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setNextEmail("");
-    setPassword("");
-  }, [currentEmail]);
 
   function clearFeedback() {
     setSubmitError(null);

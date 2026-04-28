@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router";
 import HomeDiscoveryPanel from "../../../widgets/home-discovery/ui/HomeDiscoveryPanel";
 import SearchResults from "../../../widgets/search-results/ui/SearchResults";
@@ -30,22 +30,13 @@ function buildSearchParams(searchQuery, filters) {
   return params;
 }
 
-function SearchPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const appliedSearchQuery = searchParams.get("query") ?? "";
-  const appliedFilters = readFilters(searchParams);
+function SearchDiscoverySection({
+  appliedSearchQuery,
+  appliedFilters,
+  onApply,
+}) {
   const [searchQuery, setSearchQuery] = useState(appliedSearchQuery);
   const [filters, setFilters] = useState(appliedFilters);
-
-  useEffect(() => {
-    setSearchQuery(appliedSearchQuery);
-    setFilters(appliedFilters);
-  }, [appliedSearchQuery, appliedFilters.filter1, appliedFilters.filter2]);
-
-  const { results } = getSearchPageData({
-    query: appliedSearchQuery,
-    filters: appliedFilters,
-  });
 
   function handleFilterChange(event) {
     const { name, checked } = event.target;
@@ -58,17 +49,44 @@ function SearchPage() {
 
   function handleSearchSubmit(event) {
     event.preventDefault();
-    setSearchParams(buildSearchParams(searchQuery, filters));
+    onApply(searchQuery, filters);
   }
 
   return (
+    <HomeDiscoveryPanel
+      searchQuery={searchQuery}
+      filters={filters}
+      onSearchChange={(event) => setSearchQuery(event.target.value)}
+      onFilterChange={handleFilterChange}
+      onSubmit={handleSearchSubmit}
+    />
+  );
+}
+
+function SearchPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const appliedSearchQuery = searchParams.get("query") ?? "";
+  const appliedFilters = readFilters(searchParams);
+  const appliedStateKey = [
+    appliedSearchQuery,
+    appliedFilters.filter1 ? "1" : "0",
+    appliedFilters.filter2 ? "1" : "0",
+  ].join(":");
+
+  const { results } = getSearchPageData({
+    query: appliedSearchQuery,
+    filters: appliedFilters,
+  });
+
+  return (
     <div className="search-page">
-      <HomeDiscoveryPanel
-        searchQuery={searchQuery}
-        filters={filters}
-        onSearchChange={(event) => setSearchQuery(event.target.value)}
-        onFilterChange={handleFilterChange}
-        onSubmit={handleSearchSubmit}
+      <SearchDiscoverySection
+        key={appliedStateKey}
+        appliedSearchQuery={appliedSearchQuery}
+        appliedFilters={appliedFilters}
+        onApply={(searchQuery, filters) =>
+          setSearchParams(buildSearchParams(searchQuery, filters))
+        }
       />
 
       <SearchResults

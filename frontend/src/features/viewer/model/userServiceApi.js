@@ -4,6 +4,7 @@ const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const viewerProfileRequestCache = new Map();
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -221,16 +222,46 @@ export function mapReadUserByIdResponseToViewerProfile(response, viewerId) {
 }
 
 export async function requestViewerProfileById(viewerId) {
+  const normalizedViewerId = normalizeText(viewerId);
+
+  if (!isUuid(normalizedViewerId)) {
+    throw new Error("user_service: некорректный UUID пользователя.");
+  }
+
+  const cachedRequest = viewerProfileRequestCache.get(normalizedViewerId);
+
+  if (cachedRequest) {
+    return cachedRequest;
+  }
+
   const url = buildUserServiceUrl("/user");
 
-  url.searchParams.set("id", viewerId);
+  url.searchParams.set("id", normalizedViewerId);
 
-  return requestUserService(url, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
+  const requestPromise = requestUserService(
+    url,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
     },
-  }, `loading viewer ${viewerId}`);
+    `loading viewer ${normalizedViewerId}`,
+  ).catch((error) => {
+    viewerProfileRequestCache.delete(normalizedViewerId);
+    throw error;
+  });
+
+  viewerProfileRequestCache.set(normalizedViewerId, requestPromise);
+
+  return requestPromise;
+}
+
+export async function requestViewerDisplayProfileById(viewerId) {
+  const normalizedViewerId = normalizeText(viewerId);
+  const response = await requestViewerProfileById(normalizedViewerId);
+
+  return mapReadUserByIdResponseToViewerProfile(response, normalizedViewerId);
 }
 
 function createJsonRequestOptions(payload) {

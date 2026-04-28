@@ -31,6 +31,7 @@ function ChangeEmailSection() {
 
       <div className="settings-card">
         <ChangeEmailForm
+          key={currentEmail}
           currentEmail={currentEmail}
           onSubmit={handleSubmit}
         />

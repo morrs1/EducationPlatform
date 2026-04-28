@@ -276,7 +276,9 @@ store.subscribe(() => {
       });
       saveLessonSessionByViewerId(activeViewerId, state.lessonSession);
     }
-  } catch {}
+  } catch {
+    return undefined;
+  }
 });
 
 export default store;

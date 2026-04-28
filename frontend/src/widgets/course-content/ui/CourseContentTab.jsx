@@ -58,8 +58,7 @@ function CourseContentTab({
         </div>
 
         <p className="course-panel-description">
-          {syllabus.modules.length} модулей, {course.lessonsCount} уроков и
-          практический ритм без перегруза.
+          Модулей: {syllabus.modules.length}, уроков: {course.lessonsCount}.
         </p>
       </div>
 
@@ -82,7 +81,7 @@ function CourseContentTab({
             <div className="course-lessons-list">
               {module.lessons.map((lesson, lessonIndex) => {
                 const lessonProgress = lesson.lessonId
-                  ? lessonProgressByLessonId[lesson.lessonId] ?? null
+                  ? (lessonProgressByLessonId[lesson.lessonId] ?? null)
                   : null;
                 const lessonStatusLabel = lessonProgress?.isCompleted
                   ? "Пройден"
@@ -104,7 +103,9 @@ function CourseContentTab({
                           {lesson.title}
                         </Link>
                       ) : (
-                        <span className="course-lesson-title">{lesson.title}</span>
+                        <span className="course-lesson-title">
+                          {lesson.title}
+                        </span>
                       )}
                     </div>
 

@@ -2,7 +2,7 @@ import { Link } from "react-router";
 
 function CoursePreviewCard({ course }) {
   const levelLabelMap = {
-    beginner: "Новичкам",
+    beginner: "Для начинающих",
     intermediate: "Средний уровень",
     advanced: "Продвинутый",
   };

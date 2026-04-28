@@ -92,6 +92,19 @@ function extractErrorMessage(response, responseBody) {
   return `course_service returned ${response.status}.`;
 }
 
+function normalizeUuidResponse(responseBody) {
+  const normalizedValue =
+    typeof responseBody === "string"
+      ? responseBody.trim()
+      : normalizeText(responseBody?.id);
+
+  if (!isUuid(normalizedValue)) {
+    throw new Error("course_service вернул некорректный UUID.");
+  }
+
+  return normalizedValue;
+}
+
 function getCourseServiceApiBaseUrl() {
   const configuredBaseUrl = normalizeText(
     import.meta.env.VITE_COURSE_SERVICE_API_BASE_URL,
@@ -104,6 +117,30 @@ function buildCourseServiceUrl(pathname = "") {
   return new URL(
     `${getCourseServiceApiBaseUrl()}${pathname}`,
     window.location.origin,
+  );
+}
+
+function invalidateCourseCache(courseId) {
+  const normalizedCourseId = normalizeText(courseId);
+
+  if (!normalizedCourseId) {
+    return;
+  }
+
+  courseRequestCache.delete(
+    buildCourseServiceUrl(`/course/${normalizedCourseId}`).toString(),
+  );
+}
+
+function invalidateLessonCache(lessonId) {
+  const normalizedLessonId = normalizeText(lessonId);
+
+  if (!normalizedLessonId) {
+    return;
+  }
+
+  lessonRequestCache.delete(
+    buildCourseServiceUrl(`/course/lesson/${normalizedLessonId}`).toString(),
   );
 }
 
@@ -266,6 +303,20 @@ function normalizeLessonAssetType(type, mimeType) {
   return "file";
 }
 
+function normalizeLessonBackendType(type) {
+  const normalizedType = normalizeText(type).toLowerCase();
+
+  if (normalizedType === "coding" || normalizedType === "code") {
+    return "coding";
+  }
+
+  if (normalizedType === "quiz") {
+    return "quiz";
+  }
+
+  return "theory";
+}
+
 function getLessonAssetSortWeight(type) {
   if (type === "image") {
     return 0;
@@ -308,8 +359,12 @@ function resolveLessonAssetUrl(publicUrl, storageKey) {
 
 function mapLessonAsset(asset, assetIndex) {
   const mimeType = unwrapString(asset?.mimeType, "mimeType");
+  const assetType = normalizeText(
+    unwrapString(asset?.type, "assetType") ||
+      unwrapString(asset?.assetType, "assetType"),
+  ).toLowerCase();
   const type = normalizeLessonAssetType(
-    unwrapString(asset?.type, "assetType"),
+    assetType,
     mimeType,
   );
   const storageKey = unwrapString(asset?.storageKey, "storageKey");
@@ -323,6 +378,7 @@ function mapLessonAsset(asset, assetIndex) {
   return {
     id: normalizeText(asset?.id) || `backend-asset-${assetIndex + 1}`,
     type,
+    assetType: assetType || type,
     title:
       unwrapString(asset?.title, "title") ||
       originalFilename ||
@@ -544,6 +600,53 @@ function mapQuizQuestion(question, questionIndex) {
   };
 }
 
+function mapQuizEditorQuestion(question, questionIndex) {
+  const mappedType = mapBackendQuestionType(question?.type);
+  const questionId =
+    normalizeText(question?.id) || crypto.randomUUID();
+  const options = normalizeArray(question?.options).map((option, optionIndex) => ({
+    id: normalizeText(option?.id) || crypto.randomUUID(),
+    text: unwrapString(option?.text, "text") || `Вариант ${optionIndex + 1}`,
+    isCorrect:
+      unwrapBoolean(option?.isCorrect, "isCorrect") ||
+      unwrapBoolean(option?.correct, "correct"),
+  }));
+
+  return {
+    id: questionId,
+    type:
+      mappedType === "multiple_choice" ? "multiple_choice" : "single_choice",
+    text:
+      unwrapString(question?.text, "text") || `Вопрос ${questionIndex + 1}`,
+    options: options.length
+      ? options
+      : [
+          {
+            id: crypto.randomUUID(),
+            text: "Вариант 1",
+            isCorrect: true,
+          },
+          {
+            id: crypto.randomUUID(),
+            text: "Вариант 2",
+            isCorrect: false,
+          },
+        ],
+  };
+}
+
+function selectLessonCoverAsset(assets) {
+  const coverAssets = assets.filter((asset) => asset.assetType === "cover");
+
+  if (coverAssets.length) {
+    return [...coverAssets].sort((left, right) =>
+      normalizeText(right.createdAt).localeCompare(normalizeText(left.createdAt)),
+    )[0];
+  }
+
+  return null;
+}
+
 function getSyllabusLessonLocation(syllabus, lessonId) {
   for (const module of syllabus?.modules ?? []) {
     const lesson = module.lessons.find((item) => item.lessonId === lessonId);
@@ -569,6 +672,8 @@ function mapBackendLesson({
   const lessonType = normalizeText(lessonResponse?.type).toLowerCase();
   const lessonContent = normalizeObject(lessonResponse?.content);
   const assets = mapLessonAssets(lessonResponse?.assets);
+  const coverAsset = selectLessonCoverAsset(assets);
+  const lessonAssets = assets.filter((asset) => asset.assetType !== "cover");
   const title =
     unwrapString(lessonResponse?.title, "title") ||
     lessonPreview?.title ||
@@ -591,7 +696,8 @@ function mapBackendLesson({
       contentMarkdown:
         unwrapString(lessonContent?.taskMarkdown, "taskMarkdown") ||
         "Задание пока не заполнено.",
-      assets,
+      coverAsset,
+      assets: lessonAssets,
       grader: {
         language:
           unwrapString(primaryLanguage?.language, "language") || "code",
@@ -647,7 +753,8 @@ function mapBackendLesson({
       contentMarkdown:
         unwrapString(lessonContent?.introMarkdown, "introMarkdown") ||
         "Вопросы урока пока не заполнены.",
-      assets,
+      coverAsset,
+      assets: lessonAssets,
       questions,
       isBackendLesson: true,
     };
@@ -665,13 +772,26 @@ function mapBackendLesson({
     contentMarkdown:
       unwrapString(lessonContent?.markdown, "markdown") ||
       "Содержимое урока пока не заполнено.",
-    assets,
+    coverAsset,
+    assets: lessonAssets,
     isBackendLesson: true,
   };
 }
 
 export function isUuid(value) {
   return UUID_PATTERN.test(normalizeText(value));
+}
+
+async function requestCourseService(pathname, options = {}) {
+  const requestUrl = buildCourseServiceUrl(pathname).toString();
+  const response = await fetch(requestUrl, options);
+  const responseBody = await readResponseBody(response);
+
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(response, responseBody));
+  }
+
+  return responseBody;
 }
 
 async function requestCourseServiceJson(pathname, requestCache) {
@@ -718,6 +838,120 @@ export async function requestLessonById(lessonId) {
   );
 }
 
+export async function requestCourseCreation(payload) {
+  const responseBody = await requestCourseService("/course", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return normalizeUuidResponse(responseBody);
+}
+
+export async function requestAddModuleToCourse(courseId, payload) {
+  const normalizedCourseId = normalizeText(courseId);
+  const responseBody = await requestCourseService(
+    `/course/${normalizedCourseId}/module`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  invalidateCourseCache(normalizedCourseId);
+
+  return normalizeUuidResponse(responseBody);
+}
+
+export async function requestAddLessonToCourse(payload) {
+  const normalizedCourseId = normalizeText(payload?.courseId);
+  const responseBody = await requestCourseService("/course/lesson", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const lessonId = normalizeUuidResponse(responseBody);
+
+  invalidateCourseCache(normalizedCourseId);
+  invalidateLessonCache(lessonId);
+
+  return lessonId;
+}
+
+export async function requestUploadLessonContent(lessonId, payload) {
+  const normalizedLessonId = normalizeText(lessonId);
+  const responseBody = await requestCourseService(
+    `/course/lesson/${normalizedLessonId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  invalidateLessonCache(normalizedLessonId);
+
+  return responseBody;
+}
+
+export async function requestUploadLessonAsset(
+  lessonId,
+  { file, title, assetType },
+) {
+  const normalizedLessonId = normalizeText(lessonId);
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append(
+    "request",
+    new Blob(
+      [
+        JSON.stringify({
+          title,
+          assetType,
+        }),
+      ],
+      {
+        type: "application/json",
+      },
+    ),
+  );
+
+  const responseBody = await requestCourseService(
+    `/course/lesson/${normalizedLessonId}/asset`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      body: formData,
+    },
+  );
+
+  invalidateLessonCache(normalizedLessonId);
+
+  return responseBody;
+}
+
+export function extractLessonCoverAssetFromLessonResponse(lessonResponse) {
+  const assets = mapLessonAssets(lessonResponse?.assets);
+
+  return selectLessonCoverAsset(assets);
+}
+
 export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
   const modules = sortByPosition(normalizeArray(response?.structure).map(mapModule));
   const tags = normalizeArray(response?.tags)
@@ -735,7 +969,7 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
     course: {
       id: courseId,
       authorId: normalizeText(response?.authorId),
-      authorName: normalizeText(response?.authorId) || "Автор пока не подключен",
+      authorName: "",
       title: normalizeText(response?.title) || "Курс без названия",
       shortDescription:
         normalizeText(response?.shortDescription) ||
@@ -808,5 +1042,77 @@ export function mapReadLessonByIdResponseToLessonPageData({
       lessonPreview,
       lessonResponse,
     }),
+  };
+}
+
+export function mapReadLessonByIdResponseToLessonEditorData({
+  courseId,
+  lessonId,
+  module,
+  lessonPreview,
+  lessonResponse,
+}) {
+  const lessonContent = normalizeObject(lessonResponse?.content);
+  const type = normalizeLessonBackendType(
+    normalizeText(lessonResponse?.type) || lessonPreview?.type,
+  );
+  const assets = mapLessonAssets(lessonResponse?.assets);
+  const coverAsset = selectLessonCoverAsset(assets);
+
+  return {
+    id: lessonId,
+    courseId,
+    moduleId: module?.id ?? null,
+    moduleTitle: module?.title ?? "Модуль курса",
+    title:
+      unwrapString(lessonResponse?.title, "title") ||
+      lessonPreview?.title ||
+      "Урок без названия",
+    type,
+    position: lessonPreview?.position ?? 1,
+    estimatedMinutes: lessonPreview?.estimatedMinutes ?? null,
+    durationLabel:
+      lessonPreview?.durationLabel ||
+      formatMinutesLabel(lessonPreview?.estimatedMinutes),
+    isPreview: Boolean(lessonPreview?.isPreview),
+    updatedAt: normalizeText(lessonResponse?.updatedAt),
+    createdAt: normalizeText(lessonResponse?.createdAt),
+    coverAsset,
+    assets: assets.filter((asset) => asset.assetType !== "cover"),
+    contentMarkdown:
+      type === "quiz"
+        ? unwrapString(lessonContent?.introMarkdown, "introMarkdown")
+        : type === "coding"
+          ? unwrapString(lessonContent?.taskMarkdown, "taskMarkdown")
+          : unwrapString(lessonContent?.markdown, "markdown"),
+    questions:
+      type === "quiz"
+        ? normalizeArray(lessonContent?.questions).map(mapQuizEditorQuestion)
+        : [],
+    coding:
+      type === "coding"
+        ? {
+            checkerType:
+              unwrapString(lessonContent?.checkerType, "checkerType") ||
+              "stdin_stdout",
+            languages: normalizeArray(lessonContent?.languages).map((language) => ({
+              language: unwrapString(language?.language, "language") || "java",
+              starterCode:
+                unwrapString(language?.starterCode, "starterCode") || "",
+            })),
+            testCases: normalizeArray(lessonContent?.testCases).map(
+              (testCase, testCaseIndex) => ({
+                id: normalizeText(testCase?.id) || crypto.randomUUID(),
+                isPublic: unwrapBoolean(testCase?.isPublic, "isPublic"),
+                input: unwrapString(testCase?.input, "input"),
+                expectedOutput: unwrapString(
+                  testCase?.expectedOutput,
+                  "expectedOutput",
+                ),
+                title: `Тест ${testCaseIndex + 1}`,
+              }),
+            ),
+          }
+        : null,
   };
 }

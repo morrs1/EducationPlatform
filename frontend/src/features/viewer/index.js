@@ -23,6 +23,7 @@ export {
   createInitialViewerState,
   createViewerProfileFromRegistration,
 } from "./model/factory";
+export { resolveCourseServiceAuthorId } from "./model/courseServiceAuthorId";
 
 export {
   loadViewerProfilesMap,
@@ -30,6 +31,8 @@ export {
   loadViewerProfileByViewerId,
   saveViewerProfile,
 } from "./model/persistence";
+
+export { requestViewerDisplayProfileById } from "./model/userServiceApi";
 
 export {
   selectViewer,

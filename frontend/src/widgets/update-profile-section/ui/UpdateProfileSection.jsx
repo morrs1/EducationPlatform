@@ -8,22 +8,25 @@ import {
 function UpdateProfileSection() {
   const dispatch = useDispatch();
   const viewer = useSelector(selectViewer);
+  const formKey = [
+    viewer.id,
+    viewer.avatarUrl,
+    viewer.firstName,
+    viewer.lastName,
+    viewer.patronymic,
+    viewer.status ?? viewer.headline ?? "",
+  ].join(":");
 
   return (
     <section className="settings-section">
       <header className="settings-section-header">
         <span className="settings-section-label">НАСТРОЙКИ</span>
         <h1 className="settings-section-title">Редактирование профиля</h1>
-
-        <p className="settings-section-description">
-          Обновите имя, фамилию, отчество, статус и фото профиля. Если
-          `user_service` подключен, изменения уйдут на backend, иначе профиль
-          сохранится локально.
-        </p>
       </header>
 
       <div className="settings-card">
         <UpdateProfileForm
+          key={formKey}
           viewer={viewer}
           onSubmit={(payload) => dispatch(submitViewerProfileUpdate(payload))}
         />
