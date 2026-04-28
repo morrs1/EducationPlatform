@@ -1,7 +1,4 @@
-package com.example.course_service.application.interactors.course.read_course_by_id;
-
-import com.example.course_service.domain.module.Module;
-import com.example.course_service.domain.tag.Tag;
+package com.example.course_service.application.interactors.course.read_course_by_id.views;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,9 +12,9 @@ public record ReadCourseByIdView(
         String difficulty,
         String languageCode,
         Integer estimatedMinutes,
-        List<Module> structure,
+        List<ModuleView> structure,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        List<Tag> tags
+        List<TagView> tags
 ) {
 }
