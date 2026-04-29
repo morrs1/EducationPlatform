@@ -7,6 +7,14 @@ function CoursePreviewCard({ course }) {
     advanced: "Продвинутый",
   };
   const levelLabel = levelLabelMap[course.level] ?? "Любой уровень";
+  const ratingLabel =
+    typeof course.rating === "number" && course.rating > 0
+      ? `Рейтинг ${course.rating}`
+      : "Рейтинг появится";
+  const studentsLabel =
+    typeof course.studentsCount === "number" && course.studentsCount > 0
+      ? `${course.studentsCount} студентов`
+      : "Новый курс";
 
   return (
     <Link className="course-preview-card" to={`/courses/${course.id}`}>
@@ -42,12 +50,8 @@ function CoursePreviewCard({ course }) {
       </div>
 
       <div className="course-preview-card-meta">
-        <span className="course-preview-card-meta-pill">
-          Рейтинг {course.rating}
-        </span>
-        <span className="course-preview-card-meta-pill">
-          {course.studentsCount} студентов
-        </span>
+        <span className="course-preview-card-meta-pill">{ratingLabel}</span>
+        <span className="course-preview-card-meta-pill">{studentsLabel}</span>
         <span className="course-preview-card-meta-pill">
           {course.durationLabel}
         </span>

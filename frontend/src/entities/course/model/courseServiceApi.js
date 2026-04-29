@@ -5,6 +5,7 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const courseRequestCache = new Map();
 const lessonRequestCache = new Map();
+const courseListRequestCache = new Map();
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -132,6 +133,10 @@ function invalidateCourseCache(courseId) {
   );
 }
 
+function invalidateCourseListCache() {
+  courseListRequestCache.delete(buildCourseServiceUrl("/course").toString());
+}
+
 function invalidateLessonCache(lessonId) {
   const normalizedLessonId = normalizeText(lessonId);
 
@@ -156,6 +161,19 @@ function buildCourseServiceMediaProxyUrl(storageKey) {
     .filter(Boolean)
     .map((segment) => encodeURIComponent(segment))
     .join("/")}`;
+}
+
+function appendCacheKey(url, cacheKey) {
+  const normalizedUrl = normalizeText(url);
+  const normalizedCacheKey = normalizeText(cacheKey);
+
+  if (!normalizedUrl || !normalizedCacheKey) {
+    return normalizedUrl;
+  }
+
+  const separator = normalizedUrl.includes("?") ? "&" : "?";
+
+  return `${normalizedUrl}${separator}v=${encodeURIComponent(normalizedCacheKey)}`;
 }
 
 function buildBucketMediaProxyUrl(bucket, key) {
@@ -329,29 +347,39 @@ function getLessonAssetSortWeight(type) {
   return 2;
 }
 
-function resolveLessonAssetUrl(publicUrl, storageKey) {
+function resolveLessonAssetUrl(publicUrl, storageKey, createdAt = "") {
   const normalizedStorageKey = normalizeText(storageKey);
   const storageReference = parseStorageReference(publicUrl);
+  const normalizedCreatedAt = normalizeText(createdAt);
 
   if (normalizedStorageKey) {
+    const courseProxyUrl = buildCourseServiceMediaProxyUrl(normalizedStorageKey);
     const bucketProxyUrl = storageReference?.bucket
       ? buildBucketMediaProxyUrl(storageReference.bucket, normalizedStorageKey)
       : "";
-    const courseProxyUrl = buildCourseServiceMediaProxyUrl(normalizedStorageKey);
-
-    if (bucketProxyUrl) {
-      return bucketProxyUrl;
-    }
 
     if (courseProxyUrl) {
-      return courseProxyUrl;
+      return appendCacheKey(
+        courseProxyUrl,
+        normalizedCreatedAt || normalizedStorageKey,
+      );
+    }
+
+    if (bucketProxyUrl) {
+      return appendCacheKey(
+        bucketProxyUrl,
+        normalizedCreatedAt || normalizedStorageKey,
+      );
     }
   }
 
   const normalizedPublicUrl = normalizeDirectAssetUrl(publicUrl);
 
   if (normalizedPublicUrl && !isPlaceholderAssetUrl(normalizedPublicUrl)) {
-    return normalizedPublicUrl;
+    return appendCacheKey(
+      normalizedPublicUrl,
+      normalizedCreatedAt || normalizedStorageKey,
+    );
   }
 
   return normalizedPublicUrl;
@@ -373,7 +401,8 @@ function mapLessonAsset(asset, assetIndex) {
     asset?.originalFilename,
     "originalFilename",
   );
-  const resolvedUrl = resolveLessonAssetUrl(publicUrl, storageKey);
+  const createdAt = normalizeText(asset?.createdAt);
+  const resolvedUrl = resolveLessonAssetUrl(publicUrl, storageKey, createdAt);
 
   return {
     id: normalizeText(asset?.id) || `backend-asset-${assetIndex + 1}`,
@@ -390,7 +419,7 @@ function mapLessonAsset(asset, assetIndex) {
     publicUrl,
     url: resolvedUrl,
     isResolved: Boolean(resolvedUrl),
-    createdAt: normalizeText(asset?.createdAt),
+    createdAt,
   };
 }
 
@@ -444,13 +473,9 @@ function formatMinutesLabel(estimatedMinutes) {
   return `${hours} ч ${minutes} мин`;
 }
 
-function buildCourseEyebrow(tags, difficulty, languageCode) {
+function buildCourseEyebrow(tags, difficulty) {
   const primaryTag = normalizeText(tags[0]);
   const parts = [formatDifficultyLabel(difficulty)];
-
-  if (normalizeText(languageCode)) {
-    parts.push(`Язык: ${languageCode}`);
-  }
 
   return {
     categoryName: primaryTag || "Курс из базы данных",
@@ -516,6 +541,20 @@ function mapModule(module, moduleIndex) {
     durationLabel: formatMinutesLabel(estimatedMinutes),
     lessons,
   };
+}
+
+function resolveCourseIdFromCourseResponse(response, fallbackCourseId = "") {
+  const explicitId = normalizeText(response?.id) || normalizeText(fallbackCourseId);
+
+  if (explicitId) {
+    return explicitId;
+  }
+
+  const moduleCourseId = normalizeArray(response?.structure)
+    .map((module) => normalizeText(module?.courseId))
+    .find(Boolean);
+
+  return moduleCourseId || "";
 }
 
 function countCourseStats(modules) {
@@ -831,6 +870,15 @@ export async function requestCourseById(courseId) {
   return requestCourseServiceJson(`/course/${courseId}`, courseRequestCache);
 }
 
+export async function requestAllCourses() {
+  const responseBody = await requestCourseServiceJson(
+    "/course",
+    courseListRequestCache,
+  );
+
+  return normalizeArray(responseBody);
+}
+
 export async function requestLessonById(lessonId) {
   return requestCourseServiceJson(
     `/course/lesson/${lessonId}`,
@@ -847,6 +895,8 @@ export async function requestCourseCreation(payload) {
     },
     body: JSON.stringify(payload),
   });
+
+  invalidateCourseListCache();
 
   return normalizeUuidResponse(responseBody);
 }
@@ -866,6 +916,7 @@ export async function requestAddModuleToCourse(courseId, payload) {
   );
 
   invalidateCourseCache(normalizedCourseId);
+  invalidateCourseListCache();
 
   return normalizeUuidResponse(responseBody);
 }
@@ -884,6 +935,7 @@ export async function requestAddLessonToCourse(payload) {
 
   invalidateCourseCache(normalizedCourseId);
   invalidateLessonCache(lessonId);
+  invalidateCourseListCache();
 
   return lessonId;
 }
@@ -953,6 +1005,7 @@ export function extractLessonCoverAssetFromLessonResponse(lessonResponse) {
 }
 
 export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
+  const resolvedCourseId = resolveCourseIdFromCourseResponse(response, courseId);
   const modules = sortByPosition(normalizeArray(response?.structure).map(mapModule));
   const tags = normalizeArray(response?.tags)
     .map((tag) => unwrapString(tag?.name, "name"))
@@ -962,12 +1015,11 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
   const eyebrow = buildCourseEyebrow(
     tags,
     normalizeText(response?.difficulty),
-    normalizeText(response?.languageCode),
   );
 
   return {
     course: {
-      id: courseId,
+      id: resolvedCourseId || courseId,
       authorId: normalizeText(response?.authorId),
       authorName: "",
       title: normalizeText(response?.title) || "Курс без названия",

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link, useOutletContext } from "react-router";
 
+import { useLessonCoverMap } from "../../../entities/course/model/useLessonCoverMap";
+import LessonStructureCover from "../../../entities/course/ui/LessonStructureCover";
+
 const initialModuleDraft = {
   title: "",
   description: "",
@@ -50,6 +53,9 @@ function CourseContentEditorSection() {
     (total, module) => total + module.lessons.length,
     0,
   );
+  const lessonCoverById = useLessonCoverMap(modules, {
+    enabled: pageStatus === "success",
+  });
 
   function updateLessonDraft(moduleId, patch) {
     setLessonDraftsByModuleId((currentDrafts) => ({
@@ -245,7 +251,8 @@ function CourseContentEditorSection() {
             Не удалось открыть редактор
           </strong>
           <p className="course-editor-empty-body">
-            {pageError || "course_service не вернул данные по содержанию курса."}
+            {pageError ||
+              "course_service не вернул данные по содержанию курса."}
           </p>
           <button
             type="button"
@@ -263,13 +270,14 @@ function CourseContentEditorSection() {
     <section className="course-editor-section">
       <header className="course-editor-section-head">
         <div className="course-editor-section-copy">
-          <span className="course-builder-section-kicker">РЕДАКТОР ПРОГРАММЫ</span>
+          <span className="course-builder-section-kicker">
+            РЕДАКТОР ПРОГРАММЫ
+          </span>
           <h1 className="course-builder-section-title">
             {course?.title || "Соберите модули и уроки"}
           </h1>
           <p className="course-editor-empty-copy">
-            Сначала собирайте модули, затем добавляйте в них уроки. В этой зоне
-            удобно наполнять черновик и сразу видеть итоговую структуру курса.
+            Сначала собирайте модули, затем добавляйте в них уроки.
           </p>
         </div>
 
@@ -315,7 +323,8 @@ function CourseContentEditorSection() {
                         {module.title}
                       </strong>
                       <p className="course-editor-module-description-text">
-                        {module.description || "Описание модуля пока не указано."}
+                        {module.description ||
+                          "Описание модуля пока не указано."}
                       </p>
                     </div>
 
@@ -346,11 +355,19 @@ function CourseContentEditorSection() {
                             key={lesson.id}
                             className="course-editor-existing-lesson-card"
                           >
-                            <div
-                              className="course-editor-existing-lesson-type"
-                              aria-hidden="true"
-                            >
-                              {getLessonTypeLabel(lesson.type)}
+                            <div className="course-editor-existing-lesson-media">
+                              <LessonStructureCover
+                                title={lesson.title}
+                                coverUrl={lessonCoverById[lesson.id] || ""}
+                                size="compact"
+                              />
+
+                              <div
+                                className="course-editor-existing-lesson-type"
+                                aria-hidden="true"
+                              >
+                                {getLessonTypeLabel(lesson.type)}
+                              </div>
                             </div>
 
                             <div className="course-editor-existing-lesson-copy">
@@ -366,7 +383,9 @@ function CourseContentEditorSection() {
 
                               <span className="course-editor-existing-lesson-meta">
                                 {lesson.durationLabel} ·{" "}
-                                {lesson.isPreview ? "Превью-доступ" : "Обычный урок"}
+                                {lesson.isPreview
+                                  ? "Превью-доступ"
+                                  : "Обычный урок"}
                               </span>
                             </div>
                           </article>
@@ -465,7 +484,9 @@ function CourseContentEditorSection() {
                           disabled={isCreatingLesson}
                           onClick={() => handleLessonCreate(module)}
                         >
-                          {isCreatingLesson ? "Создаём урок..." : "Создать урок"}
+                          {isCreatingLesson
+                            ? "Создаём урок..."
+                            : "Создать урок"}
                         </button>
                       </div>
 
@@ -489,11 +510,6 @@ function CourseContentEditorSection() {
       </div>
 
       <footer className="course-editor-footer">
-        <span className="course-editor-footer-note">
-          Модули и уроки сохраняются сразу. Редактирование уже созданных
-          элементов подключим после появления `update`-ручек.
-        </span>
-
         <button
           type="button"
           className="course-editor-save-btn"

@@ -1,3 +1,5 @@
+import { useLessonCoverMap } from "../../../entities/course/model/useLessonCoverMap";
+import LessonStructureCover from "../../../entities/course/ui/LessonStructureCover";
 import { Link } from "react-router";
 
 function CourseContentTab({
@@ -9,6 +11,10 @@ function CourseContentTab({
   onLogin,
   onEnroll,
 }) {
+  const lessonCoverById = useLessonCoverMap(syllabus?.modules ?? [], {
+    enabled: isLogged && canViewContent,
+  });
+
   if (!isLogged) {
     return (
       <section className="course-panel">
@@ -91,22 +97,30 @@ function CourseContentTab({
 
                 return (
                   <div key={lesson.id} className="course-lesson-row">
-                    <div className="course-lesson-meta">
-                      <span className="course-lesson-index">
-                        {index + 1}.{lessonIndex + 1}
-                      </span>
-                      {lesson.lessonId ? (
-                        <Link
-                          to={`/courses/${course.id}/lessons/${lesson.lessonId}`}
-                          className="course-lesson-title"
-                        >
-                          {lesson.title}
-                        </Link>
-                      ) : (
-                        <span className="course-lesson-title">
-                          {lesson.title}
+                    <div className="course-lesson-main">
+                      <LessonStructureCover
+                        title={lesson.title}
+                        coverUrl={lessonCoverById[lesson.id || lesson.lessonId] || ""}
+                        size="compact"
+                      />
+
+                      <div className="course-lesson-meta">
+                        <span className="course-lesson-index">
+                          {index + 1}.{lessonIndex + 1}
                         </span>
-                      )}
+                        {lesson.lessonId ? (
+                          <Link
+                            to={`/courses/${course.id}/lessons/${lesson.lessonId}`}
+                            className="course-lesson-title"
+                          >
+                            {lesson.title}
+                          </Link>
+                        ) : (
+                          <span className="course-lesson-title">
+                            {lesson.title}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="course-lesson-trailing">

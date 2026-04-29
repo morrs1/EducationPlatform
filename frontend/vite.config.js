@@ -9,7 +9,7 @@ const USER_SERVICE_API_PROXY_PATH = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const COURSE_SERVICE_API_PROXY_PATH = "/api/course-service";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
-const DEFAULT_COURSE_SERVICE_S3_BUCKET = "user-service-local";
+const DEFAULT_COURSE_SERVICE_S3_BUCKET = "course-service-local";
 
 function normalizeBoolean(value, fallback = false) {
   if (typeof value !== "string") {

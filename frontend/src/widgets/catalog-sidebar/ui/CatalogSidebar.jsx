@@ -1,22 +1,28 @@
 import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
 import {
   closeCatalog,
   resetSelectedCategory,
-  selectCategories,
   selectCategory,
   selectIsCatalogOpen,
   selectSelectedCategoryId,
 } from "../../../features/catalog";
-import { useEffect } from "react";
 import { Link } from "react-router";
+
+import { useCatalogCollections } from "../../../entities/course/model/useCatalogCollections";
 
 function CatalogSidebar({ headerHeight }) {
   const dispatch = useDispatch();
   const isCatalogOpen = useSelector(selectIsCatalogOpen);
-  const categories = useSelector(selectCategories);
   const selectedCategoryId = useSelector(selectSelectedCategoryId);
-  const currentCategory = categories.find(
+  const { catalogData } = useCatalogCollections();
+  const resolvedSelectedCategoryId = catalogData.some(
     (category) => category.id === selectedCategoryId,
+  )
+    ? selectedCategoryId
+    : (catalogData[0]?.id ?? null);
+  const currentCategory = catalogData.find(
+    (category) => category.id === resolvedSelectedCategoryId,
   );
 
   useEffect(() => {
@@ -88,11 +94,11 @@ function CatalogSidebar({ headerHeight }) {
         }}
       >
         <div className="catalog-pane catalog-pane-nav">
-          {categories.map((category) => (
+          {catalogData.map((category) => (
             <button
               type="button"
               className={`catalog-category-btn ${
-                selectedCategoryId === category.id ? "active" : ""
+                resolvedSelectedCategoryId === category.id ? "active" : ""
               }`}
               key={category.id}
               onClick={() => dispatch(selectCategory(category.id))}

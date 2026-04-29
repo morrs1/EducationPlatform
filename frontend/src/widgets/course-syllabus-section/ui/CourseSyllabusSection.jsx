@@ -1,10 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
 import { Link, useOutletContext } from "react-router";
 
-import {
-  extractLessonCoverAssetFromLessonResponse,
-  requestLessonById,
-} from "../../../entities/course/model/courseServiceApi";
+import { useLessonCoverMap } from "../../../entities/course/model/useLessonCoverMap";
+import LessonStructureCover from "../../../entities/course/ui/LessonStructureCover";
 
 function getLessonTypeLabel(type) {
   if (type === "quiz") {
@@ -18,84 +15,17 @@ function getLessonTypeLabel(type) {
   return "Теория";
 }
 
-function getUniqueLessonIds(modules) {
-  return Array.from(
-    new Set(
-      modules.flatMap((module) =>
-        module.lessons.map((lesson) => lesson.id || lesson.lessonId).filter(Boolean),
-      ),
-    ),
-  );
-}
-
-function LessonSyllabusCover({ title, coverUrl }) {
-  if (coverUrl) {
-    return (
-      <div className="course-syllabus-lesson-cover">
-        <img
-          src={coverUrl}
-          alt={`Обложка урока ${title || ""}`.trim()}
-          className="course-syllabus-lesson-cover-image"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="course-syllabus-lesson-cover">
-      <div className="course-syllabus-lesson-cover-fallback" aria-hidden="true">
-        <span className="course-syllabus-lesson-cover-mark">EP</span>
-      </div>
-    </div>
-  );
-}
-
 function CourseSyllabusSection() {
   const { course, modules, pageStatus, pageError, reloadCourse } =
     useOutletContext();
-  const [lessonCoverById, setLessonCoverById] = useState({});
   const hasModules = modules.length > 0;
   const lessonsCount = modules.reduce(
     (total, module) => total + module.lessons.length,
     0,
   );
-  const lessonIds = useMemo(() => getUniqueLessonIds(modules), [modules]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    if (pageStatus !== "success" || !lessonIds.length) {
-      return () => {
-        isCancelled = true;
-      };
-    }
-
-    async function loadLessonCovers() {
-      const entries = await Promise.all(
-        lessonIds.map(async (lessonId) => {
-          try {
-            const lessonResponse = await requestLessonById(lessonId);
-            const coverAsset =
-              extractLessonCoverAssetFromLessonResponse(lessonResponse);
-
-            return [lessonId, coverAsset?.url || ""];
-          } catch {
-            return [lessonId, ""];
-          }
-        }),
-      );
-
-      if (!isCancelled) {
-        setLessonCoverById(Object.fromEntries(entries));
-      }
-    }
-
-    loadLessonCovers();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [lessonIds, pageStatus]);
+  const lessonCoverById = useLessonCoverMap(modules, {
+    enabled: pageStatus === "success",
+  });
 
   if (pageStatus === "loading") {
     return (
@@ -177,10 +107,6 @@ function CourseSyllabusSection() {
                     {module.durationLabel}
                   </span>
                 </div>
-
-                <span className="course-syllabus-module-state">
-                  Сохранён в backend
-                </span>
               </div>
 
               <h2 className="course-syllabus-module-title">{module.title}</h2>
@@ -198,7 +124,7 @@ function CourseSyllabusSection() {
                       key={lesson.id}
                       className="course-syllabus-lesson-item"
                     >
-                      <LessonSyllabusCover
+                      <LessonStructureCover
                         title={lesson.title}
                         coverUrl={lessonCoverById[lesson.id || lesson.lessonId] || ""}
                       />

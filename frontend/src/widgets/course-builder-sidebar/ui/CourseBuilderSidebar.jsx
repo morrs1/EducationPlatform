@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  Link,
-  NavLink,
-  useLocation,
-  useResolvedPath,
-} from "react-router";
+import { Link, NavLink, useLocation, useResolvedPath } from "react-router";
 import CourseDisplayCover from "../../../entities/course/ui/CourseDisplayCover";
 
 function CourseBuilderSidebar({ course, pageStatus }) {
@@ -31,9 +26,6 @@ function CourseBuilderSidebar({ course, pageStatus }) {
       : "Короткое описание появится после загрузки курса.");
   const lessonsCount = Number(course?.lessonsCount) || 0;
   const durationLabel = course?.durationLabel || "Длительность уточняется";
-  const languageLabel = course?.languageCode
-    ? course.languageCode.toUpperCase()
-    : "Язык не указан";
 
   return (
     <nav className="course-builder-sidebar" aria-label="Навигация по курсу">
@@ -58,15 +50,11 @@ function CourseBuilderSidebar({ course, pageStatus }) {
             <span className="course-builder-sidebar-status">
               {hasCourse ? "Сохранено" : "Черновик"}
             </span>
-            <span className="course-builder-sidebar-status accent">
-              {course?.categoryName || "Курс преподавателя"}
-            </span>
           </div>
 
           <div className="course-builder-sidebar-summary-meta">
             <span>{durationLabel}</span>
             <span>Уроков: {lessonsCount}</span>
-            <span>{languageLabel}</span>
           </div>
         </div>
       </div>
@@ -79,12 +67,6 @@ function CourseBuilderSidebar({ course, pageStatus }) {
         >
           Опубликовать
         </button>
-
-        <p className="course-builder-sidebar-action-hint">
-          Сейчас здесь можно собирать структуру курса и просматривать её в
-          реальном черновике. Публикацию подключим, когда появится отдельный
-          endpoint.
-        </p>
       </div>
 
       <div className="course-builder-sidebar-group">

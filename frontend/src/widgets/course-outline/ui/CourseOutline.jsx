@@ -1,5 +1,8 @@
 import { Link } from "react-router";
 
+import { useLessonCoverMap } from "../../../entities/course/model/useLessonCoverMap";
+import LessonStructureCover from "../../../entities/course/ui/LessonStructureCover";
+
 function CourseOutline({
   course,
   syllabus,
@@ -11,6 +14,7 @@ function CourseOutline({
   showLessonProgress = false,
 }) {
   const modules = syllabus?.modules ?? [];
+  const lessonCoverById = useLessonCoverMap(modules);
 
   return (
     <aside className="course-outline">
@@ -74,6 +78,13 @@ function CourseOutline({
                         <span className="course-outline-lesson-index">
                           {moduleIndex + 1}.{lessonIndex + 1}
                         </span>
+                        <LessonStructureCover
+                          title={lesson.title}
+                          coverUrl={
+                            lessonCoverById[lesson.lessonId || lesson.id] || ""
+                          }
+                          size="tiny"
+                        />
                         <div className="course-outline-lesson-body">
                           <span
                             className="course-outline-lesson-title"
@@ -98,9 +109,18 @@ function CourseOutline({
                       <span className="course-outline-lesson-index">
                         {moduleIndex + 1}.{lessonIndex + 1}
                       </span>
-                      <span className="course-outline-lesson-title">
-                        {lesson.title}
-                      </span>
+                      <LessonStructureCover
+                        title={lesson.title}
+                        coverUrl={
+                          lessonCoverById[lesson.lessonId || lesson.id] || ""
+                        }
+                        size="tiny"
+                      />
+                      <div className="course-outline-lesson-body">
+                        <span className="course-outline-lesson-title">
+                          {lesson.title}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}

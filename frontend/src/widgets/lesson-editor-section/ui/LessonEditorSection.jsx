@@ -39,12 +39,14 @@ function getAssetTypeLabel(assetType) {
 }
 
 function getInitials(value) {
-  return value
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.slice(0, 1).toUpperCase())
-    .join("") || "LS";
+  return (
+    value
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.slice(0, 1).toUpperCase())
+      .join("") || "LS"
+  );
 }
 
 function formatDateTimeLabel(value) {
@@ -109,7 +111,8 @@ function normalizeQuestionForSave(question, questionIndex) {
 
   return {
     id: question.id || crypto.randomUUID(),
-    type: question.type === "multiple_choice" ? "multiple_choice" : "single_choice",
+    type:
+      question.type === "multiple_choice" ? "multiple_choice" : "single_choice",
     text: question.text.trim() || `Вопрос ${questionIndex + 1}`,
     options: normalizedOptions,
   };
@@ -158,7 +161,11 @@ function getLessonValidationError(lessonType, state) {
     return "Для тестового урока добавьте хотя бы один вопрос.";
   }
 
-  for (let questionIndex = 0; questionIndex < state.quizQuestions.length; questionIndex += 1) {
+  for (
+    let questionIndex = 0;
+    questionIndex < state.quizQuestions.length;
+    questionIndex += 1
+  ) {
     const question = state.quizQuestions[questionIndex];
     const title = question.text.trim();
 
@@ -209,11 +216,7 @@ function wrapSelection(value, start, end, before, after = before, placeholder) {
   const selectedText = value.slice(start, end);
   const content = selectedText || placeholder;
   const nextValue =
-    value.slice(0, start) +
-    before +
-    content +
-    after +
-    value.slice(end);
+    value.slice(0, start) + before + content + after + value.slice(end);
   const selectionStart = start + before.length;
   const selectionEnd = selectionStart + content.length;
 
@@ -272,11 +275,7 @@ function insertCodeBlock(value, start, end) {
   };
 }
 
-function MarkdownEditor({
-  value,
-  onChange,
-  disabled = false,
-}) {
+function MarkdownEditor({ value, onChange, disabled = false }) {
   const textareaRef = useRef(null);
   const blocks = useMemo(() => parseLessonMarkdown(value), [value]);
 
@@ -337,7 +336,14 @@ function MarkdownEditor({
           className="lesson-rich-editor-tool"
           onClick={() =>
             applyTransform((currentValue, start, end) =>
-              wrapSelection(currentValue, start, end, "**", "**", "жирный текст"),
+              wrapSelection(
+                currentValue,
+                start,
+                end,
+                "**",
+                "**",
+                "жирный текст",
+              ),
             )
           }
           disabled={disabled}
@@ -401,8 +407,11 @@ function MarkdownEditor({
           className="lesson-rich-editor-tool"
           onClick={() =>
             applyTransform((currentValue, start, end) =>
-              prefixSelectedLines(currentValue, start, end, (_line, index) =>
-                `${index + 1}. ${_line}`,
+              prefixSelectedLines(
+                currentValue,
+                start,
+                end,
+                (_line, index) => `${index + 1}. ${_line}`,
               ),
             )
           }
@@ -440,7 +449,6 @@ function MarkdownEditor({
         <div className="lesson-rich-editor-panel">
           <div className="lesson-rich-editor-panel-head">
             <strong>Markdown</strong>
-            <span>Сохраняем в backend как md-строку</span>
           </div>
           <textarea
             ref={textareaRef}
@@ -507,10 +515,6 @@ function LessonAssetsManager({
         <div>
           <span className="lesson-editor-block-kicker">АССЕТЫ</span>
           <h2 className="lesson-editor-block-title">Материалы урока</h2>
-          <p className="lesson-editor-block-subtext">
-            Изображения, видео и файлы уже можно отправлять в backend. Они сразу
-            прикрепляются к уроку.
-          </p>
         </div>
 
         <button
@@ -532,7 +536,9 @@ function LessonAssetsManager({
       />
 
       {uploadMessage ? (
-        <p className={`course-inline-feedback${uploadState === "error" ? " error" : ""}`}>
+        <p
+          className={`course-inline-feedback${uploadState === "error" ? " error" : ""}`}
+        >
           {uploadMessage}
         </p>
       ) : null}
@@ -543,7 +549,9 @@ function LessonAssetsManager({
             <article key={asset.id} className="lesson-editor-asset-card">
               <div className="lesson-editor-asset-copy">
                 <div className="lesson-editor-asset-head">
-                  <strong className="lesson-editor-asset-name">{asset.title}</strong>
+                  <strong className="lesson-editor-asset-name">
+                    {asset.title}
+                  </strong>
                   <span className="lesson-editor-asset-badge">
                     {getAssetTypeLabel(asset.assetType)}
                   </span>
@@ -679,7 +687,8 @@ function LessonQuizBuilder({ questions, onChange }) {
           return question;
         }
 
-        const nextIndex = direction === "up" ? optionIndex - 1 : optionIndex + 1;
+        const nextIndex =
+          direction === "up" ? optionIndex - 1 : optionIndex + 1;
 
         if (nextIndex < 0 || nextIndex >= question.options.length) {
           return question;
@@ -1047,7 +1056,9 @@ function LessonEditorWorkspace({
       </header>
 
       {saveMessage ? (
-        <p className={`course-inline-feedback${saveState === "error" ? " error" : ""}`}>
+        <p
+          className={`course-inline-feedback${saveState === "error" ? " error" : ""}`}
+        >
           {saveMessage}
         </p>
       ) : null}
@@ -1074,10 +1085,14 @@ function LessonEditorWorkspace({
               className="lesson-editor-cover-image"
             />
           ) : (
-            <span className="lesson-editor-cover-placeholder">{titleInitials}</span>
+            <span className="lesson-editor-cover-placeholder">
+              {titleInitials}
+            </span>
           )}
           <span className="lesson-editor-cover-overlay">
-            {coverUploadState === "uploading" ? "Загружаем..." : "Сменить обложку"}
+            {coverUploadState === "uploading"
+              ? "Загружаем..."
+              : "Сменить обложку"}
           </span>
         </button>
 
@@ -1090,11 +1105,6 @@ function LessonEditorWorkspace({
               className="lesson-editor-title-input is-readonly"
             />
           </div>
-
-          <p className="lesson-editor-inline-note">
-            Название урока пока читаем из backend. Сейчас можно полноценно
-            редактировать содержимое, quiz-структуру, cover и lesson assets.
-          </p>
 
           <div className="lesson-editor-top-meta">
             <span className="lesson-editor-meta-pill">
@@ -1126,12 +1136,10 @@ function LessonEditorWorkspace({
           <div>
             <span className="lesson-editor-block-kicker">СОДЕРЖАНИЕ</span>
             <h2 className="lesson-editor-block-title">
-              {editorLesson.type === "quiz" ? "Текст тестового урока" : "Текст урока"}
+              {editorLesson.type === "quiz"
+                ? "Текст тестового урока"
+                : "Текст урока"}
             </h2>
-            <p className="lesson-editor-block-subtext">
-              Этот текст хранится как markdown и уходит в `course_service`
-              без промежуточного HTML.
-            </p>
           </div>
         </div>
 
@@ -1266,12 +1274,7 @@ function LessonEditorSection() {
     return () => {
       isCancelled = true;
     };
-  }, [
-    activeLesson,
-    activeModule,
-    courseId,
-    reloadSeed,
-  ]);
+  }, [activeLesson, activeModule, courseId, reloadSeed]);
 
   const currentSnapshot = useMemo(() => {
     if (!editorLesson) {

@@ -80,10 +80,6 @@ function CourseDescriptionSection() {
         <h1 className="course-builder-section-title">
           {course?.title || "Метаданные курса"}
         </h1>
-        <p className="course-builder-section-description">
-          Здесь собраны основные данные курса: позиционирование, язык, уровень
-          и то описание, с которого начинается карточка курса.
-        </p>
       </header>
 
       <div className="course-description-card-grid">
@@ -97,10 +93,11 @@ function CourseDescriptionSection() {
         </article>
 
         <article className="course-description-card">
-          <strong className="course-description-card-title">Параметры курса</strong>
+          <strong className="course-description-card-title">
+            Параметры курса
+          </strong>
           <p className="course-description-card-text">
-            {getDifficultyLabel(course?.difficulty)} · Язык:{" "}
-            {course?.languageCode || "не указан"} · {course?.durationLabel}
+            {getDifficultyLabel(course?.difficulty)} · {course?.durationLabel}
           </p>
         </article>
 

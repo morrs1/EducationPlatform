@@ -198,7 +198,7 @@ export function submitViewerProfileUpdate(payload) {
 
       return {
         ok: true,
-        message: "Данные профиля сохранены через user_service.",
+        message: "Данные профиля сохранены.",
       };
     } catch (error) {
       if (hasSuccessfulMutation) {
@@ -237,8 +237,10 @@ export function hydrateViewerFromUserService(options = {}) {
     try {
       const response = await requestViewerProfileById(remoteViewerId);
       const viewerStateId = state.auth.currentViewerId ?? remoteViewerId;
-      const remoteViewer =
-        mapReadUserByIdResponseToViewerProfile(response, viewerStateId);
+      const remoteViewer = mapReadUserByIdResponseToViewerProfile(
+        response,
+        viewerStateId,
+      );
       const localViewer = state.viewer;
 
       dispatch(

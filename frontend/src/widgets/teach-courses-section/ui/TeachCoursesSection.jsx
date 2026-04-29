@@ -1,6 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router";
+import {
+  mapReadCourseByIdResponseToCoursePageData,
+  requestAllCourses,
+} from "../../../entities/course/model/courseServiceApi";
 import CourseDisplayCover from "../../../entities/course/ui/CourseDisplayCover";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
@@ -11,11 +15,14 @@ import {
 function TeachCoursesSection() {
   const currentViewerId = useSelector(selectCurrentViewerId);
   const viewer = useSelector(selectViewer);
+  const [backendStatus, setBackendStatus] = useState("idle");
+  const [backendCourses, setBackendCourses] = useState([]);
+  const [backendError, setBackendError] = useState("");
   const authorId = useMemo(
     () => resolveCourseServiceAuthorId(currentViewerId, viewer.remoteId),
     [currentViewerId, viewer.remoteId],
   );
-  const authoredCourses = useMemo(
+  const localSnapshotCourses = useMemo(
     () =>
       Object.values(viewer.courseSnapshotsById)
         .filter(
@@ -25,6 +32,112 @@ function TeachCoursesSection() {
     [authorId, viewer.courseSnapshotsById],
   );
 
+  useEffect(() => {
+    if (!authorId) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function loadBackendCourses() {
+      setBackendStatus("loading");
+      setBackendError("");
+
+      try {
+        const response = await requestAllCourses();
+        const snapshotBySignature = new Map(
+          localSnapshotCourses.map((course) => [
+            `${course.authorId}::${course.title.toLowerCase()}`,
+            course,
+          ]),
+        );
+        const backendCoursesById = new Map();
+        const backendCourseSignatures = new Set();
+
+        response.forEach((courseResponse) => {
+          const pageData = mapReadCourseByIdResponseToCoursePageData(
+            courseResponse,
+            "",
+          );
+          const backendCourse = pageData.course;
+          const signature = `${backendCourse.authorId}::${backendCourse.title.toLowerCase()}`;
+
+          backendCourseSignatures.add(signature);
+
+          const snapshotMatch = snapshotBySignature.get(signature);
+          const resolvedId = backendCourse.id || snapshotMatch?.id || "";
+
+          if (!resolvedId) {
+            return;
+          }
+
+          backendCoursesById.set(String(resolvedId), {
+            ...snapshotMatch,
+            ...backendCourse,
+            id: resolvedId,
+            coverUrl: backendCourse.coverUrl || snapshotMatch?.coverUrl || "",
+            imageUrl: backendCourse.imageUrl || snapshotMatch?.imageUrl || "",
+          });
+        });
+
+        const nextCourses = [
+          ...backendCoursesById.values(),
+          ...localSnapshotCourses.filter((course) => {
+            const signature = `${course.authorId}::${course.title.toLowerCase()}`;
+
+            return (
+              backendCourseSignatures.has(signature) &&
+              !backendCoursesById.has(String(course.id))
+            );
+          }),
+        ]
+          .filter(
+            (course) =>
+              course && course.isBackendCourse && course.authorId === authorId,
+          )
+          .sort((left, right) => left.title.localeCompare(right.title, "ru"));
+
+        if (!isCancelled) {
+          setBackendCourses(nextCourses);
+          setBackendStatus("success");
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setBackendCourses([]);
+          setBackendStatus("error");
+          setBackendError(
+            error?.message ??
+              "Не удалось загрузить список курсов из course_service.",
+          );
+        }
+      }
+    }
+
+    loadBackendCourses();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [authorId, localSnapshotCourses]);
+
+  const authoredCourses =
+    backendStatus === "success" ? backendCourses : localSnapshotCourses;
+
+  if (backendStatus === "loading") {
+    return (
+      <section className="teach-courses-section">
+        <div className="teach-courses-section-empty-state">
+          <strong className="teach-courses-section-empty-title">
+            Загружаем ваши курсы
+          </strong>
+          <p className="teach-courses-section-empty">
+            Подтягиваем список из `course_service`.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   if (!authoredCourses.length) {
     return (
       <section className="teach-courses-section">
@@ -32,6 +145,9 @@ function TeachCoursesSection() {
           <strong className="teach-courses-section-empty-title">
             У вас пока нет курсов
           </strong>
+          {backendStatus === "error" ? (
+            <p className="teach-courses-section-empty">{backendError}</p>
+          ) : null}
         </div>
       </section>
     );

@@ -1,5 +1,8 @@
 import { Link, useParams } from "react-router";
+
+import { useLessonCoverMap } from "../../../entities/course/model/useLessonCoverMap";
 import CourseDisplayCover from "../../../entities/course/ui/CourseDisplayCover";
+import LessonStructureCover from "../../../entities/course/ui/LessonStructureCover";
 
 function getLessonTypeLabel(type) {
   if (type === "quiz") {
@@ -20,6 +23,9 @@ function LessonEditorSidebar({
   activeLessonId,
 }) {
   const { courseId } = useParams();
+  const lessonCoverById = useLessonCoverMap(modules, {
+    enabled: pageStatus === "success",
+  });
 
   return (
     <nav className="lesson-editor-sidebar" aria-label="Содержание курса">
@@ -96,6 +102,12 @@ function LessonEditorSidebar({
                             {module.position ?? moduleIndex + 1}.
                             {lesson.position ?? lessonIndex + 1}
                           </span>
+
+                          <LessonStructureCover
+                            title={lesson.title}
+                            coverUrl={lessonCoverById[lesson.id] || ""}
+                            size="tiny"
+                          />
 
                           <span className="lesson-editor-sidebar-lesson-copy">
                             <span className="lesson-editor-sidebar-lesson-title">
