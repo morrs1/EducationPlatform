@@ -1,23 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function LessonStructureCover({
   title,
   coverUrl,
   size = "default",
 }) {
-  const [hasImageError, setHasImageError] = useState(false);
+  const [failedCoverUrl, setFailedCoverUrl] = useState("");
   const sizeClass =
     size === "tiny"
       ? " lesson-structure-cover-tiny"
       : size === "compact"
         ? " lesson-structure-cover-compact"
         : "";
+  const canRenderImage = Boolean(coverUrl) && coverUrl !== failedCoverUrl;
 
-  useEffect(() => {
-    setHasImageError(false);
-  }, [coverUrl]);
-
-  if (coverUrl && !hasImageError) {
+  if (canRenderImage) {
     return (
       <div className={`lesson-structure-cover${sizeClass}`}>
         <img
@@ -25,7 +22,7 @@ function LessonStructureCover({
           alt={`Обложка урока ${title || ""}`.trim()}
           className="lesson-structure-cover-image"
           loading="lazy"
-          onError={() => setHasImageError(true)}
+          onError={() => setFailedCoverUrl(coverUrl)}
         />
       </div>
     );

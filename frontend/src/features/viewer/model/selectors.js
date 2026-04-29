@@ -98,19 +98,36 @@ export const selectCanViewCourseContent = (state, courseId) =>
   selectIsEnrolledInCourse(state, courseId) ||
   selectIsCompletedCourse(state, courseId);
 
-export const selectViewerCourseProgress = (state, courseId) =>
-  selectViewerSessionActive(state)
-    ? getCourseProgressByCourseId({
-        courseId: normalizeViewerCourseId(courseId),
-        viewerProgress:
-          state.viewer.progressByCourseId[
-            getViewerCourseStorageKey(courseId)
-          ] ?? null,
-        viewedLessonIds: selectViewedLessonIds(state),
-        completedLessonIds: selectCompletedLessonIds(state),
-        courseSnapshot: getViewerCourseRecord(state.viewer, courseId),
-      })
-    : null;
+export const selectViewerCourseProgress = createSelector(
+  [
+    selectViewerSessionActive,
+    selectViewerState,
+    selectViewedLessonIds,
+    selectCompletedLessonIds,
+    selectCourseIdParam,
+  ],
+  (sessionIsActive, viewer, viewedLessonIds, completedLessonIds, courseId) => {
+    if (!sessionIsActive) {
+      return null;
+    }
+
+    const normalizedCourseId = normalizeViewerCourseId(courseId);
+
+    if (normalizedCourseId == null) {
+      return null;
+    }
+
+    return getCourseProgressByCourseId({
+      courseId: normalizedCourseId,
+      viewerProgress:
+        viewer.progressByCourseId[getViewerCourseStorageKey(normalizedCourseId)] ??
+        null,
+      viewedLessonIds,
+      completedLessonIds,
+      courseSnapshot: getViewerCourseRecord(viewer, normalizedCourseId),
+    });
+  },
+);
 
 export const selectCurrentCourses = createSelector(
   [
