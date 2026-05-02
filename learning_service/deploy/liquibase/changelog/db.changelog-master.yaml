@@ -1,5 +1,7 @@
 databaseChangeLog:
   - include:
-      file: migrations/v.1.0.0/init.sql
+      file: v.1.0.0/init.sql
   - include:
-      file: migrations/v.1.0.0/seed_data.sql
+      file: v.1.0.0/seed_data.sql
+  - include:
+      file: v.1.0.1/normalize_enrollment_status.sql
