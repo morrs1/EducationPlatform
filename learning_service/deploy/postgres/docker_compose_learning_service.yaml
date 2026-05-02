@@ -1,0 +1,44 @@
+services:
+  postgres-learning-service:
+    container_name: postgres-learning-service
+    image: postgres:16.3-alpine
+    restart: "no"
+    ports:
+      - "${POSTGRES_EXTERNAL_PORT}:${POSTGRES_INNER_PORT}"
+    volumes:
+      - postgres_learning_service_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - learning_service_network
+    env_file:
+      - .env
+
+  liquibase-learning-service:
+    container_name: liquibase-learning-service
+    image: liquibase/liquibase:4.31-alpine
+    command: liquibase update --url=jdbc:postgresql://postgres-learning-service:${POSTGRES_INNER_PORT}/${POSTGRES_DB} --username=${POSTGRES_USER} --password=${POSTGRES_PASSWORD} --changelog-file=/migrations/db.changeLog-master.yaml
+    volumes:
+      - ../liquibase/changelog/:/liquibase/migrations/
+    networks:
+      - learning_service_network
+    depends_on:
+      postgres-learning-service:
+        condition: service_healthy
+    env_file:
+      - .env
+
+volumes:
+  postgres_learning_service_data:
+
+networks:
+  learning_service_network:
+  services_network:
+    external: true
