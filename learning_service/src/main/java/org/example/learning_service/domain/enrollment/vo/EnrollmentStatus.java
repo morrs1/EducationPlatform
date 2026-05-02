@@ -9,14 +9,13 @@ import java.util.Set;
 @Getter
 public class EnrollmentStatus extends BaseValueObject {
 
-    public static final String ENROLLED = "enrolled";
+    /** Курс начат или идёт, завершён ещё не зафиксирован. */
     public static final String IN_PROGRESS = "in_progress";
-    public static final String COMPLETED = "completed";
-    public static final String DROPPED = "dropped";
 
-    private static final Set<String> ALLOWED = Set.of(
-            ENROLLED, IN_PROGRESS, COMPLETED, DROPPED
-    );
+    /** Курс официально завершён для пользователя. */
+    public static final String COMPLETED = "completed";
+
+    private static final Set<String> ALLOWED = Set.of(IN_PROGRESS, COMPLETED);
 
     private final String value;
 
@@ -31,7 +30,7 @@ public class EnrollmentStatus extends BaseValueObject {
             throw new ValidateException("Enrollment status must not be blank");
         }
         if (!ALLOWED.contains(value)) {
-            throw new ValidateException("Unsupported enrollment status: " + value);
+            throw new ValidateException("Unsupported enrollment status: " + value + " (allowed: in_progress, completed)");
         }
     }
 

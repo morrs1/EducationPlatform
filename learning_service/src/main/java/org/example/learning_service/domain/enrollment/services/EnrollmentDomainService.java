@@ -10,36 +10,15 @@ import java.util.Objects;
 
 public class EnrollmentDomainService extends BaseDomainService {
 
-    public void markDropped(Enrollment enrollment, LocalDateTime droppedAt) throws ValidateException {
-        Objects.requireNonNull(enrollment);
-        Objects.requireNonNull(droppedAt);
-        requireStatusAllowsDrop(enrollment);
-        enrollment.setStatus(new EnrollmentStatus(EnrollmentStatus.DROPPED));
-        enrollment.setUpdatedAt(droppedAt);
-    }
-
+    /** Перевести активное зачисление в завершённое. */
     public void markCourseCompleted(Enrollment enrollment, LocalDateTime completedAt) throws ValidateException {
         Objects.requireNonNull(enrollment);
         Objects.requireNonNull(completedAt);
-        cannotCompleteIfDropped(enrollment);
+        if (EnrollmentStatus.COMPLETED.equals(enrollment.getStatus().getValue())) {
+            throw new ValidateException("Enrollment is already completed");
+        }
         enrollment.setStatus(new EnrollmentStatus(EnrollmentStatus.COMPLETED));
         enrollment.setCompletedAt(completedAt);
         enrollment.setUpdatedAt(completedAt);
-    }
-
-    private void requireStatusAllowsDrop(Enrollment enrollment) throws ValidateException {
-        String s = enrollment.getStatus().getValue();
-        if (EnrollmentStatus.DROPPED.equals(s)) {
-            throw new ValidateException("Enrollment is already dropped");
-        }
-        if (EnrollmentStatus.COMPLETED.equals(s)) {
-            throw new ValidateException("Cannot drop a completed enrollment");
-        }
-    }
-
-    private void cannotCompleteIfDropped(Enrollment enrollment) throws ValidateException {
-        if (EnrollmentStatus.DROPPED.equals(enrollment.getStatus().getValue())) {
-            throw new ValidateException("Cannot complete a dropped enrollment");
-        }
     }
 }
