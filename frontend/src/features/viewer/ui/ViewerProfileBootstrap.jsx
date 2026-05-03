@@ -2,7 +2,10 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router";
 import { selectCurrentViewerId, selectIsLogged } from "../../auth";
-import { hydrateViewerFromUserService } from "../model/thunks";
+import {
+  hydrateViewerFromUserService,
+  hydrateViewerLearningFromLearningService,
+} from "../model/thunks";
 
 function ViewerProfileBootstrap() {
   const dispatch = useDispatch();
@@ -18,6 +21,11 @@ function ViewerProfileBootstrap() {
 
     dispatch(
       hydrateViewerFromUserService({
+        remoteViewerId: remoteViewerIdFromQuery,
+      }),
+    );
+    dispatch(
+      hydrateViewerLearningFromLearningService({
         remoteViewerId: remoteViewerIdFromQuery,
       }),
     );

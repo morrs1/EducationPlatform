@@ -9,6 +9,7 @@ const USER_SERVICE_API_PROXY_PATH = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const COURSE_SERVICE_API_PROXY_PATH = "/api/course-service";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
+const LEARNING_SERVICE_API_PROXY_PATH = "/api/learning-service";
 const DEFAULT_COURSE_SERVICE_S3_BUCKET = "course-service-local";
 
 function normalizeBoolean(value, fallback = false) {
@@ -271,6 +272,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const userServiceUrl = env.VITE_USER_SERVICE_URL?.trim();
   const courseServiceUrl = env.VITE_COURSE_SERVICE_URL?.trim();
+  const learningServiceUrl = env.VITE_LEARNING_SERVICE_URL?.trim();
   const proxy = {};
 
   if (userServiceUrl) {
@@ -288,6 +290,15 @@ export default defineConfig(({ mode }) => {
       changeOrigin: true,
       rewrite: (path) =>
         path.replace(/^\/api\/course-service/, ""),
+    };
+  }
+
+  if (learningServiceUrl) {
+    proxy[LEARNING_SERVICE_API_PROXY_PATH] = {
+      target: learningServiceUrl,
+      changeOrigin: true,
+      rewrite: (path) =>
+        path.replace(/^\/api\/learning-service/, ""),
     };
   }
 

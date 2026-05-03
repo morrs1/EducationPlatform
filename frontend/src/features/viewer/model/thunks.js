@@ -1,4 +1,24 @@
-import { updateViewerProfile, restoreViewer } from "./viewerSlice";
+import {
+  enrollInCourse,
+  markCourseCompleted,
+  restoreViewer,
+  syncLearningEnrollment,
+  updateViewerProfile,
+} from "./viewerSlice";
+import {
+  createViewerCourseSnapshot,
+} from "./factory";
+import {
+  mapReadCourseByIdResponseToCoursePageData,
+  requestCourseById,
+} from "../../../entities/course/model/courseServiceApi";
+import {
+  isUuid as isLearningUuid,
+  requestCompletedCoursesByUser,
+  requestCompleteCourse,
+  requestEnrollUserInCourse,
+  requestIncompleteCoursesByUser,
+} from "../../learning";
 import {
   buildUserServiceMediaProxyUrl,
   mapReadUserByIdResponseToViewerProfile,
@@ -39,6 +59,68 @@ const VIEWER_STATUS_PATTERN = /^[A-Z][A-Z_]{1,31}$/;
 
 function normalizeStatus(value) {
   return (value ?? "").trim().replace(/\s+/g, "_").toUpperCase();
+}
+
+function normalizeCourseId(value) {
+  return typeof value === "string" ? value.trim() : value;
+}
+
+function getUniqueCourseIds(...courseIdGroups) {
+  const courseIdMap = new Map();
+
+  courseIdGroups.flat().forEach((courseId) => {
+    const normalizedCourseId = normalizeCourseId(courseId);
+
+    if (!normalizedCourseId) {
+      return;
+    }
+
+    courseIdMap.set(String(normalizedCourseId), normalizedCourseId);
+  });
+
+  return Array.from(courseIdMap.values());
+}
+
+function getSyllabusLessonIds(syllabus) {
+  return (syllabus?.modules ?? [])
+    .flatMap((module) => module.lessons.map((lesson) => lesson.lessonId))
+    .filter(Boolean);
+}
+
+async function loadCourseSnapshotFromCourseService(courseId) {
+  try {
+    const courseResponse = await requestCourseById(courseId);
+    const pageData = mapReadCourseByIdResponseToCoursePageData(
+      courseResponse,
+      courseId,
+    );
+
+    if (!pageData?.course) {
+      return null;
+    }
+
+    return createViewerCourseSnapshot(
+      pageData.course,
+      getSyllabusLessonIds(pageData.syllabus),
+    );
+  } catch {
+    return null;
+  }
+}
+
+async function loadCourseSnapshotsFromCourseService(courseIds) {
+  const snapshots = await Promise.all(
+    getUniqueCourseIds(courseIds).map(loadCourseSnapshotFromCourseService),
+  );
+
+  return snapshots.filter(Boolean);
+}
+
+function resolveLearningViewerId(state, explicitRemoteViewerId = null) {
+  return resolveRemoteViewerId(
+    state.auth.currentViewerId,
+    explicitRemoteViewerId ?? state.viewer.remoteId,
+  );
 }
 
 function saveViewerProfileLocally(dispatch, viewer, profile) {
@@ -281,6 +363,162 @@ export function hydrateViewerFromUserService(options = {}) {
         error:
           error?.message ??
           "Не удалось загрузить профиль пользователя из user_service.",
+      };
+    }
+  };
+}
+
+export function hydrateViewerLearningFromLearningService(options = {}) {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const remoteViewerId = resolveLearningViewerId(
+      state,
+      options.remoteViewerId,
+    );
+
+    if (!state.auth.isLogged || !remoteViewerId) {
+      return {
+        ok: false,
+        skipped: true,
+      };
+    }
+
+    try {
+      const [enrolledCourseIds, completedCourseIds] = await Promise.all([
+        requestIncompleteCoursesByUser(remoteViewerId),
+        requestCompletedCoursesByUser(remoteViewerId),
+      ]);
+      const courseSnapshots = await loadCourseSnapshotsFromCourseService([
+        ...enrolledCourseIds,
+        ...completedCourseIds,
+      ]);
+
+      dispatch(
+        syncLearningEnrollment({
+          enrolledCourseIds,
+          completedCourseIds,
+          courseSnapshots,
+        }),
+      );
+
+      return {
+        ok: true,
+        viewerId: remoteViewerId,
+        enrolledCourseIds,
+        completedCourseIds,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error?.message ??
+          "Не удалось загрузить учебное состояние из learning_service.",
+      };
+    }
+  };
+}
+
+export function enrollViewerInCourseWithLearningService(payload) {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const courseId = normalizeCourseId(payload?.courseId ?? payload);
+    const courseSnapshot = payload?.courseSnapshot ?? null;
+    const remoteViewerId = resolveLearningViewerId(
+      state,
+      payload?.remoteViewerId,
+    );
+
+    if (!state.auth.isLogged) {
+      return {
+        ok: false,
+        error: "Войдите в аккаунт, чтобы записаться на курс.",
+      };
+    }
+
+    if (!isLearningUuid(courseId) || !remoteViewerId) {
+      dispatch(enrollInCourse({ courseId, courseSnapshot }));
+
+      return {
+        ok: true,
+        local: true,
+      };
+    }
+
+    try {
+      await requestEnrollUserInCourse({
+        userId: remoteViewerId,
+        courseId,
+      });
+
+      const hydrationResult = await dispatch(
+        hydrateViewerLearningFromLearningService({
+          remoteViewerId,
+        }),
+      );
+
+      if (!hydrationResult?.ok) {
+        dispatch(enrollInCourse({ courseId, courseSnapshot }));
+      }
+
+      return {
+        ok: true,
+        viewerId: remoteViewerId,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error?.message ?? "Не удалось записаться на курс через learning_service.",
+      };
+    }
+  };
+}
+
+export function completeViewerCourseWithLearningService(payload) {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const courseId = normalizeCourseId(payload?.courseId ?? payload);
+    const courseSnapshot = payload?.courseSnapshot ?? null;
+    const remoteViewerId = resolveLearningViewerId(
+      state,
+      payload?.remoteViewerId,
+    );
+
+    if (!isLearningUuid(courseId) || !remoteViewerId) {
+      dispatch(markCourseCompleted({ courseId, courseSnapshot }));
+
+      return {
+        ok: true,
+        local: true,
+      };
+    }
+
+    try {
+      await requestCompleteCourse({
+        userId: remoteViewerId,
+        courseId,
+      });
+
+      const hydrationResult = await dispatch(
+        hydrateViewerLearningFromLearningService({
+          remoteViewerId,
+        }),
+      );
+
+      if (!hydrationResult?.ok) {
+        dispatch(markCourseCompleted({ courseId, courseSnapshot }));
+      }
+
+      return {
+        ok: true,
+        viewerId: remoteViewerId,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error?.message ??
+          "Не удалось завершить курс через learning_service.",
       };
     }
   };

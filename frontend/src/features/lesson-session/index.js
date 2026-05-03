@@ -1,5 +1,7 @@
 export { default as lessonSessionReducer } from "./model/lessonSessionSlice";
 export {
+  completeLessonWithLearningService,
+  hydrateCompletedLessonsFromLearningService,
   openLesson,
   runCodeLesson,
   submitLessonAnswer,
@@ -8,6 +10,7 @@ export {
 export {
   markLessonViewed,
   markLessonCompleted,
+  syncCompletedLessonsForCourse,
   saveChoiceDraft,
   saveTextDraft,
   saveCodeDraft,

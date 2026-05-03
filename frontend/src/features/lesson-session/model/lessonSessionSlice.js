@@ -58,6 +58,26 @@ const lessonSessionSlice = createSlice({
       addUniqueValue(state.completedLessonIds, action.payload);
     },
 
+    syncCompletedLessonsForCourse: (state, action) => {
+      const courseLessonIds = Array.isArray(action.payload?.courseLessonIds)
+        ? action.payload.courseLessonIds.filter(Boolean)
+        : [];
+      const completedLessonIds = Array.isArray(action.payload?.completedLessonIds)
+        ? action.payload.completedLessonIds.filter(Boolean)
+        : [];
+      const completedLessonIdSet = new Set(completedLessonIds);
+
+      state.completedLessonIds = state.completedLessonIds.filter(
+        (lessonId) =>
+          !courseLessonIds.includes(lessonId) ||
+          completedLessonIdSet.has(lessonId),
+      );
+
+      completedLessonIds.forEach((lessonId) => {
+        addUniqueValue(state.completedLessonIds, lessonId);
+      });
+    },
+
     saveChoiceDraft: (state, action) => {
       const {
         lessonId,
@@ -196,6 +216,7 @@ const lessonSessionSlice = createSlice({
 export const {
   markLessonViewed,
   markLessonCompleted,
+  syncCompletedLessonsForCourse,
   saveChoiceDraft,
   saveTextDraft,
   saveCodeDraft,

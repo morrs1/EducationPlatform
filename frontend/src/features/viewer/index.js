@@ -2,6 +2,9 @@ export { default as viewerReducer } from "./model/viewerSlice";
 export {
   submitViewerProfileUpdate,
   hydrateViewerFromUserService,
+  hydrateViewerLearningFromLearningService,
+  enrollViewerInCourseWithLearningService,
+  completeViewerCourseWithLearningService,
 } from "./model/thunks";
 export { default as ViewerProfileBootstrap } from "./ui/ViewerProfileBootstrap";
 
@@ -12,6 +15,7 @@ export {
   toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
+  syncLearningEnrollment,
   upsertViewerCourseSnapshot,
   restoreViewer,
   resetDemoState,
@@ -32,7 +36,10 @@ export {
   saveViewerProfile,
 } from "./model/persistence";
 
-export { requestViewerDisplayProfileById } from "./model/userServiceApi";
+export {
+  requestViewerDisplayProfileById,
+  resolveRemoteViewerId,
+} from "./model/userServiceApi";
 
 export {
   selectViewer,

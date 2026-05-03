@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  isUuid,
+  requestLearningActivityYear,
+} from "../../../features/learning";
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 const WEEKDAY_LABELS = [
@@ -50,7 +54,66 @@ function getPlural(count, one, few, many) {
   return many;
 }
 
-function buildActivityCalendar() {
+function getActivityLevel(lessons) {
+  if (lessons <= 0) {
+    return 0;
+  }
+
+  if (lessons === 1) {
+    return 1;
+  }
+
+  if (lessons <= 3) {
+    return 2;
+  }
+
+  return 3;
+}
+
+function calculateSummary(days, today) {
+  const visibleDays = days.filter((day) => !day.isPlaceholder);
+  const activeDays = visibleDays.filter((day) => day.lessons > 0).length;
+  const totalLessons = visibleDays.reduce(
+    (total, day) => total + day.lessons,
+    0,
+  );
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let runningStreak = 0;
+
+  visibleDays.forEach((day) => {
+    if (day.lessons > 0) {
+      runningStreak += 1;
+      longestStreak = Math.max(longestStreak, runningStreak);
+      return;
+    }
+
+    runningStreak = 0;
+  });
+
+  for (let index = visibleDays.length - 1; index >= 0; index -= 1) {
+    const day = visibleDays[index];
+
+    if (new Date(day.id).getTime() > today.getTime()) {
+      continue;
+    }
+
+    if (day.lessons <= 0) {
+      break;
+    }
+
+    currentStreak += 1;
+  }
+
+  return {
+    activeDays,
+    currentStreak,
+    totalSolved: totalLessons,
+    longestStreak,
+  };
+}
+
+function buildActivityCalendar(activityByDay = {}) {
   const now = new Date();
   const currentYear = now.getUTCFullYear();
   const today = createUtcDate(
@@ -90,6 +153,9 @@ function buildActivityCalendar() {
       continue;
     }
 
+    const dateKey = currentDate.toISOString().slice(0, 10);
+    const lessons = Math.max(Number(activityByDay[dateKey]) || 0, 0);
+
     days.push({
       id: currentDate.toISOString(),
       dateLabel: DATE_FORMATTER.format(currentDate),
@@ -97,10 +163,10 @@ function buildActivityCalendar() {
       isToday: currentDate.getTime() === today.getTime(),
       weekIndex,
       weekdayIndex: getMondayIndex(currentDate),
-      solved: 0,
-      lessons: 0,
+      solved: lessons,
+      lessons,
       minutes: 0,
-      level: 0,
+      level: getActivityLevel(lessons),
     });
   }
 
@@ -126,17 +192,18 @@ function buildActivityCalendar() {
     columns,
     monthLabels,
     totalColumns,
-    summary: {
-      activeDays: 0,
-      currentStreak: 0,
-      totalSolved: 0,
-      longestStreak: 0,
-    },
+    summary: calculateSummary(days, today),
   };
 }
 
-function ProfileActivity() {
-  const activity = buildActivityCalendar();
+function ProfileActivity({ viewerId = null }) {
+  const [loadedActivity, setLoadedActivity] = useState({
+    viewerId: null,
+    activityByDay: {},
+  });
+  const activityByDay =
+    loadedActivity.viewerId === viewerId ? loadedActivity.activityByDay : {};
+  const activity = buildActivityCalendar(activityByDay);
   const [tooltip, setTooltip] = useState(null);
   const tooltipWidth = 224;
   const tooltipGap = 16;
@@ -147,6 +214,43 @@ function ProfileActivity() {
     "активных дня",
     "активных дней",
   )} в ${activity.currentYear} году`;
+
+  useEffect(() => {
+    if (!isUuid(viewerId)) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function loadActivity() {
+      try {
+        const response = await requestLearningActivityYear({
+          userId: viewerId,
+          year: activity.currentYear,
+        });
+
+        if (!isCancelled) {
+          setLoadedActivity({
+            viewerId,
+            activityByDay: response?.activityByDay ?? {},
+          });
+        }
+      } catch {
+        if (!isCancelled) {
+          setLoadedActivity({
+            viewerId,
+            activityByDay: {},
+          });
+        }
+      }
+    }
+
+    loadActivity();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activity.currentYear, viewerId]);
 
   function showTooltip(day, event) {
     const section = event.currentTarget.closest(".profile-activity");
@@ -188,15 +292,15 @@ function ProfileActivity() {
             {tooltip.day.solved}{" "}
             {getPlural(
               tooltip.day.solved,
-              "решённая задача",
-              "решённые задачи",
-              "решённых задач",
+              "пройденный урок",
+              "пройденных урока",
+              "пройденных уроков",
             )}
           </span>
           <span>
             {tooltip.day.lessons}{" "}
-            {getPlural(tooltip.day.lessons, "урок", "урока", "уроков")} и{" "}
-            {tooltip.day.minutes} мин практики
+            {getPlural(tooltip.day.lessons, "урок", "урока", "уроков")} за
+            день
           </span>
         </div>
       ) : null}
@@ -259,9 +363,9 @@ function ProfileActivity() {
                     const isHovered = tooltip?.day.id === day.id;
                     const ariaLabel = `${day.dateLabel}: ${day.solved} ${getPlural(
                       day.solved,
-                      "решённая задача",
-                      "решённые задачи",
-                      "решённых задач",
+                      "пройденный урок",
+                      "пройденных урока",
+                      "пройденных уроков",
                     )}, ${day.lessons} ${getPlural(
                       day.lessons,
                       "урок",
@@ -307,7 +411,7 @@ function ProfileActivity() {
 
         <div className="profile-activity-metric">
           <strong>{activity.summary.totalSolved}</strong>
-          <span>задач решено</span>
+          <span>уроков пройдено</span>
         </div>
       </div>
 

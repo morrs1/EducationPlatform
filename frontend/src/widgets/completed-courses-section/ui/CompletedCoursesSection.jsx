@@ -1,14 +1,18 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { filterCoursesByQuery } from "../../../entities/course/model/filterCoursesByQuery";
 import CompletedCoursesList from "../../../entities/course/ui/completed/CompletedCoursesList";
+import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
 import {
+  hydrateViewerLearningFromLearningService,
   selectCompletedCourses,
   toggleFavouriteCourse,
 } from "../../../features/viewer";
 
 function CompletedCoursesSection() {
   const dispatch = useDispatch();
+  const isLogged = useSelector(selectIsLogged);
+  const currentViewerId = useSelector(selectCurrentViewerId);
   const courses = useSelector(selectCompletedCourses);
   const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +25,14 @@ function CompletedCoursesSection() {
     courses.length === 0
       ? "Пока нет завершенных курсов."
       : `По запросу «${searchQuery}» ничего не найдено.`;
+
+  useEffect(() => {
+    if (!isLogged || !currentViewerId) {
+      return;
+    }
+
+    dispatch(hydrateViewerLearningFromLearningService());
+  }, [dispatch, isLogged, currentViewerId]);
 
   function handleSearchSubmit(event) {
     event.preventDefault();

@@ -3,12 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import { selectIsLogged, openLoginModal } from "../../../features/auth";
 import {
+  hydrateCompletedLessonsFromLearningService,
   selectCompletedLessonIds,
   selectViewedLessonIds,
 } from "../../../features/lesson-session";
 import {
-  enrollInCourse,
+  completeViewerCourseWithLearningService,
   createViewerCourseSnapshot,
+  enrollViewerInCourseWithLearningService,
   requestViewerDisplayProfileById,
   upsertViewerCourseSnapshot,
   selectIsCompletedCourse,
@@ -90,6 +92,7 @@ function CoursePage() {
   const [backendPageData, setBackendPageData] = useState(null);
   const [backendPageError, setBackendPageError] = useState("");
   const [backendRequestSeed, setBackendRequestSeed] = useState(0);
+  const [learningActionError, setLearningActionError] = useState("");
 
   const enrichBackendCourseAuthor = useCallback(async (nextPageData) => {
     const authorId = nextPageData?.course?.authorId;
@@ -278,6 +281,72 @@ function CoursePage() {
       ),
     [viewedLessonIds, completedLessonIds, syllabusLessonIds],
   );
+  const completedSyllabusLessonIds = useMemo(
+    () =>
+      syllabusLessonIds.filter((lessonId) => {
+        const progress = lessonProgressByLessonId[lessonId];
+
+        return progress?.isCompleted;
+      }),
+    [lessonProgressByLessonId, syllabusLessonIds],
+  );
+
+  useEffect(() => {
+    if (
+      !isBackendCourseRoute ||
+      !isLogged ||
+      !canUseCourseContent ||
+      !resolvedCourseId ||
+      !syllabusLessonIds.length
+    ) {
+      return;
+    }
+
+    dispatch(
+      hydrateCompletedLessonsFromLearningService({
+        courseId: resolvedCourseId,
+        courseLessonIds: syllabusLessonIds,
+      }),
+    );
+  }, [
+    canUseCourseContent,
+    dispatch,
+    isBackendCourseRoute,
+    isLogged,
+    resolvedCourseId,
+    syllabusLessonIds,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isBackendCourseRoute ||
+      !isLogged ||
+      !isEnrolled ||
+      isCompleted ||
+      !course ||
+      !syllabusLessonIds.length ||
+      completedSyllabusLessonIds.length < syllabusLessonIds.length
+    ) {
+      return;
+    }
+
+    dispatch(
+      completeViewerCourseWithLearningService({
+        courseId: course.id,
+        courseSnapshot: backendCourseSnapshot,
+      }),
+    );
+  }, [
+    backendCourseSnapshot,
+    completedSyllabusLessonIds.length,
+    course,
+    dispatch,
+    isBackendCourseRoute,
+    isCompleted,
+    isEnrolled,
+    isLogged,
+    syllabusLessonIds.length,
+  ]);
 
   function handlePageRetry() {
     setBackendRequestSeed((value) => value + 1);
@@ -344,19 +413,28 @@ function CoursePage() {
     setSearchParams(nextSearchParams);
   }
 
-  function handlePrimaryAction() {
+  async function handlePrimaryAction() {
     if (!isLogged) {
       dispatch(openLoginModal());
       return;
     }
 
+    setLearningActionError("");
+
     if (!canViewContent) {
-      dispatch(
-        enrollInCourse({
+      const result = await dispatch(
+        enrollViewerInCourseWithLearningService({
           courseId: course.id,
           courseSnapshot: backendCourseSnapshot,
         }),
       );
+
+      if (!result?.ok) {
+        setLearningActionError(
+          result?.error ?? "Не удалось записаться на курс.",
+        );
+        return;
+      }
     }
 
     changeTab("content");
@@ -420,6 +498,10 @@ function CoursePage() {
                 : `${course.studentsCount} студентов`}
             </span>
           </div>
+
+          {learningActionError ? (
+            <p className="course-not-found-text">{learningActionError}</p>
+          ) : null}
         </section>
 
         {activeTab === "description" ? (

@@ -213,6 +213,45 @@ const viewerSlice = createSlice({
       };
     },
 
+    syncLearningEnrollment: (state, action) => {
+      const enrolledCourseIds = action.payload?.enrolledCourseIds ?? [];
+      const completedCourseIds = action.payload?.completedCourseIds ?? [];
+      const courseSnapshots = action.payload?.courseSnapshots ?? [];
+
+      courseSnapshots.forEach((courseSnapshot) => {
+        upsertCourseSnapshot(
+          state,
+          normalizeViewerCourseSnapshot(courseSnapshot) ??
+            createViewerCourseSnapshot(courseSnapshot),
+        );
+      });
+
+      state.completedCourseIds = [
+        ...new Set(completedCourseIds.map(normalizeViewerCourseId)),
+      ].filter((courseId) => courseId != null);
+      state.enrolledCourseIds = [
+        ...new Set(enrolledCourseIds.map(normalizeViewerCourseId)),
+      ].filter(
+        (courseId) =>
+          courseId != null && !state.completedCourseIds.includes(courseId),
+      );
+
+      state.enrolledCourseIds.forEach((courseId) => {
+        const storageKey = getViewerCourseStorageKey(courseId);
+
+        if (!storageKey || state.progressByCourseId[storageKey]) {
+          return;
+        }
+
+        state.progressByCourseId[storageKey] = {
+          completedLessons: 0,
+          completedTests: 0,
+          completedTasks: 0,
+          lastVisitedAt: new Date().toISOString(),
+        };
+      });
+    },
+
     upsertViewerCourseSnapshot: (state, action) => {
       const courseSnapshot =
         action.payload?.courseSnapshot ?? action.payload ?? null;
@@ -235,6 +274,7 @@ export const {
   toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
+  syncLearningEnrollment,
   upsertViewerCourseSnapshot,
   restoreViewer,
   resetDemoState,

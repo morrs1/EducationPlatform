@@ -3,12 +3,41 @@ import {
   markLessonViewed,
   setRunResult,
   setSubmissionResult,
+  syncCompletedLessonsForCourse,
 } from "./lessonSessionSlice";
 import { selectLessonDraft } from "./selectors";
 import { executeCodeStep } from "./codeExecutionGateway";
+import {
+  isUuid as isLearningUuid,
+  requestCompletedLessonsForCourse,
+  requestCompleteLesson,
+} from "../../learning";
+import { resolveRemoteViewerId } from "../../viewer/model/userServiceApi";
 
 function createTimestamp() {
   return new Date().toISOString();
+}
+
+function resolveLearningViewerId(state) {
+  return resolveRemoteViewerId(
+    state.auth?.currentViewerId,
+    state.viewer?.remoteId,
+  );
+}
+
+function shouldUseLearningServiceForLesson(state, lesson, explicitCourseId) {
+  const courseId = explicitCourseId ?? lesson?.courseId;
+  const userId = resolveLearningViewerId(state);
+
+  return {
+    userId,
+    courseId,
+    lessonId: lesson?.id,
+    canUseLearningService:
+      isLearningUuid(userId) &&
+      isLearningUuid(courseId) &&
+      isLearningUuid(lesson?.id),
+  };
 }
 
 function areOptionIdsEqual(left, right) {
@@ -142,8 +171,8 @@ function createUnsupportedLessonResult(lesson, type) {
   };
 }
 
-export function openLesson({ lesson }) {
-  return (dispatch) => {
+export function openLesson({ lesson, courseId = null } = {}) {
+  return async (dispatch) => {
     if (!lesson?.id) {
       return;
     }
@@ -152,6 +181,104 @@ export function openLesson({ lesson }) {
 
     if (lesson.type === "theory") {
       dispatch(markLessonCompleted(lesson.id));
+      await dispatch(completeLessonWithLearningService({ lesson, courseId }));
+    }
+  };
+}
+
+export function hydrateCompletedLessonsFromLearningService({
+  courseId,
+  courseLessonIds = [],
+} = {}) {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const userId = resolveLearningViewerId(state);
+
+    if (!isLearningUuid(userId) || !isLearningUuid(courseId)) {
+      return {
+        ok: false,
+        skipped: true,
+      };
+    }
+
+    try {
+      const response = await requestCompletedLessonsForCourse({
+        userId,
+        courseId,
+      });
+      const completedLessonIds = response.completedLessons.map(
+        (lesson) => lesson.lessonId,
+      );
+
+      dispatch(
+        syncCompletedLessonsForCourse({
+          courseLessonIds,
+          completedLessonIds,
+        }),
+      );
+
+      return {
+        ok: true,
+        enrollmentId: response.enrollmentId,
+        enrollmentStatus: response.enrollmentStatus,
+        completedLessonIds,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error?.message ??
+          "Не удалось загрузить прогресс уроков из learning_service.",
+      };
+    }
+  };
+}
+
+export function completeLessonWithLearningService({
+  lesson,
+  courseId = null,
+} = {}) {
+  return async (dispatch, getState) => {
+    if (!lesson?.id) {
+      return {
+        ok: false,
+        skipped: true,
+      };
+    }
+
+    const state = getState();
+    const learningContext = shouldUseLearningServiceForLesson(
+      state,
+      lesson,
+      courseId,
+    );
+
+    if (!learningContext.canUseLearningService) {
+      return {
+        ok: false,
+        skipped: true,
+      };
+    }
+
+    try {
+      await requestCompleteLesson({
+        userId: learningContext.userId,
+        courseId: learningContext.courseId,
+        lessonId: learningContext.lessonId,
+      });
+
+      dispatch(markLessonCompleted(lesson.id));
+
+      return {
+        ok: true,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error?.message ??
+          "Не удалось отметить урок через learning_service.",
+      };
     }
   };
 }
@@ -191,7 +318,7 @@ export function runCodeLesson({ lesson }) {
   };
 }
 
-export function submitLessonAnswer({ lesson }) {
+export function submitLessonAnswer({ lesson, courseId = null } = {}) {
   return async (dispatch, getState) => {
     if (!lesson) {
       return {
@@ -204,6 +331,7 @@ export function submitLessonAnswer({ lesson }) {
 
     if (lesson.type === "theory") {
       dispatch(markLessonCompleted(lesson.id));
+      await dispatch(completeLessonWithLearningService({ lesson, courseId }));
 
       return {
         status: "correct",
@@ -241,6 +369,7 @@ export function submitLessonAnswer({ lesson }) {
 
     if (result.status === "correct") {
       dispatch(markLessonCompleted(lesson.id));
+      await dispatch(completeLessonWithLearningService({ lesson, courseId }));
     }
 
     return result;

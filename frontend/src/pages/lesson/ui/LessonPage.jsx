@@ -30,6 +30,7 @@ import {
 } from "../../../features/assistant";
 
 import {
+  hydrateCompletedLessonsFromLearningService,
   openLesson,
   runCodeLesson,
   saveCodeDraft,
@@ -42,7 +43,12 @@ import {
   selectLessonSubmission,
   submitLessonAnswer,
 } from "../../../features/lesson-session";
-import { selectCanViewCourseContent } from "../../../features/viewer";
+import {
+  completeViewerCourseWithLearningService,
+  selectCanViewCourseContent,
+  selectIsCompletedCourse,
+  selectIsEnrolledInCourse,
+} from "../../../features/viewer";
 
 function getNavigableLessons(syllabus) {
   return (syllabus?.modules ?? []).flatMap((module) =>
@@ -137,6 +143,12 @@ function LessonPage() {
   const completedLessonIds = useSelector(selectCompletedLessonIds);
   const canViewContent = useSelector((state) =>
     course ? selectCanViewCourseContent(state, course.id) : false,
+  );
+  const isEnrolled = useSelector((state) =>
+    course ? selectIsEnrolledInCourse(state, course.id) : false,
+  );
+  const isCompletedCourse = useSelector((state) =>
+    course ? selectIsCompletedCourse(state, course.id) : false,
   );
   const lessonDraft = useSelector((state) =>
     lesson ? selectLessonDraft(state, lesson.id) : null,
@@ -240,8 +252,60 @@ function LessonPage() {
       return;
     }
 
-    dispatch(openLesson({ lesson }));
-  }, [dispatch, lesson]);
+    dispatch(openLesson({ lesson, courseId: course?.id ?? null }));
+  }, [course?.id, dispatch, lesson]);
+
+  useEffect(() => {
+    if (
+      !isBackendLessonRoute ||
+      !course?.id ||
+      !canUseCourseContent ||
+      !syllabusLessonIds.length
+    ) {
+      return;
+    }
+
+    dispatch(
+      hydrateCompletedLessonsFromLearningService({
+        courseId: course.id,
+        courseLessonIds: syllabusLessonIds,
+      }),
+    );
+  }, [
+    canUseCourseContent,
+    course?.id,
+    dispatch,
+    isBackendLessonRoute,
+    syllabusLessonIds,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isBackendLessonRoute ||
+      !isEnrolled ||
+      isCompletedCourse ||
+      !course ||
+      !syllabusLessonIds.length ||
+      completedSyllabusLessonIds.length < syllabusLessonIds.length
+    ) {
+      return;
+    }
+
+    dispatch(
+      completeViewerCourseWithLearningService({
+        courseId: course.id,
+        courseSnapshot: course,
+      }),
+    );
+  }, [
+    completedSyllabusLessonIds.length,
+    course,
+    dispatch,
+    isBackendLessonRoute,
+    isCompletedCourse,
+    isEnrolled,
+    syllabusLessonIds.length,
+  ]);
 
   useEffect(() => {
     if (!assistantContextKey) {
@@ -410,7 +474,7 @@ function LessonPage() {
     setIsSubmitting(true);
 
     try {
-      await dispatch(submitLessonAnswer({ lesson }));
+      await dispatch(submitLessonAnswer({ lesson, courseId: course?.id }));
     } finally {
       setIsSubmitting(false);
     }
