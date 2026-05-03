@@ -3,6 +3,7 @@ package com.example.course_service.infrasructure.persistence.mappers;
 import com.example.course_service.domain.course.Course;
 import com.example.course_service.domain.course.vo.CourseDescription;
 import com.example.course_service.domain.course.vo.CourseDifficulty;
+import com.example.course_service.domain.course.vo.CourseIsPreview;
 import com.example.course_service.domain.course.vo.CourseEstimatedMinutes;
 import com.example.course_service.domain.course.vo.CourseLanguageCode;
 import com.example.course_service.domain.course.vo.CourseShortDescription;
@@ -43,6 +44,7 @@ public class CourseHibernateMapper {
         hibernateCourse.setDifficulty(Objects.isNull(course.getDifficulty()) ? null : course.getDifficulty().getDifficulty());
         hibernateCourse.setLanguageCode(Objects.isNull(course.getLanguageCode()) ? null : course.getLanguageCode().getLanguageCode());
         hibernateCourse.setEstimatedMinutes(Objects.isNull(course.getEstimatedMinutes()) ? null : course.getEstimatedMinutes().getEstimatedMinutes());
+        hibernateCourse.setIsPreview(Objects.isNull(course.getIsPreview()) ? null : course.getIsPreview().isPreview());
         hibernateCourse.setStructure(new HibernateCourse.CourseStructureJson(mapModuleJsons(course.getStructure())));
         hibernateCourse.setCreatedAt(course.getCreatedAt());
         hibernateCourse.setUpdatedAt(course.getUpdatedAt());
@@ -60,6 +62,7 @@ public class CourseHibernateMapper {
                 new CourseDifficulty(hibernateCourse.getDifficulty()),
                 new CourseLanguageCode(hibernateCourse.getLanguageCode()),
                 new CourseEstimatedMinutes(hibernateCourse.getEstimatedMinutes()),
+                new CourseIsPreview(hibernateCourse.getIsPreview()),
                 mapModules(hibernateCourse.getStructure()),
                 hibernateCourse.getCreatedAt(),
                 hibernateCourse.getUpdatedAt(),

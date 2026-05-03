@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record ReadCourseByIdView(
+        UUID id,
         UUID authorId,
         String title,
         String shortDescription,
@@ -12,6 +13,7 @@ public record ReadCourseByIdView(
         String difficulty,
         String languageCode,
         Integer estimatedMinutes,
+        Boolean isPreview,
         List<ModuleView> structure,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
