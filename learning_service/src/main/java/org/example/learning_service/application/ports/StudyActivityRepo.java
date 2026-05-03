@@ -14,4 +14,6 @@ public interface StudyActivityRepo {
     List<UserStudyDay> findByUserIdAndActivityDateBetween(UUID userId, LocalDate fromInclusive, LocalDate toInclusive);
 
     void save(UserStudyDay userStudyDay);
+
+    void deleteByUserIdAndActivityDate(UUID userId, LocalDate activityDate);
 }
