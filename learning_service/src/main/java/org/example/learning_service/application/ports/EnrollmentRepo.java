@@ -22,4 +22,6 @@ public interface EnrollmentRepo {
 
     /** Зачисления в процессе ({@code in_progress}), без lesson_completion. */
     List<Enrollment> findSummariesByUserIdForIncompleteCourses(UUID userId);
+
+    void deleteById(UUID enrollmentId);
 }

@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface CertificateSpringDataRepo extends JpaRepository<HibernateCertificate, UUID> {
 
     boolean existsByEnrollmentId(UUID enrollmentId);
+
+    void deleteByEnrollmentId(UUID enrollmentId);
 }

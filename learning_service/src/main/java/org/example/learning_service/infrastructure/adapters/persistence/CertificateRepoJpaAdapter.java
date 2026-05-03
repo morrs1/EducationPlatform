@@ -28,6 +28,11 @@ public class CertificateRepoJpaAdapter implements CertificateRepo {
     }
 
     @Override
+    public void deleteByEnrollmentId(UUID enrollmentId) {
+        certificateSpringDataRepo.deleteByEnrollmentId(enrollmentId);
+    }
+
+    @Override
     public void save(Certificate certificate) {
         var existing = certificateSpringDataRepo.findById(certificate.getId());
         if (existing.isPresent()) {

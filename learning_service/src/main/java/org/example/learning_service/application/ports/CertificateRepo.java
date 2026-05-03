@@ -11,5 +11,7 @@ public interface CertificateRepo {
 
     boolean existsByEnrollmentId(UUID enrollmentId);
 
+    void deleteByEnrollmentId(UUID enrollmentId);
+
     void save(Certificate certificate);
 }
