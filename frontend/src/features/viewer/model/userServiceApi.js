@@ -247,9 +247,11 @@ export async function requestViewerProfileById(viewerId) {
       },
     },
     `loading viewer ${normalizedViewerId}`,
-  ).catch((error) => {
+  ).finally(() => {
+    // Keep the cache only while the request is in flight.
+    // Profile data can change after mutations, so storing fulfilled
+    // responses here makes subsequent hydrations stale.
     viewerProfileRequestCache.delete(normalizedViewerId);
-    throw error;
   });
 
   viewerProfileRequestCache.set(normalizedViewerId, requestPromise);
