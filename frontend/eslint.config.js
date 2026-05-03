@@ -31,6 +31,27 @@ export default defineConfig([
           varsIgnorePattern: "^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)*$",
         },
       ],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/entities/*/model/*",
+                "**/entities/*/api/*",
+                "**/entities/*/ui/*",
+                "**/features/*/api/*",
+                "**/features/*/model/*",
+                "**/features/*/ui/*",
+                "**/pages/*/ui/*",
+                "**/widgets/*/ui/*",
+              ],
+              message:
+                "Import another FSD slice through its public index.js API.",
+            },
+          ],
+        },
+      ],
     },
   },
 ]);

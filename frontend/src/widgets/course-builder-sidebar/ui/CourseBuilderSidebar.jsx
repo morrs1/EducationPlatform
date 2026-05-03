@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, useLocation, useResolvedPath } from "react-router";
-import CourseDisplayCover from "../../../entities/course/ui/CourseDisplayCover";
+import { CourseDisplayCover } from "../../../entities/course";
 
 function CourseBuilderSidebar({ course, pageStatus }) {
   const location = useLocation();

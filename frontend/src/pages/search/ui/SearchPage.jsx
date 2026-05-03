@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
-import HomeDiscoveryPanel from "../../../widgets/home-discovery/ui/HomeDiscoveryPanel";
-import SearchResults from "../../../widgets/search-results/ui/SearchResults";
+import { HomeDiscoveryPanel } from "../../../widgets/home-discovery";
+import { SearchResults } from "../../../widgets/search-results";
 import { getSearchPageData } from "../lib/getSearchPageData";
 
 function readFilters(searchParams) {

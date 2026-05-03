@@ -1,4 +1,13 @@
 import { mockViewer } from "./mockViewer";
+import {
+  buildAvatarUrl,
+  buildViewerDisplayName,
+} from "../../../shared/lib/viewerProfile";
+
+export {
+  buildAvatarUrl,
+  buildViewerDisplayName,
+} from "../../../shared/lib/viewerProfile";
 
 function normalizeText(value, { lowercase = false } = {}) {
   if (typeof value !== "string") {
@@ -193,14 +202,6 @@ export function createViewerCourseSnapshot(course, syllabusLessonIds = []) {
   });
 }
 
-export function buildViewerDisplayName(
-  firstName,
-  lastName,
-  patronymic = "",
-) {
-  return [lastName, firstName, patronymic].filter(Boolean).join(" ").trim();
-}
-
 function splitFullName(fullName) {
   const normalizedFullName = normalizeText(fullName);
 
@@ -229,10 +230,6 @@ function splitFullName(fullName) {
     lastName,
     patronymic: patronymicParts.join(" "),
   };
-}
-
-export function buildAvatarUrl(seed) {
-  return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
 }
 
 export function normalizeViewerProfile(value) {

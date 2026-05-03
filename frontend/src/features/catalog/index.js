@@ -12,3 +12,5 @@ export {
   selectCategories,
   selectSelectedCategoryId,
 } from "./model/selectors";
+
+export { useCatalogCollections } from "./model/useCatalogCollections";

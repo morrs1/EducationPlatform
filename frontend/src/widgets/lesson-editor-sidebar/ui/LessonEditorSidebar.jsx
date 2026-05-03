@@ -1,8 +1,10 @@
 import { Link, useParams } from "react-router";
 
-import { useLessonCoverMap } from "../../../entities/course/model/useLessonCoverMap";
-import CourseDisplayCover from "../../../entities/course/ui/CourseDisplayCover";
-import LessonStructureCover from "../../../entities/course/ui/LessonStructureCover";
+import {
+  CourseDisplayCover,
+  LessonStructureCover,
+  useLessonCoverMap,
+} from "../../../entities/course";
 
 function getLessonTypeLabel(type) {
   if (type === "quiz") {

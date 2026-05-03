@@ -11,8 +11,8 @@ import {
   isUuid as isLearningUuid,
   requestCompletedLessonsForCourse,
   requestCompleteLesson,
-} from "../../learning";
-import { resolveRemoteViewerId } from "../../viewer/model/userServiceApi";
+} from "../../../shared/api/learningServiceApi";
+import { resolveRemoteViewerId } from "../../../shared/api/userServiceApi";
 
 function createTimestamp() {
   return new Date().toISOString();

@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import TeachSidebar from "../../../widgets/teach-sidebar/ui/TeachSidebar";
+import { TeachSidebar } from "../../../widgets/teach-sidebar";
 
 function TeachPage() {
   return (

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   extractLessonCoverAssetFromLessonResponse,
   requestLessonById,
-} from "./courseServiceApi";
+} from "../api/courseServiceApi";
 
 function getUniqueLessonIds(modules) {
   return Array.from(

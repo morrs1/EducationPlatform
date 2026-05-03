@@ -1,4 +1,4 @@
-import CoursePreviewCard from "../../../entities/course/ui/preview/CoursePreviewCard";
+import { CoursePreviewCard } from "../../../entities/course";
 
 const FILTER_LABELS = {
   filter1: "Для новичков",

@@ -13,7 +13,7 @@ import {
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
   requestCourseCreation,
-} from "../../../entities/course/model/courseServiceApi";
+} from "../../../entities/course";
 
 const initialFormState = {
   title: "",

@@ -1,6 +1,5 @@
 import { useSelector } from "react-redux";
-import ProfileCard from "../../../entities/user/ui/ProfileCard";
-import ProfileActivity from "../../../entities/user/ui/ProfileActivity";
+import { ProfileActivity, ProfileCard } from "../../../entities/user";
 import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
 import { resolveRemoteViewerId, selectViewer } from "../../../features/viewer";
 

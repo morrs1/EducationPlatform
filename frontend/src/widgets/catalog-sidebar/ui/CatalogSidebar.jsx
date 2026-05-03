@@ -9,7 +9,7 @@ import {
 } from "../../../features/catalog";
 import { Link } from "react-router";
 
-import { useCatalogCollections } from "../../../entities/course/model/useCatalogCollections";
+import { useCatalogCollections } from "../../../features/catalog";
 
 function CatalogSidebar({ headerHeight }) {
   const dispatch = useDispatch();

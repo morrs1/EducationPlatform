@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { filterCoursesByQuery } from "../../../entities/course/model/filterCoursesByQuery";
-import FavouriteCoursesList from "../../../entities/course/ui/favourite/FavouriteCoursesList";
+import {
+  FavouriteCoursesList,
+  filterCoursesByQuery,
+} from "../../../entities/course";
 import {
   selectFavouriteCourses,
   toggleFavouriteCourse,

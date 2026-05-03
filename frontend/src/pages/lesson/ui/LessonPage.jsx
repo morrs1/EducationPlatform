@@ -8,18 +8,20 @@ import {
   getCachedLessonContentMarkdown,
   getLessonContentMarkdown,
 } from "../lib/getLessonContentMarkdown";
-import { parseLessonMarkdown } from "../../../entities/lesson/model/parseLessonMarkdown";
-import { getCourseSyllabus } from "../../../entities/course/model/mockCourseSyllabus";
-import { getLessonProgressMap } from "../../../entities/lesson/model/progress";
+import {
+  getLessonProgressMap,
+  parseLessonMarkdown,
+} from "../../../entities/lesson";
+import { getCourseSyllabus } from "../../../entities/course";
 import {
   isUuid,
   mapReadLessonByIdResponseToLessonPageData,
   requestCourseById,
   requestLessonById,
-} from "../../../entities/course/model/courseServiceApi";
-import CourseOutline from "../../../widgets/course-outline/ui/CourseOutline";
-import LessonContentSection from "../../../widgets/lesson-content-section/ui/LessonContentSection";
-import AssistantPanel from "../../../widgets/assistant-panel/ui/AssistantPanel";
+} from "../../../entities/course";
+import { CourseOutline } from "../../../widgets/course-outline";
+import { LessonContentSection } from "../../../widgets/lesson-content-section";
+import { AssistantPanel } from "../../../widgets/assistant-panel";
 import {
   closeAssistant,
   openAssistant,

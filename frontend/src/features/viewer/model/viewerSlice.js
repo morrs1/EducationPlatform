@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { mockCourses } from "../../../entities/course/model/mockCourses";
+import { mockCourses } from "../../../entities/course";
 import {
   buildAvatarUrl,
   buildViewerDisplayName,
@@ -9,7 +9,7 @@ import {
   normalizeViewerCourseId,
   normalizeViewerCourseSnapshot,
   normalizeViewerProfile,
-} from "./factory";
+} from "../../../entities/viewer";
 
 function getCourseById(courseId) {
   return mockCourses.find((course) => course.id === courseId) ?? null;

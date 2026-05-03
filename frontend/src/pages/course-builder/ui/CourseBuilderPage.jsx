@@ -4,20 +4,20 @@ import { Outlet, useParams } from "react-router";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
   createViewerCourseSnapshot,
-  requestViewerDisplayProfileById,
   resolveCourseServiceAuthorId,
   selectViewer,
   selectViewerName,
   upsertViewerCourseSnapshot,
 } from "../../../features/viewer";
+import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import {
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestAddLessonToCourse,
   requestAddModuleToCourse,
   requestCourseById,
-} from "../../../entities/course/model/courseServiceApi";
-import CourseBuilderSidebar from "../../../widgets/course-builder-sidebar/ui/CourseBuilderSidebar";
+} from "../../../entities/course";
+import { CourseBuilderSidebar } from "../../../widgets/course-builder-sidebar";
 
 function collectSyllabusLessonIds(modules) {
   return modules.flatMap((module) =>

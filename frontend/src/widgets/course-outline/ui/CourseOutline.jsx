@@ -1,7 +1,9 @@
 import { Link } from "react-router";
 
-import { useLessonCoverMap } from "../../../entities/course/model/useLessonCoverMap";
-import LessonStructureCover from "../../../entities/course/ui/LessonStructureCover";
+import {
+  LessonStructureCover,
+  useLessonCoverMap,
+} from "../../../entities/course";
 
 function CourseOutline({
   course,

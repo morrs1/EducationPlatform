@@ -1,4 +1,4 @@
-import { buildAvatarUrl, buildViewerDisplayName } from "./factory";
+import { buildAvatarUrl, buildViewerDisplayName } from "../lib/viewerProfile";
 
 const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";

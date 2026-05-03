@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import EditProfileSidebar from "../../../widgets/edit-profile-sidebar/ui/EditProfileSidebar";
+import { EditProfileSidebar } from "../../../widgets/edit-profile-sidebar";
 
 function EditProfilePage() {
   return (

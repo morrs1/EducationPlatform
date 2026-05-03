@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import LessonMarkdownPreview from "../../../entities/lesson/ui/LessonMarkdownPreview";
+import { LessonMarkdownPreview } from "../../../entities/lesson";
 
 function renderSubmissionResult(lessonSubmission) {
   if (!lessonSubmission) {

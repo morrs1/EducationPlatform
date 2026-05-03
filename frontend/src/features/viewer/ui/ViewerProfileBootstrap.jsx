@@ -1,16 +1,13 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useLocation } from "react-router";
-import { selectCurrentViewerId, selectIsLogged } from "../../auth";
 import {
   hydrateViewerFromUserService,
   hydrateViewerLearningFromLearningService,
 } from "../model/thunks";
 
-function ViewerProfileBootstrap() {
+function ViewerProfileBootstrap({ isLogged = false, currentViewerId = null }) {
   const dispatch = useDispatch();
-  const isLogged = useSelector(selectIsLogged);
-  const currentViewerId = useSelector(selectCurrentViewerId);
   const location = useLocation();
   const remoteViewerIdFromQuery = new URLSearchParams(location.search).get("id");
 

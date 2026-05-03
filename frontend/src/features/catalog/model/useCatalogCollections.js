@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { requestViewerDisplayProfileById } from "../../../features/viewer";
-import { buildCatalogData } from "./buildCatalogData";
+import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import {
+  buildCatalogData,
+  getAllCourses,
   mapReadCourseByIdResponseToCoursePageData,
   requestAllCourses,
-} from "./courseServiceApi";
-import { getAllCourses } from "./selectors";
+} from "../../../entities/course";
 
 const INFORMATION_TECHNOLOGY_CATEGORY = {
   id: 1,

@@ -4,8 +4,8 @@ import {
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
-} from "../../../entities/course/model/courseServiceApi";
-import LessonEditorSidebar from "../../../widgets/lesson-editor-sidebar/ui/LessonEditorSidebar";
+} from "../../../entities/course";
+import { LessonEditorSidebar } from "../../../widgets/lesson-editor-sidebar";
 
 function findLessonLocation(modules, lessonId) {
   for (const module of modules) {

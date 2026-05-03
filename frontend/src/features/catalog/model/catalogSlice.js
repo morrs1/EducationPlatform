@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { mockCatalogData } from "../../../entities/course/model/mockCatalogData";
+import { mockCatalogData } from "../../../entities/course";
 
 const defaultSelectedCategoryId = mockCatalogData[0]?.id ?? null;
 

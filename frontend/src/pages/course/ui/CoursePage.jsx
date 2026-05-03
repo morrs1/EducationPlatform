@@ -11,7 +11,6 @@ import {
   completeViewerCourseWithLearningService,
   createViewerCourseSnapshot,
   enrollViewerInCourseWithLearningService,
-  requestViewerDisplayProfileById,
   upsertViewerCourseSnapshot,
   selectIsCompletedCourse,
   selectIsFavouriteCourse,
@@ -21,12 +20,13 @@ import {
   selectViewerCourseProgress,
   toggleFavouriteCourse,
 } from "../../../features/viewer";
-import { getLessonProgressMap } from "../../../entities/lesson/model/progress";
-import CourseTabs from "../../../widgets/course-tabs/ui/CourseTabs";
-import CourseSidebar from "../../../widgets/course-sidebar/ui/CourseSidebar";
-import CourseDescriptionTab from "../../../widgets/course-description/ui/CourseDescriptionTab";
-import CourseContentTab from "../../../widgets/course-content/ui/CourseContentTab";
-import CourseReviewsTab from "../../../widgets/course-reviews/ui/CourseReviewsTab";
+import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
+import { getLessonProgressMap } from "../../../entities/lesson";
+import { CourseTabs } from "../../../widgets/course-tabs";
+import { CourseSidebar } from "../../../widgets/course-sidebar";
+import { CourseDescriptionTab } from "../../../widgets/course-description";
+import { CourseContentTab } from "../../../widgets/course-content";
+import { CourseReviewsTab } from "../../../widgets/course-reviews";
 import { getCoursePageData } from "../lib/getCoursePageData";
 import { getCourseDescriptionMarkdown } from "../lib/getCourseDescriptionMarkdown";
 import { parseCourseDescriptionMarkdown } from "../lib/parseCourseDescriptionMarkdown";
@@ -34,7 +34,7 @@ import {
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
-} from "../../../entities/course/model/courseServiceApi";
+} from "../../../entities/course";
 
 const tabIds = ["description", "content", "reviews"];
 

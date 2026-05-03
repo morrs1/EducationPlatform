@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import AccountSidebar from "../../../widgets/account-sidebar/ui/AccountSidebar";
+import { AccountSidebar } from "../../../widgets/account-sidebar";
 
 function AccountPage() {
   return (

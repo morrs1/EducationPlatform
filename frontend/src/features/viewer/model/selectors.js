@@ -1,13 +1,13 @@
 import { createSelector } from "@reduxjs/toolkit";
-import { getCourseProgressByCourseId } from "../../../entities/course/model/progress";
+import { getCourseProgressByCourseId } from "../../../entities/course";
 import {
   enrichCourse,
   getCourseById,
-} from "../../../entities/course/model/selectors";
+} from "../../../entities/course";
 import {
   getViewerCourseStorageKey,
   normalizeViewerCourseId,
-} from "./factory";
+} from "../../../entities/viewer";
 
 export const selectViewer = (state) => state.viewer;
 export const selectViewerId = (state) => state.viewer.id;

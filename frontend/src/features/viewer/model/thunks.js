@@ -7,18 +7,18 @@ import {
 } from "./viewerSlice";
 import {
   createViewerCourseSnapshot,
-} from "./factory";
+} from "../../../entities/viewer";
 import {
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
-} from "../../../entities/course/model/courseServiceApi";
+} from "../../../entities/course";
 import {
   isUuid as isLearningUuid,
   requestCompletedCoursesByUser,
   requestCompleteCourse,
   requestEnrollUserInCourse,
   requestIncompleteCoursesByUser,
-} from "../../learning";
+} from "../../../shared/api/learningServiceApi";
 import {
   buildUserServiceMediaProxyUrl,
   mapReadUserByIdResponseToViewerProfile,
@@ -30,7 +30,7 @@ import {
   requestViewerSurnameUpdate,
   resolveRemoteViewerId,
   uploadViewerProfilePhoto,
-} from "./userServiceApi";
+} from "../../../shared/api/userServiceApi";
 
 function hasUnsupportedCourseIds(courseIds) {
   if (!Array.isArray(courseIds)) {

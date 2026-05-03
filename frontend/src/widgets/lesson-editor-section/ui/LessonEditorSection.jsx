@@ -6,9 +6,11 @@ import {
   requestLessonById,
   requestUploadLessonAsset,
   requestUploadLessonContent,
-} from "../../../entities/course/model/courseServiceApi";
-import { parseLessonMarkdown } from "../../../entities/lesson/model/parseLessonMarkdown";
-import LessonMarkdownPreview from "../../../entities/lesson/ui/LessonMarkdownPreview";
+} from "../../../entities/course";
+import {
+  LessonMarkdownPreview,
+  parseLessonMarkdown,
+} from "../../../entities/lesson";
 
 function getLessonTypeLabel(type) {
   if (type === "quiz") {

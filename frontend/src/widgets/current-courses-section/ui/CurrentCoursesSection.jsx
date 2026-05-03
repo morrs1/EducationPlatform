@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import CurrentCoursesList from "../../../entities/course/ui/current/CurrentCoursesList";
-import { filterCoursesByQuery } from "../../../entities/course/model/filterCoursesByQuery";
+import {
+  CurrentCoursesList,
+  filterCoursesByQuery,
+} from "../../../entities/course";
 import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
 import {
   hydrateViewerLearningFromLearningService,

@@ -13,7 +13,7 @@ import {
 import {
   createViewerProfileFromRegistration,
   saveViewerProfile,
-} from "../../viewer";
+} from "../../../entities/viewer";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

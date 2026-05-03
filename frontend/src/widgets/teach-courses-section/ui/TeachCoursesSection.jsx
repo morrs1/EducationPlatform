@@ -4,8 +4,8 @@ import { Link } from "react-router";
 import {
   mapReadCourseByIdResponseToCoursePageData,
   requestAllCourses,
-} from "../../../entities/course/model/courseServiceApi";
-import CourseDisplayCover from "../../../entities/course/ui/CourseDisplayCover";
+} from "../../../entities/course";
+import { CourseDisplayCover } from "../../../entities/course";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
   resolveCourseServiceAuthorId,

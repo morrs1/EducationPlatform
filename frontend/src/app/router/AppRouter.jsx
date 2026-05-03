@@ -7,33 +7,33 @@ import {
 } from "react-router";
 import { useSelector } from "react-redux";
 
-import Layout from "../../widgets/layout/ui/Layout";
-import Home from "../../pages/home/ui/HomePage";
-import SearchPage from "../../pages/search/ui/SearchPage";
-import CoursePage from "../../pages/course/ui/CoursePage";
-import AccountPage from "../../pages/account/ui/AccountPage";
-import EditProfilePage from "../../pages/edit-profile/ui/EditProfilePage";
-import NotificationsPage from "../../pages/notifications/ui/NotificationsPage";
-import LessonPage from "../../pages/lesson/ui/LessonPage";
-import TeachPage from "../../pages/teach/ui/TeachPage";
-import CourseBuilderPage from "../../pages/course-builder/ui/CourseBuilderPage";
-import LessonEditorPage from "../../pages/lesson-editor/ui/LessonEditorPage";
+import { Layout } from "../../widgets/layout";
+import { HomePage as Home } from "../../pages/home";
+import { SearchPage } from "../../pages/search";
+import { CoursePage } from "../../pages/course";
+import { AccountPage } from "../../pages/account";
+import { EditProfilePage } from "../../pages/edit-profile";
+import { NotificationsPage } from "../../pages/notifications";
+import { LessonPage } from "../../pages/lesson";
+import { TeachPage } from "../../pages/teach";
+import { CourseBuilderPage } from "../../pages/course-builder";
+import { LessonEditorPage } from "../../pages/lesson-editor";
 
-import ProfileSection from "../../widgets/profile-section/ui/ProfileSection";
-import CurrentCoursesSection from "../../widgets/current-courses-section/ui/CurrentCoursesSection";
-import CompletedCoursesSection from "../../widgets/completed-courses-section/ui/CompletedCoursesSection";
-import FavouriteCoursesSection from "../../widgets/favourite-courses-section/ui/FavouriteCoursesSection";
-import CertificatesSection from "../../widgets/certificates-section/ui/CertificatesSection";
+import { ProfileSection } from "../../widgets/profile-section";
+import { CurrentCoursesSection } from "../../widgets/current-courses-section";
+import { CompletedCoursesSection } from "../../widgets/completed-courses-section";
+import { FavouriteCoursesSection } from "../../widgets/favourite-courses-section";
+import { CertificatesSection } from "../../widgets/certificates-section";
 import { selectIsLogged } from "../../features/auth";
-import UpdateProfileSection from "../../widgets/update-profile-section/ui/UpdateProfileSection";
-import ChangePasswordSection from "../../widgets/change-password-section/ui/ChangePasswordSection";
-import ChangeEmailSection from "../../widgets/change-email-section/ui/ChangeEmailSection";
-import CreateCourseSection from "../../widgets/create-course-section/ui/CreateCourseSection";
-import TeachCoursesSection from "../../widgets/teach-courses-section/ui/TeachCoursesSection";
-import CourseDescriptionSection from "../../widgets/course-description-section/ui/CourseDescriptionSection";
-import CourseSyllabusSection from "../../widgets/course-syllabus-section/ui/CourseSyllabusSection";
-import CourseContentEditorSection from "../../widgets/course-content-editor-section/ui/CourseContentEditorSection";
-import LessonEditorSection from "../../widgets/lesson-editor-section/ui/LessonEditorSection";
+import { UpdateProfileSection } from "../../widgets/update-profile-section";
+import { ChangePasswordSection } from "../../widgets/change-password-section";
+import { ChangeEmailSection } from "../../widgets/change-email-section";
+import { CreateCourseSection } from "../../widgets/create-course-section";
+import { TeachCoursesSection } from "../../widgets/teach-courses-section";
+import { CourseDescriptionSection } from "../../widgets/course-description-section";
+import { CourseSyllabusSection } from "../../widgets/course-syllabus-section";
+import { CourseContentEditorSection } from "../../widgets/course-content-editor-section";
+import { LessonEditorSection } from "../../widgets/lesson-editor-section";
 
 function ProtectedRoute() {
   const isLogged = useSelector(selectIsLogged);

@@ -26,7 +26,7 @@ export {
   createViewerCourseSnapshot,
   createInitialViewerState,
   createViewerProfileFromRegistration,
-} from "./model/factory";
+} from "../../entities/viewer";
 export { resolveCourseServiceAuthorId } from "./model/courseServiceAuthorId";
 
 export {
@@ -34,12 +34,12 @@ export {
   saveViewerProfilesMap,
   loadViewerProfileByViewerId,
   saveViewerProfile,
-} from "./model/persistence";
+} from "../../entities/viewer";
 
 export {
   requestViewerDisplayProfileById,
   resolveRemoteViewerId,
-} from "./model/userServiceApi";
+} from "../../shared/api/userServiceApi";
 
 export {
   selectViewer,

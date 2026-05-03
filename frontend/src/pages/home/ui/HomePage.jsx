@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { getHomePageData } from "../lib/getHomePageData";
-import { useCatalogCollections } from "../../../entities/course/model/useCatalogCollections";
-import HomeDiscoveryPanel from "../../../widgets/home-discovery/ui/HomeDiscoveryPanel";
-import OurCoursesSection from "../../../widgets/our-courses-section/ui/OurCoursesSection";
-import PopularCoursesSection from "../../../widgets/popular-courses-section/ui/PopularCoursesSection";
+import { useCatalogCollections } from "../../../features/catalog";
+import { HomeDiscoveryPanel } from "../../../widgets/home-discovery";
+import { OurCoursesSection } from "../../../widgets/our-courses-section";
+import { PopularCoursesSection } from "../../../widgets/popular-courses-section";
 
 function Home() {
   const navigate = useNavigate();

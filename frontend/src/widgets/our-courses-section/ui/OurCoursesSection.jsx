@@ -1,5 +1,5 @@
 import { useState } from "react";
-import CoursePreviewCard from "../../../entities/course/ui/preview/CoursePreviewCard";
+import { CoursePreviewCard } from "../../../entities/course";
 
 const COURSES_PER_PAGE = 6;
 

@@ -1,14 +1,16 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Outlet, useLocation } from "react-router";
-import Header from "../../header/ui/Header";
-import Footer from "../../footer/ui/Footer";
-import AuthModal from "../../auth-modal/ui/AuthModal";
-import CatalogSidebar from "../../catalog-sidebar/ui/CatalogSidebar";
+import { Header } from "../../header";
+import { Footer } from "../../footer";
+import { AuthModal } from "../../auth-modal";
+import { CatalogSidebar } from "../../catalog-sidebar";
 import { ViewerProfileBootstrap } from "../../../features/viewer";
 import {
+  selectCurrentViewerId,
   selectIsLoginModalOpen,
   selectIsRegisterModalOpen,
+  selectIsLogged,
 } from "../../../features/auth";
 import { selectIsCatalogOpen } from "../../../features/catalog";
 import { ThemeBootstrap } from "../../../features/theme";
@@ -18,6 +20,8 @@ function Layout() {
   const [headerHeight, setHeaderHeight] = useState(0);
   const location = useLocation();
   const isCatalogOpen = useSelector(selectIsCatalogOpen);
+  const currentViewerId = useSelector(selectCurrentViewerId);
+  const isLogged = useSelector(selectIsLogged);
   const isLoginModalOpen = useSelector(selectIsLoginModalOpen);
   const isRegisterModalOpen = useSelector(selectIsRegisterModalOpen);
   const isAuthModalOpen = isLoginModalOpen || isRegisterModalOpen;
@@ -88,7 +92,10 @@ function Layout() {
       <div className="app-shell-glow app-shell-glow-left" aria-hidden="true" />
       <div className="app-shell-glow app-shell-glow-right" aria-hidden="true" />
       <ThemeBootstrap />
-      <ViewerProfileBootstrap />
+      <ViewerProfileBootstrap
+        currentViewerId={currentViewerId}
+        isLogged={isLogged}
+      />
       <div
         ref={headerRef}
         className="app-header-shell"
