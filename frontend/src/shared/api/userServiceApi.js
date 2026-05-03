@@ -30,31 +30,18 @@ async function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function extractErrorMessage(response, responseBody, context = "") {
-  if (typeof responseBody === "string" && responseBody.trim()) {
-    return responseBody.trim();
+function extractErrorMessage(response, context = "") {
+  if (response.status === 404) {
+    return "Данные не найдены.";
   }
 
-  if (
-    responseBody &&
-    typeof responseBody === "object" &&
-    !Array.isArray(responseBody)
-  ) {
-    if (typeof responseBody.msg === "string" && responseBody.msg.trim()) {
-      return responseBody.msg.trim();
-    }
-
-    if (
-      typeof responseBody.message === "string" &&
-      responseBody.message.trim()
-    ) {
-      return responseBody.message.trim();
-    }
+  if (response.status === 401 || response.status === 403) {
+    return "Для этого действия нужно войти в аккаунт.";
   }
 
   return context
-    ? `user_service returned ${response.status} while ${context}.`
-    : `user_service returned ${response.status}.`;
+    ? "Не удалось выполнить действие. Попробуйте позже."
+    : "Не удалось получить данные. Попробуйте позже.";
 }
 
 async function requestUserService(url, options = {}, context = "") {
@@ -62,7 +49,7 @@ async function requestUserService(url, options = {}, context = "") {
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response, responseBody, context));
+    throw new Error(extractErrorMessage(response, context));
   }
 
   return responseBody;
@@ -225,7 +212,7 @@ export async function requestViewerProfileById(viewerId) {
   const normalizedViewerId = normalizeText(viewerId);
 
   if (!isUuid(normalizedViewerId)) {
-    throw new Error("user_service: некорректный UUID пользователя.");
+    throw new Error("Не удалось определить пользователя.");
   }
 
   const cachedRequest = viewerProfileRequestCache.get(normalizedViewerId);

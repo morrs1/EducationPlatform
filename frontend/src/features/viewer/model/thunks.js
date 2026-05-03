@@ -198,7 +198,7 @@ export function submitViewerProfileUpdate(payload) {
       return {
         ok: true,
         message: nextAvatarFile
-          ? "Данные профиля сохранены локально. Фото будет доступно после подключения user_service."
+          ? "Данные профиля сохранены. Фото станет доступно позже."
           : "Данные профиля сохранены локально.",
       };
     }
@@ -295,7 +295,7 @@ export function submitViewerProfileUpdate(payload) {
         ok: false,
         error:
           error?.message ??
-          "Не удалось сохранить изменения профиля через user_service.",
+          "Не удалось сохранить изменения профиля.",
       };
     }
   };
@@ -362,7 +362,7 @@ export function hydrateViewerFromUserService(options = {}) {
         ok: false,
         error:
           error?.message ??
-          "Не удалось загрузить профиль пользователя из user_service.",
+          "Не удалось загрузить профиль пользователя.",
       };
     }
   };
@@ -412,7 +412,7 @@ export function hydrateViewerLearningFromLearningService(options = {}) {
         ok: false,
         error:
           error?.message ??
-          "Не удалось загрузить учебное состояние из learning_service.",
+          "Не удалось загрузить учебное состояние.",
       };
     }
   };
@@ -468,7 +468,7 @@ export function enrollViewerInCourseWithLearningService(payload) {
       return {
         ok: false,
         error:
-          error?.message ?? "Не удалось записаться на курс через learning_service.",
+          error?.message ?? "Не удалось записаться на курс.",
       };
     }
   };
@@ -518,7 +518,7 @@ export function completeViewerCourseWithLearningService(payload) {
         ok: false,
         error:
           error?.message ??
-          "Не удалось завершить курс через learning_service.",
+          "Не удалось завершить курс.",
       };
     }
   };

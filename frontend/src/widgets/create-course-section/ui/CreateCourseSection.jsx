@@ -122,7 +122,7 @@ function CreateCourseSection() {
     } catch (error) {
       setSubmitStatus("error");
       setSubmitError(
-        error?.message ?? "Не удалось создать курс через course_service.",
+        error?.message ?? "Не удалось создать курс.",
       );
     }
   }

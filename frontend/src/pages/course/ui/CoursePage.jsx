@@ -34,6 +34,7 @@ import {
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
+  sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
 
 const tabIds = ["description", "content", "reviews"];
@@ -149,7 +150,7 @@ function CoursePage() {
           setBackendPageData(null);
           setBackendPageStatus("error");
           setBackendPageError(
-            error?.message ?? "Не удалось загрузить курс из course_service.",
+            error?.message ?? "Не удалось загрузить курс.",
           );
         }
       }
@@ -357,9 +358,9 @@ function CoursePage() {
       <div className="course-page">
         <section className="course-not-found">
           <p className="course-not-found-label">Загрузка курса</p>
-          <h1 className="course-not-found-title">Подключаем course_service</h1>
+          <h1 className="course-not-found-title">Загружаем курс</h1>
           <p className="course-not-found-text">
-            Запрашиваем курс по UUID и подготавливаем его для текущего UI.
+            Подготавливаем описание, программу и материалы курса.
           </p>
         </section>
       </div>
@@ -373,7 +374,7 @@ function CoursePage() {
           <p className="course-not-found-label">Ошибка загрузки</p>
           <h1 className="course-not-found-title">Не удалось получить курс</h1>
           <p className="course-not-found-text">
-            {backendPageError || "course_service не вернул данные курса."}
+            {backendPageError || "Не удалось получить данные курса."}
           </p>
           <button
             type="button"
@@ -474,8 +475,11 @@ function CoursePage() {
         <section className="course-hero">
           <div className="course-hero-copy">
             <p className="course-hero-eyebrow">
-              {course.categoryName || "Курс"} /{" "}
-              {course.subcategoryName || "Описание структуры"}
+              {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
+              {sanitizeCourseDisplayLabel(
+                course.subcategoryName,
+                "Описание структуры",
+              )}
             </p>
             <h1 className="course-hero-title">{course.title}</h1>
             <p className="course-hero-description">{course.shortDescription}</p>

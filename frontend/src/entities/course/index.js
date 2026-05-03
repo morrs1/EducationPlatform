@@ -4,6 +4,7 @@ export { getCourseCoverSrc } from "./model/getCourseCoverSrc";
 export { getCourseProgressByCourseId } from "./model/progress";
 export { mockCatalogData } from "./model/mockCatalogData";
 export { mockCourses } from "./model/mockCourses";
+export { sanitizeCourseDisplayLabel } from "./model/courseDisplayLabels";
 export {
   enrichCourse,
   getAllCourses,

@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import {
   mapReadCourseByIdResponseToCoursePageData,
   requestAllCourses,
+  sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
 import { CourseDisplayCover } from "../../../entities/course";
 import { selectCurrentViewerId } from "../../../features/auth";
@@ -107,7 +108,7 @@ function TeachCoursesSection() {
           setBackendStatus("error");
           setBackendError(
             error?.message ??
-              "Не удалось загрузить список курсов из course_service.",
+              "Не удалось загрузить список курсов.",
           );
         }
       }
@@ -131,7 +132,7 @@ function TeachCoursesSection() {
             Загружаем ваши курсы
           </strong>
           <p className="teach-courses-section-empty">
-            Подтягиваем список из `course_service`.
+            Подготавливаем список курсов.
           </p>
         </div>
       </section>
@@ -178,7 +179,10 @@ function TeachCoursesSection() {
                       Черновик
                     </span>
                     <span className="teach-course-card-status">
-                      {course.categoryName || "Курс преподавателя"}
+                      {sanitizeCourseDisplayLabel(
+                        course.categoryName,
+                        "Курс преподавателя",
+                      )}
                     </span>
                   </div>
 

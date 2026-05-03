@@ -9,7 +9,7 @@ export const mockViewer = {
   patronymic: "",
   name: "Саркисян Баграт",
   email: "bagrat.sarkisyan@example.com",
-  headline: "Изучает frontend и продуктовую разработку",
+  headline: "Изучает веб-разработку и продуктовый подход",
   about:
     "Собирает персональный образовательный трек, тестирует интерфейсы платформы и параллельно закрывает практические задачи по React, JavaScript и продуктовому мышлению.",
   avatarUrl: buildAvatarUrl("Саркисян Баграт"),

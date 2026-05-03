@@ -228,7 +228,7 @@ export function hydrateCompletedLessonsFromLearningService({
         ok: false,
         error:
           error?.message ??
-          "Не удалось загрузить прогресс уроков из learning_service.",
+          "Не удалось загрузить прогресс уроков.",
       };
     }
   };
@@ -277,7 +277,7 @@ export function completeLessonWithLearningService({
         ok: false,
         error:
           error?.message ??
-          "Не удалось отметить урок через learning_service.",
+          "Не удалось отметить урок как завершенный.",
       };
     }
   };

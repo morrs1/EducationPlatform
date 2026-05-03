@@ -22,7 +22,7 @@ function CourseBuilderSidebar({ course, pageStatus }) {
   const resolvedDescription =
     course?.shortDescription ||
     (pageStatus === "loading"
-      ? "Подключаем метаданные курса."
+      ? "Загружаем сведения о курсе."
       : "Короткое описание появится после загрузки курса.");
   const lessonsCount = Number(course?.lessonsCount) || 0;
   const durationLabel = course?.durationLabel || "Длительность уточняется";

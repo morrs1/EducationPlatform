@@ -450,7 +450,7 @@ function MarkdownEditor({ value, onChange, disabled = false }) {
       <div className="lesson-rich-editor-panels">
         <div className="lesson-rich-editor-panel">
           <div className="lesson-rich-editor-panel-head">
-            <strong>Markdown</strong>
+            <strong>Текст урока</strong>
           </div>
           <textarea
             ref={textareaRef}
@@ -459,7 +459,7 @@ function MarkdownEditor({ value, onChange, disabled = false }) {
             className="lesson-rich-editor-source"
             spellCheck={false}
             disabled={disabled}
-            placeholder="Напишите содержание урока в Markdown..."
+            placeholder="Напишите содержание урока..."
           />
         </div>
 
@@ -515,7 +515,7 @@ function LessonAssetsManager({
     <section className="lesson-editor-block">
       <div className="lesson-editor-block-head">
         <div>
-          <span className="lesson-editor-block-kicker">АССЕТЫ</span>
+          <span className="lesson-editor-block-kicker">ФАЙЛЫ</span>
           <h2 className="lesson-editor-block-title">Материалы урока</h2>
         </div>
 
@@ -588,7 +588,7 @@ function LessonAssetsManager({
           </strong>
           <p className="lesson-editor-empty-panel-text">
             Можно прикрепить изображения, видео, PDF и любые дополнительные
-            материалы. Они сразу появятся в lesson API.
+            материалы. Они появятся в уроке после загрузки.
           </p>
         </div>
       )}
@@ -767,8 +767,7 @@ function LessonQuizBuilder({ questions, onChange }) {
             Пока без вопросов
           </strong>
           <p className="lesson-editor-empty-panel-text">
-            Добавьте первый вопрос, чтобы собрать структуру quiz-урока перед
-            сохранением в backend.
+            Добавьте первый вопрос, чтобы собрать структуру тестового урока.
           </p>
         </div>
       </section>
@@ -945,9 +944,8 @@ function LessonCodingSummary({ coding }) {
           <span className="lesson-editor-block-kicker">CODE</span>
           <h2 className="lesson-editor-block-title">Технические настройки</h2>
           <p className="lesson-editor-block-subtext">
-            Для кодовых уроков пока сохраняем текст задания и ассеты, а
-            существующие тесты и языки просто показываем как уже пришедшие из
-            backend.
+            Для кодовых уроков можно настроить текст задания, материалы,
+            тесты и язык выполнения.
           </p>
         </div>
       </div>
@@ -1264,7 +1262,7 @@ function LessonEditorSection() {
         if (!isCancelled) {
           setEditorStatus("error");
           setEditorError(
-            error?.message ?? "Не удалось загрузить lesson payload из backend.",
+            error?.message ?? "Не удалось загрузить материалы урока.",
           );
           setEditorLesson(null);
         }
@@ -1356,13 +1354,13 @@ function LessonEditorSection() {
 
       await requestUploadLessonContent(editorLesson.id, { content });
       await refreshEditorLessonWithBackendMessages(
-        "Содержимое урока сохранено в course_service.",
+        "Содержимое урока сохранено.",
       );
       setSaveState("success");
     } catch (error) {
       setSaveState("error");
       setSaveMessage(
-        error?.message ?? "Не удалось сохранить содержимое урока в backend.",
+        error?.message ?? "Не удалось сохранить содержимое урока.",
       );
     }
   }
@@ -1388,7 +1386,7 @@ function LessonEditorSection() {
       });
       await refreshEditorLessonWithBackendMessages("");
       setCoverUploadState("success");
-      setCoverUploadMessage("Обложка урока загружена в backend.");
+      setCoverUploadMessage("Обложка урока загружена.");
     } catch (error) {
       setCoverUploadState("error");
       setCoverUploadMessage(
@@ -1438,7 +1436,7 @@ function LessonEditorSection() {
             Загружаем редактор урока
           </strong>
           <p className="lesson-editor-empty-text">
-            Подключаем структуру курса и список уроков, чтобы открыть редактор.
+            Подготавливаем структуру курса и список уроков.
           </p>
         </div>
       ) : pageStatus === "error" ? (
@@ -1468,11 +1466,10 @@ function LessonEditorSection() {
       ) : editorStatus === "loading" ? (
         <div className="lesson-editor-empty-state">
           <strong className="lesson-editor-empty-title">
-            Загружаем lesson payload
+            Загружаем материалы урока
           </strong>
           <p className="lesson-editor-empty-text">
-            Подтягиваем из backend markdown, assets и тип урока для дальнейшего
-            редактирования.
+            Подготавливаем содержимое, материалы и настройки урока.
           </p>
         </div>
       ) : editorStatus === "error" || !editorLesson ? (
@@ -1481,7 +1478,7 @@ function LessonEditorSection() {
             Не удалось открыть урок
           </strong>
           <p className="lesson-editor-empty-text">
-            {editorError || "Lesson API не вернул данные по уроку."}
+            {editorError || "Не удалось получить данные урока."}
           </p>
           <button
             type="button"

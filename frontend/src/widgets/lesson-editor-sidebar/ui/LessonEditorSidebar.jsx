@@ -70,7 +70,7 @@ function LessonEditorSidebar({
 
         {pageStatus === "loading" ? (
           <p className="lesson-editor-sidebar-empty">
-            Подключаем модули и уроки курса.
+            Загружаем модули и уроки курса.
           </p>
         ) : modules.length ? (
           <div className="lesson-editor-sidebar-module-list">

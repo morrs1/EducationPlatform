@@ -161,7 +161,7 @@ export function useCatalogCollections() {
           setBackendStatus("error");
           setBackendError(
             error?.message ??
-              "Не удалось загрузить backend-курсы для каталога.",
+              "Не удалось загрузить курсы для каталога.",
           );
         }
       }

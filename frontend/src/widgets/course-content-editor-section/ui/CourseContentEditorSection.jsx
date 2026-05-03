@@ -238,7 +238,7 @@ function CourseContentEditorSection() {
             Загружаем редактор курса
           </strong>
           <p className="course-editor-empty-body">
-            Подключаем текущую структуру модулей и уроков из `course_service`.
+            Подготавливаем модули и уроки для редактирования.
           </p>
         </div>
       </section>
@@ -254,7 +254,7 @@ function CourseContentEditorSection() {
           </strong>
           <p className="course-editor-empty-body">
             {pageError ||
-              "course_service не вернул данные по содержанию курса."}
+              "Не удалось получить содержание курса."}
           </p>
           <button
             type="button"

@@ -68,7 +68,7 @@ const specificSyllabusByCourseId = {
         lessons: [
           { id: "react-9", title: "useEffect без типичных ловушек", durationLabel: "20 мин" },
           { id: "react-10", title: "Состояния загрузки и ошибок", durationLabel: "17 мин" },
-          { id: "react-11", title: "Практика: mock-driven экран курса", durationLabel: "30 мин" },
+          { id: "react-11", title: "Практика: экран курса", durationLabel: "30 мин" },
         ],
       },
       {

@@ -106,7 +106,7 @@ function CourseBuilderPage() {
 
   const syncCourse = useCallback(async () => {
     if (!hasValidCourseId) {
-      const nextError = "Некорректный UUID курса для конструктора.";
+      const nextError = "Не удалось открыть курс для редактирования.";
       setCourse(null);
       setModules([]);
       setPageStatus("error");
@@ -133,8 +133,7 @@ function CourseBuilderPage() {
         ok: true,
       };
     } catch (error) {
-      const nextError =
-        error?.message ?? "Не удалось загрузить курс из course_service.";
+      const nextError = error?.message ?? "Не удалось загрузить курс.";
 
       setCourse(null);
       setModules([]);
@@ -157,7 +156,7 @@ function CourseBuilderPage() {
           setCourse(null);
           setModules([]);
           setPageStatus("error");
-          setPageError("Некорректный UUID курса для конструктора.");
+          setPageError("Не удалось открыть курс для редактирования.");
         }
         return;
       }
@@ -183,7 +182,7 @@ function CourseBuilderPage() {
           setModules([]);
           setPageStatus("error");
           setPageError(
-            error?.message ?? "Не удалось загрузить курс из course_service.",
+            error?.message ?? "Не удалось загрузить курс.",
           );
         }
       }
@@ -220,8 +219,7 @@ function CourseBuilderPage() {
     } catch (error) {
       return {
         ok: false,
-        error:
-          error?.message ?? "Не удалось создать модуль через course_service.",
+        error: error?.message ?? "Не удалось создать модуль.",
       };
     }
   }
@@ -243,8 +241,7 @@ function CourseBuilderPage() {
     } catch (error) {
       return {
         ok: false,
-        error:
-          error?.message ?? "Не удалось создать урок через course_service.",
+        error: error?.message ?? "Не удалось создать урок.",
       };
     }
   }

@@ -45,7 +45,7 @@ function LessonEditorPage() {
           setCourse(null);
           setModules([]);
           setPageStatus("error");
-          setPageError("Некорректный UUID курса для редактора уроков.");
+          setPageError("Не удалось открыть урок для редактирования.");
         }
         return;
       }

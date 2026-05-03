@@ -334,7 +334,7 @@ function AuthModal() {
                   />
 
                   <textarea
-                    placeholder="Статус в профиле, коротко о себе. Например: Ищу первую стажировку во frontend"
+                    placeholder="Статус в профиле, коротко о себе. Например: Ищу первую стажировку в веб-разработке"
                     className="auth-modal-input auth-modal-textarea"
                     value={registerStatusInput}
                     onChange={handleRegisterStatusChange}

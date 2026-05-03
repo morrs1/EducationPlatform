@@ -114,7 +114,7 @@ function LessonPage() {
           setBackendResolvedLessonId(null);
           setBackendPageStatus("error");
           setBackendPageError(
-            error?.message ?? "Не удалось загрузить урок из course_service.",
+            error?.message ?? "Не удалось загрузить урок.",
           );
         }
       }
@@ -538,9 +538,9 @@ function LessonPage() {
       <div className="lesson-page">
         <section className="lesson-card">
           <p className="lesson-label">Загрузка урока</p>
-          <h1 className="lesson-title">Подключаем course_service</h1>
+          <h1 className="lesson-title">Загружаем урок</h1>
           <p className="lesson-text">
-            Получаем курс, содержание и выбранный урок по UUID.
+            Подготавливаем содержание и задания урока.
           </p>
         </section>
       </div>
@@ -554,7 +554,7 @@ function LessonPage() {
           <p className="lesson-label">Ошибка загрузки</p>
           <h1 className="lesson-title">Не удалось получить урок</h1>
           <p className="lesson-text">
-            {backendPageError || "course_service не вернул данные урока."}
+            {backendPageError || "Не удалось получить данные урока."}
           </p>
           <button
             type="button"

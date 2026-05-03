@@ -37,7 +37,7 @@ function CourseSyllabusSection() {
             Загружаем содержание курса
           </strong>
           <p className="course-syllabus-empty-text">
-            Подключаем `course_service` и собираем актуальную структуру модулей.
+            Подготавливаем модули и уроки.
           </p>
         </div>
       </section>
@@ -52,7 +52,7 @@ function CourseSyllabusSection() {
             Не удалось загрузить структуру курса
           </strong>
           <p className="course-syllabus-empty-text">
-            {pageError || "course_service не вернул данные по содержанию."}
+            {pageError || "Не удалось получить содержание курса."}
           </p>
           <button
             type="button"
@@ -75,9 +75,8 @@ function CourseSyllabusSection() {
             {course?.title || "Содержание курса"}
           </h1>
           <p className="course-syllabus-section-description">
-            Здесь отображается текущая структура курса: модули, типы уроков,
-            длительность и доступность превью. Это тот вид, который удобно
-            использовать для быстрой проверки программы.
+            Здесь отображается программа курса: модули, типы уроков,
+            длительность и доступность превью.
           </p>
         </div>
 

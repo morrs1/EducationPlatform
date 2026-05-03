@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { sanitizeCourseDisplayLabel } from "../../model/courseDisplayLabels";
 
 function CoursePreviewCard({ course }) {
   const levelLabelMap = {
@@ -15,11 +16,12 @@ function CoursePreviewCard({ course }) {
     typeof course.studentsCount === "number" && course.studentsCount > 0
       ? `${course.studentsCount} студентов`
       : "Новый курс";
+  const categoryLabel = sanitizeCourseDisplayLabel(course.categoryName);
 
   return (
     <Link className="course-preview-card" to={`/courses/${course.id}`}>
       <div className="course-preview-card-badges">
-        <span className="course-preview-card-badge">{course.categoryName}</span>
+        <span className="course-preview-card-badge">{categoryLabel}</span>
         <span className="course-preview-card-level">{levelLabel}</span>
       </div>
 
@@ -42,7 +44,7 @@ function CoursePreviewCard({ course }) {
           ) : (
             <div className="course-preview-card-placeholder">
               <span className="course-preview-card-category">
-                {course.categoryName}
+                {categoryLabel}
               </span>
             </div>
           )}

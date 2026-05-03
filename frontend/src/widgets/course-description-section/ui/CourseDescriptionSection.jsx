@@ -44,7 +44,7 @@ function CourseDescriptionSection() {
             Загружаем описание курса
           </strong>
           <p className="course-syllabus-empty-text">
-            Подключаем метаданные курса из `course_service`.
+            Подготавливаем описание и основные сведения.
           </p>
         </div>
       </section>
@@ -59,7 +59,7 @@ function CourseDescriptionSection() {
             Не удалось загрузить описание курса
           </strong>
           <p className="course-syllabus-empty-text">
-            {pageError || "course_service не вернул метаданные курса."}
+            {pageError || "Не удалось получить описание курса."}
           </p>
           <button
             type="button"
@@ -78,7 +78,7 @@ function CourseDescriptionSection() {
       <header className="course-description-section-head">
         <span className="course-builder-section-kicker">ОПИСАНИЕ КУРСА</span>
         <h1 className="course-builder-section-title">
-          {course?.title || "Метаданные курса"}
+          {course?.title || "Описание курса"}
         </h1>
       </header>
 

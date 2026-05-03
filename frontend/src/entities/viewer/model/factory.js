@@ -21,6 +21,24 @@ function normalizeText(value, { lowercase = false } = {}) {
 
 const INTEGER_ID_PATTERN = /^\d+$/;
 
+function sanitizeCourseDisplayLabel(value, fallback = "Курс") {
+  const normalizedValue = normalizeText(value);
+  const normalizedSearchValue = normalizedValue.toLowerCase();
+
+  if (
+    !normalizedValue ||
+    ["frontend", "backend", "bd", "db"].includes(normalizedSearchValue) ||
+    normalizedSearchValue.includes("курс из базы данных") ||
+    normalizedSearchValue.includes("база данных") ||
+    normalizedSearchValue.includes("базы данных") ||
+    normalizedSearchValue.includes("database")
+  ) {
+    return fallback;
+  }
+
+  return normalizedValue;
+}
+
 export function normalizeViewerCourseId(value) {
   if (Number.isFinite(value)) {
     return value;
@@ -137,11 +155,13 @@ export function normalizeViewerCourseSnapshot(value) {
     title: normalizeText(value?.title) || "Курс без названия",
     shortDescription: normalizeText(value?.shortDescription),
     categoryId: normalizeViewerCourseId(value?.categoryId) ?? null,
-    categoryName: normalizeText(value?.categoryName) || "Курс",
-    categoryIcon: normalizeText(value?.categoryIcon) || "DB",
+    categoryName: sanitizeCourseDisplayLabel(value?.categoryName),
+    categoryIcon: normalizeText(value?.categoryIcon) || "📘",
     subcategoryId: normalizeViewerCourseId(value?.subcategoryId) ?? null,
-    subcategoryName:
-      normalizeText(value?.subcategoryName) || "Курс из базы данных",
+    subcategoryName: sanitizeCourseDisplayLabel(
+      value?.subcategoryName,
+      "Материалы курса",
+    ),
     level: normalizeText(value?.level) || "beginner",
     durationLabel: normalizeText(value?.durationLabel) || "Длительность уточняется",
     rating: Number.isFinite(value?.rating) ? value.rating : null,

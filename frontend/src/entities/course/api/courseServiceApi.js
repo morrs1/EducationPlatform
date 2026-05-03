@@ -1,3 +1,5 @@
+import { sanitizeCourseDisplayLabel } from "../model/courseDisplayLabels";
+
 const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course-service";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
@@ -71,26 +73,16 @@ function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function extractErrorMessage(response, responseBody) {
-  if (typeof responseBody === "string" && responseBody.trim()) {
-    return responseBody.trim();
+function extractErrorMessage(response) {
+  if (response.status === 404) {
+    return "Данные не найдены.";
   }
 
-  if (
-    responseBody &&
-    typeof responseBody === "object" &&
-    !Array.isArray(responseBody)
-  ) {
-    if (typeof responseBody.message === "string" && responseBody.message.trim()) {
-      return responseBody.message.trim();
-    }
-
-    if (typeof responseBody.msg === "string" && responseBody.msg.trim()) {
-      return responseBody.msg.trim();
-    }
+  if (response.status === 401 || response.status === 403) {
+    return "Для этого действия нужно войти в аккаунт.";
   }
 
-  return `course_service returned ${response.status}.`;
+  return "Не удалось выполнить действие. Попробуйте позже.";
 }
 
 function normalizeUuidResponse(responseBody) {
@@ -100,7 +92,7 @@ function normalizeUuidResponse(responseBody) {
       : normalizeText(responseBody?.id);
 
   if (!isUuid(normalizedValue)) {
-    throw new Error("course_service вернул некорректный UUID.");
+    throw new Error("Не удалось завершить действие. Попробуйте позже.");
   }
 
   return normalizedValue;
@@ -474,11 +466,11 @@ function formatMinutesLabel(estimatedMinutes) {
 }
 
 function buildCourseEyebrow(tags, difficulty) {
-  const primaryTag = normalizeText(tags[0]);
+  const primaryTag = sanitizeCourseDisplayLabel(tags[0]);
   const parts = [formatDifficultyLabel(difficulty)];
 
   return {
-    categoryName: primaryTag || "Курс из базы данных",
+    categoryName: primaryTag,
     subcategoryName: parts.join(" · "),
   };
 }
@@ -827,7 +819,7 @@ async function requestCourseService(pathname, options = {}) {
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response, responseBody));
+    throw new Error(extractErrorMessage(response));
   }
 
   return responseBody;
@@ -851,7 +843,7 @@ async function requestCourseServiceJson(pathname, requestCache) {
       const responseBody = await readResponseBody(response);
 
       if (!response.ok) {
-        throw new Error(extractErrorMessage(response, responseBody));
+        throw new Error(extractErrorMessage(response));
       }
 
       return responseBody;
@@ -1041,7 +1033,7 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
       studentsCount: null,
       categoryId: null,
       subcategoryId: null,
-      categoryIcon: "DB",
+      categoryIcon: "📘",
       categoryName: eyebrow.categoryName,
       subcategoryName: eyebrow.subcategoryName,
       coverUrl: "",
