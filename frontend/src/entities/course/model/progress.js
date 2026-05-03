@@ -30,6 +30,7 @@ export function getCourseProgressByCourseId({
   viewedLessonIds = [],
   completedLessonIds = [],
   courseSnapshot = null,
+  isCompletedCourse = false,
 }) {
   const course = courseSnapshot ?? mockCoursesById.get(courseId) ?? null;
 
@@ -39,7 +40,31 @@ export function getCourseProgressByCourseId({
 
   const persistedProgress = viewerProgress ?? {};
   const lessonsCount = course.lessonsCount ?? 0;
+  const completedTests = Number(persistedProgress.completedTests) || 0;
+  const completedTasks = Number(persistedProgress.completedTasks) || 0;
+  const lastVisitedAt =
+    typeof persistedProgress.lastVisitedAt === "string" &&
+    persistedProgress.lastVisitedAt
+      ? persistedProgress.lastVisitedAt
+      : null;
   const interactiveLessonIds = getCourseInteractiveLessonIds(course);
+  const isPersistedAsComplete =
+    lessonsCount > 0 &&
+    Number(persistedProgress.completedLessons) >= lessonsCount;
+
+  if (isCompletedCourse || isPersistedAsComplete) {
+    return {
+      completedLessons: lessonsCount,
+      completedTests: Math.max(completedTests, course.testsCount ?? 0),
+      completedTasks: Math.max(completedTasks, course.tasksCount ?? 0),
+      lastVisitedAt,
+      progressPercent: lessonsCount > 0 ? 100 : 0,
+      interactiveLessonsCount: interactiveLessonIds.length,
+      startedInteractiveLessonsCount: interactiveLessonIds.length,
+      completedInteractiveLessonsCount: interactiveLessonIds.length,
+    };
+  }
+
   const lessonProgressByLessonId = getLessonProgressMap(
     viewedLessonIds,
     completedLessonIds,
@@ -72,13 +97,9 @@ export function getCourseProgressByCourseId({
 
   return {
     completedLessons,
-    completedTests: Number(persistedProgress.completedTests) || 0,
-    completedTasks: Number(persistedProgress.completedTasks) || 0,
-    lastVisitedAt:
-      typeof persistedProgress.lastVisitedAt === "string" &&
-      persistedProgress.lastVisitedAt
-        ? persistedProgress.lastVisitedAt
-        : null,
+    completedTests,
+    completedTasks,
+    lastVisitedAt,
     progressPercent,
     interactiveLessonsCount: interactiveLessonIds.length,
     startedInteractiveLessonsCount,

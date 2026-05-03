@@ -59,6 +59,8 @@ function attachViewerState(
 ) {
   const enrichedCourse = enrichCourse(course);
   const storageKey = getViewerCourseStorageKey(course.id);
+  const isCompleted =
+    sessionIsActive && viewer.completedCourseIds.includes(course.id);
   const progress = sessionIsActive
     ? getCourseProgressByCourseId({
         courseId: course.id,
@@ -66,6 +68,7 @@ function attachViewerState(
         viewedLessonIds,
         completedLessonIds,
         courseSnapshot: course,
+        isCompletedCourse: isCompleted,
       })
     : null;
 
@@ -74,8 +77,7 @@ function attachViewerState(
     isEnrolled: sessionIsActive && viewer.enrolledCourseIds.includes(course.id),
     isFavourite:
       sessionIsActive && viewer.favouriteCourseIds.includes(course.id),
-    isCompleted:
-      sessionIsActive && viewer.completedCourseIds.includes(course.id),
+    isCompleted,
     hasCertificate:
       sessionIsActive && viewer.certificateCourseIds.includes(course.id),
     progress,
@@ -125,6 +127,7 @@ export const selectViewerCourseProgress = createSelector(
       viewedLessonIds,
       completedLessonIds,
       courseSnapshot: getViewerCourseRecord(viewer, normalizedCourseId),
+      isCompletedCourse: viewer.completedCourseIds.includes(normalizedCourseId),
     });
   },
 );

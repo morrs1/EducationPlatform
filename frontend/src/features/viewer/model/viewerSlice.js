@@ -57,6 +57,15 @@ function upsertCourseSnapshot(state, courseSnapshot) {
   state.courseSnapshotsById[String(courseSnapshot.id)] = courseSnapshot;
 }
 
+function createCompletedCourseProgress(course) {
+  return {
+    completedLessons: course?.lessonsCount ?? 0,
+    completedTests: course?.testsCount ?? 0,
+    completedTasks: course?.tasksCount ?? 0,
+    lastVisitedAt: new Date().toISOString(),
+  };
+}
+
 function isGeneratedViewerAvatar(avatarUrl) {
   return avatarUrl.includes("api.dicebear.com/9.x/initials/svg");
 }
@@ -205,12 +214,7 @@ const viewerSlice = createSlice({
 
       const storageKey = getViewerCourseStorageKey(courseId);
 
-      state.progressByCourseId[storageKey] = {
-        completedLessons: course?.lessonsCount ?? 0,
-        completedTests: course?.testsCount ?? 0,
-        completedTasks: course?.tasksCount ?? 0,
-        lastVisitedAt: new Date().toISOString(),
-      };
+      state.progressByCourseId[storageKey] = createCompletedCourseProgress(course);
     },
 
     syncLearningEnrollment: (state, action) => {
@@ -249,6 +253,17 @@ const viewerSlice = createSlice({
           completedTasks: 0,
           lastVisitedAt: new Date().toISOString(),
         };
+      });
+
+      state.completedCourseIds.forEach((courseId) => {
+        const storageKey = getViewerCourseStorageKey(courseId);
+        const course = getViewerCourseRecord(state, courseId);
+
+        if (!storageKey || !course) {
+          return;
+        }
+
+        state.progressByCourseId[storageKey] = createCompletedCourseProgress(course);
       });
     },
 
