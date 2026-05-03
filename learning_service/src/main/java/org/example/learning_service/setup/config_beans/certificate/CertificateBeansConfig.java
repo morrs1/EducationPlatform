@@ -2,6 +2,7 @@ package org.example.learning_service.setup.config_beans.certificate;
 
 import org.example.learning_service.application.interactors.certificate.create_certificate.CreateCertificateInteractor;
 import org.example.learning_service.application.interactors.certificate.get_certificate.GetCertificateInteractor;
+import org.example.learning_service.application.interactors.certificate.list_certificates_by_user.ListCertificatesByUserInteractor;
 import org.example.learning_service.application.ports.CertificateRepo;
 import org.example.learning_service.application.ports.EnrollmentRepo;
 import org.example.learning_service.application.ports.TransactionManager;
@@ -38,5 +39,13 @@ public class CertificateBeansConfig {
             CertificateRepo certificateRepo
     ) {
         return new GetCertificateInteractor(transactionManager, certificateRepo);
+    }
+
+    @Bean
+    public ListCertificatesByUserInteractor listCertificatesByUserInteractor(
+            TransactionManager transactionManager,
+            CertificateRepo certificateRepo
+    ) {
+        return new ListCertificatesByUserInteractor(transactionManager, certificateRepo);
     }
 }
