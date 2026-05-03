@@ -15,6 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -104,5 +105,46 @@ public class HibernateCourseRepo implements CourseRepo {
                 .getResultList()
                 .stream().map(mapper::toDomainCourse)
                 .toList();
+    }
+
+    @Override
+    public List<Course> readPublishedCoursesByAuthor(UUID authorId) {
+        return entityManager
+                .createQuery(
+                        "select distinct c from HibernateCourse c left join fetch c.tags "
+                                + "where c.authorId = :authorId and c.isPreview = true order by c.createdAt desc",
+                        HibernateCourse.class
+                )
+                .setParameter("authorId", authorId)
+                .getResultList()
+                .stream()
+                .map(mapper::toDomainCourse)
+                .toList();
+    }
+
+    @Override
+    public List<Course> readDraftCoursesByAuthor(UUID authorId) {
+        return entityManager
+                .createQuery(
+                        "select distinct c from HibernateCourse c left join fetch c.tags "
+                                + "where c.authorId = :authorId and (c.isPreview is null or c.isPreview = false) "
+                                + "order by c.createdAt desc",
+                        HibernateCourse.class
+                )
+                .setParameter("authorId", authorId)
+                .getResultList()
+                .stream()
+                .map(mapper::toDomainCourse)
+                .toList();
+    }
+
+    @Override
+    public void publishCourse(UUID courseId) {
+        var hibernateCourse = entityManager.find(HibernateCourse.class, courseId);
+        if (hibernateCourse == null) {
+            throw new CourseNotFoundException("Course with this id was not found");
+        }
+        hibernateCourse.setIsPreview(true);
+        hibernateCourse.setUpdatedAt(LocalDateTime.now());
     }
 }

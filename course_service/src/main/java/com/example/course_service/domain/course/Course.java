@@ -25,6 +25,7 @@ public class Course extends BaseEntity {
     private CourseDifficulty difficulty;
     private CourseLanguageCode languageCode;
     private CourseEstimatedMinutes estimatedMinutes;
+    private CourseIsPreview isPreview;
     private List<Module> structure;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -39,6 +40,7 @@ public class Course extends BaseEntity {
             CourseDifficulty difficulty,
             CourseLanguageCode languageCode,
             CourseEstimatedMinutes estimatedMinutes,
+            CourseIsPreview isPreview,
             List<Module> structure,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
@@ -52,6 +54,7 @@ public class Course extends BaseEntity {
         this.difficulty = difficulty;
         this.languageCode = languageCode;
         this.estimatedMinutes = estimatedMinutes;
+        this.isPreview = isPreview;
         this.structure = Objects.isNull(structure) ? new ArrayList<>() : new ArrayList<>(structure);
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;

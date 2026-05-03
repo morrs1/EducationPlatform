@@ -40,6 +40,8 @@ public class HibernateCourse {
     private String languageCode;
     @Column(name = "estimated_minutes")
     private Integer estimatedMinutes;
+    @Column(name = "is_preview")
+    private Boolean isPreview;
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "structure", columnDefinition = "jsonb", nullable = false)
     private CourseStructureJson structure;

@@ -41,6 +41,7 @@ public class CourseDomainService extends BaseDomainService {
                 new CourseDifficulty(courseDifficulty),
                 new CourseLanguageCode(languageCode),
                 new CourseEstimatedMinutes(estimatedMinutes),
+                new CourseIsPreview(false),
                 List.of(),
                 LocalDateTime.now(),
                 LocalDateTime.now(),

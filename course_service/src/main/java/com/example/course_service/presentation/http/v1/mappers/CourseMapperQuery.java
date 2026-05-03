@@ -18,6 +18,7 @@ public class CourseMapperQuery {
 
     public ReadCourseByIdResponse toReadCourseByIdResponse(ReadCourseByIdView readCourseByIdView) {
         return new ReadCourseByIdResponse(
+                readCourseByIdView.id(),
                 readCourseByIdView.authorId(),
                 readCourseByIdView.title(),
                 readCourseByIdView.shortDescription(),
@@ -25,6 +26,7 @@ public class CourseMapperQuery {
                 readCourseByIdView.difficulty(),
                 readCourseByIdView.languageCode(),
                 readCourseByIdView.estimatedMinutes(),
+                readCourseByIdView.isPreview(),
                 mapModules(readCourseByIdView.structure()),
                 readCourseByIdView.createdAt(),
                 readCourseByIdView.updatedAt(),
