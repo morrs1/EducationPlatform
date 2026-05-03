@@ -25,6 +25,9 @@ function Layout() {
   const isLoginModalOpen = useSelector(selectIsLoginModalOpen);
   const isRegisterModalOpen = useSelector(selectIsRegisterModalOpen);
   const isAuthModalOpen = isLoginModalOpen || isRegisterModalOpen;
+  const shouldShowFooter = !/^\/courses\/[^/]+\/lessons\/[^/]+\/?$/.test(
+    location.pathname,
+  );
   const appShellStateClassName = [
     "app-shell",
     isCatalogOpen ? "is-catalog-open" : "",
@@ -108,7 +111,7 @@ function Layout() {
       >
         <Outlet />
       </main>
-      <Footer />
+      {shouldShowFooter ? <Footer /> : null}
       <AuthModal />
       <CatalogSidebar headerHeight={headerHeight} />
     </div>
