@@ -32,3 +32,5 @@ temp:
     secret-key: ${TEMP_S3_SECRET_KEY:}
     public-base-url: ${TEMP_S3_PUBLIC_BASE_URL:}
     path-style-access: ${TEMP_S3_PATH_STYLE_ACCESS:false}
+server:
+  port: 8080
