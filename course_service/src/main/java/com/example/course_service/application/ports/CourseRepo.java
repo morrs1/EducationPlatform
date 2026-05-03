@@ -18,4 +18,10 @@ public interface CourseRepo {
     void addLessonPreview(UUID courseId, UUID moduleId, LessonPreview lessonPreview);
 
     List<Course> readAll();
+
+    List<Course> readPublishedCoursesByAuthor(UUID authorId);
+
+    List<Course> readDraftCoursesByAuthor(UUID authorId);
+
+    void publishCourse(UUID courseId);
 }

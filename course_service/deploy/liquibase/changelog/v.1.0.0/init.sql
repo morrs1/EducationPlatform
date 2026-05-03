@@ -13,6 +13,7 @@ CREATE TABLE course
     language_code     VARCHAR(16),
     estimated_minutes INTEGER      NOT NULL DEFAULT 0,
     structure         JSONB        NOT NULL DEFAULT '{"modules": []}'::jsonb,
+    is_preview        BOOLEAN      DEFAULT FALSE,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     CONSTRAINT chk_course_difficulty

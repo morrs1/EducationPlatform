@@ -929,7 +929,7 @@ SET structure = jsonb_set(
         (
             SELECT jsonb_agg(
                            CASE
-                               WHEN jsonb_exists(module, 'courseId') THEN module
+                               WHEN jsonb_path_exists(module, '$.courseId') THEN module
                                ELSE jsonb_set(module, '{courseId}', to_jsonb(course.id::text), true)
                                END
                    )

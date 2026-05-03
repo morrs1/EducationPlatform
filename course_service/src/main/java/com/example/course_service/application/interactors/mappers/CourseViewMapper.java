@@ -16,6 +16,7 @@ public class CourseViewMapper {
 
     public ReadCourseByIdView toReadCourseByIdView(Course course) {
         return new ReadCourseByIdView(
+                course.getId(),
                 course.getAuthorId(),
                 course.getTitle().getTitle(),
                 course.getShortDescription().getShortDescription(),
@@ -23,6 +24,7 @@ public class CourseViewMapper {
                 course.getDifficulty().getDifficulty(),
                 course.getLanguageCode().getLanguageCode(),
                 course.getEstimatedMinutes().getEstimatedMinutes(),
+                Objects.isNull(course.getIsPreview()) ? Boolean.FALSE : course.getIsPreview().isPreview(),
                 mapModules(course.getStructure()),
                 course.getCreatedAt(),
                 course.getUpdatedAt(),
