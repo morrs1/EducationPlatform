@@ -7,6 +7,7 @@ import org.example.learning_service.infrastructure.persistence.mappers.Certifica
 import org.example.learning_service.infrastructure.persistence.repositories.CertificateSpringDataRepo;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +21,13 @@ public class CertificateRepoJpaAdapter implements CertificateRepo {
     @Override
     public Optional<Certificate> findById(UUID id) {
         return certificateSpringDataRepo.findById(id).map(certificatePersistenceMapper::toDomain);
+    }
+
+    @Override
+    public List<Certificate> findByUserIdOrderByIssuedAtDesc(UUID userId) {
+        return certificateSpringDataRepo.findAllByUserIdOrderByIssuedAtDesc(userId).stream()
+                .map(certificatePersistenceMapper::toDomain)
+                .toList();
     }
 
     @Override
