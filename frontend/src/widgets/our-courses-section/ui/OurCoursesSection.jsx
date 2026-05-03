@@ -15,9 +15,7 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
   const resolvedActiveCategoryId = hasActiveCategory
     ? activeCategoryId
     : (courseCategories[0]?.id ?? null);
-  const effectiveCurrentPage = hasActiveCategory
-    ? currentPage
-    : 0;
+  const effectiveCurrentPage = resolvedActiveCategoryId ? currentPage : 0;
 
   const activeCategoryCourses = resolvedActiveCategoryId
     ? (coursesByCategory[resolvedActiveCategoryId] ?? [])

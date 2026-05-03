@@ -297,11 +297,6 @@ function ProfileActivity({ viewerId = null }) {
               "пройденных уроков",
             )}
           </span>
-          <span>
-            {tooltip.day.lessons}{" "}
-            {getPlural(tooltip.day.lessons, "урок", "урока", "уроков")} за
-            день
-          </span>
         </div>
       ) : null}
 
@@ -366,11 +361,6 @@ function ProfileActivity({ viewerId = null }) {
                       "пройденный урок",
                       "пройденных урока",
                       "пройденных уроков",
-                    )}, ${day.lessons} ${getPlural(
-                      day.lessons,
-                      "урок",
-                      "урока",
-                      "уроков",
                     )}`;
 
                     return (

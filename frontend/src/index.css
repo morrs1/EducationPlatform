@@ -18,10 +18,10 @@
     --app-border: rgba(23, 34, 59, 0.1);
     --app-border-strong: rgba(37, 99, 235, 0.18);
     --app-shadow: 0 24px 60px -34px rgba(15, 23, 42, 0.22);
-    --activity-level-0: #d7e0f1;
-    --activity-level-1: #bfdbfe;
-    --activity-level-2: #60a5fa;
-    --activity-level-3: #2563eb;
+    --activity-level-0: #e5eaf3;
+    --activity-level-1: #bbf7d0;
+    --activity-level-2: #4ade80;
+    --activity-level-3: #15803d;
   }
 
   :root[data-theme="dark"] {
@@ -40,10 +40,10 @@
     --app-border: rgba(148, 163, 184, 0.1);
     --app-border-strong: rgba(91, 124, 240, 0.28);
     --app-shadow: 0 30px 70px -36px rgba(0, 0, 0, 0.72);
-    --activity-level-0: #1f2737;
-    --activity-level-1: #2e3b55;
-    --activity-level-2: #4865b8;
-    --activity-level-3: #819cff;
+    --activity-level-0: #263244;
+    --activity-level-1: #14532d;
+    --activity-level-2: #22c55e;
+    --activity-level-3: #86efac;
   }
 
   html,
@@ -2775,7 +2775,7 @@
   .profile-activity-cell-button:hover,
   .profile-activity-cell-button:focus-visible,
   .profile-activity-cell-button.is-active {
-    @apply scale-110 border-gray-900 outline-none;
+    @apply scale-110 border-gray-900 outline-none shadow-md;
   }
 
   .profile-activity-cell-placeholder {
@@ -2783,7 +2783,7 @@
   }
 
   .profile-activity-cell-button.is-today {
-    @apply border-red-500;
+    @apply border-red-500 shadow-[0_0_0_2px_rgba(239,68,68,0.22)];
   }
 
   .profile-activity-cell.level-0 {

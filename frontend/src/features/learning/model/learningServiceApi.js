@@ -1,6 +1,6 @@
 const DEFAULT_LEARNING_SERVICE_API_BASE_URL = "/api/learning-service";
 const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
