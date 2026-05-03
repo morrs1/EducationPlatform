@@ -6,14 +6,10 @@ import org.example.user_service.domain.base.BaseValueObject;
 import org.example.user_service.domain.base.exceptions.ValidateException;
 
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 @ToString
 @Getter
 public class UserStatus extends BaseValueObject {
-
-    private static final Pattern STATUS_PATTERN =
-            Pattern.compile("^[A-Z][A-Z_]{1,31}$");
 
     private final String status;
 
@@ -28,8 +24,5 @@ public class UserStatus extends BaseValueObject {
             throw new ValidateException("Status must not be null");
         }
 
-        if (!STATUS_PATTERN.matcher(status).matches()) {
-            throw new ValidateException("Status must be uppercase and may contain underscores");
-        }
     }
 }
