@@ -2,10 +2,14 @@ import { Link, useLocation, useResolvedPath } from "react-router";
 
 function TeachSidebar() {
   const location = useLocation();
-  const coursesPath = useResolvedPath("courses");
+  const publishedCoursesPath = useResolvedPath("courses/published");
+  const draftCoursesPath = useResolvedPath("courses/drafts");
   const createCoursePath = useResolvedPath("courses/new");
-  const isCoursesActive =
-    location.pathname.startsWith(coursesPath.pathname) ||
+  const isPublishedCoursesActive = location.pathname.startsWith(
+    publishedCoursesPath.pathname,
+  );
+  const isDraftCoursesActive =
+    location.pathname.startsWith(draftCoursesPath.pathname) ||
     location.pathname.startsWith(createCoursePath.pathname);
 
   return (
@@ -17,11 +21,19 @@ function TeachSidebar() {
         + Новый курс
       </Link>
       <Link
-        to="courses"
-        className={`teach-sidebar-navlink${isCoursesActive ? " is-active" : ""}`}
-        aria-current={isCoursesActive ? "page" : undefined}
+        to="courses/published"
+        className={`teach-sidebar-navlink${isPublishedCoursesActive ? " is-active" : ""}`}
+        aria-current={isPublishedCoursesActive ? "page" : undefined}
       >
-        Курсы
+        Опубликованные курсы
+      </Link>
+
+      <Link
+        to="courses/drafts"
+        className={`teach-sidebar-navlink${isDraftCoursesActive ? " is-active" : ""}`}
+        aria-current={isDraftCoursesActive ? "page" : undefined}
+      >
+        Черновики
       </Link>
     </nav>
   );

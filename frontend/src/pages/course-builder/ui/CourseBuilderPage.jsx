@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Outlet, useParams } from "react-router";
+import { Link, Outlet, useParams } from "react-router";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
   createViewerCourseSnapshot,
@@ -16,6 +16,7 @@ import {
   requestAddLessonToCourse,
   requestAddModuleToCourse,
   requestCourseById,
+  requestPublishCourse,
 } from "../../../entities/course";
 import { CourseBuilderSidebar } from "../../../widgets/course-builder-sidebar";
 
@@ -38,6 +39,8 @@ function CourseBuilderPage() {
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [requestSeed, setRequestSeed] = useState(0);
+  const [publishStatus, setPublishStatus] = useState("idle");
+  const [publishError, setPublishError] = useState("");
   const hasValidCourseId = Boolean(courseId && isUuid(courseId));
 
   const courseServiceAuthorId = useMemo(
@@ -205,7 +208,51 @@ function CourseBuilderPage() {
     setRequestSeed((value) => value + 1);
   }
 
+  async function publishCourse() {
+    if (!courseId || !isUuid(courseId) || !course) {
+      setPublishError("Не удалось опубликовать курс.");
+      return;
+    }
+
+    if (course.isPublished) {
+      return;
+    }
+
+    if (course.authorId !== courseServiceAuthorId) {
+      setPublishError("Опубликовать курс может только его автор.");
+      return;
+    }
+
+    setPublishStatus("loading");
+    setPublishError("");
+
+    try {
+      await requestPublishCourse(courseId);
+      const result = await syncCourse();
+
+      if (!result.ok) {
+        setPublishStatus("error");
+        setPublishError(
+          result.error || "Курс опубликован, но данные не обновились.",
+        );
+        return;
+      }
+
+      setPublishStatus("success");
+    } catch (error) {
+      setPublishStatus("error");
+      setPublishError(error?.message ?? "Не удалось опубликовать курс.");
+    }
+  }
+
   async function createModule(payload) {
+    if (course?.isPublished) {
+      return {
+        ok: false,
+        error: "Опубликованный курс недоступен для редактирования.",
+      };
+    }
+
     if (!courseId || !isUuid(courseId)) {
       return {
         ok: false,
@@ -225,6 +272,13 @@ function CourseBuilderPage() {
   }
 
   async function createLesson(payload) {
+    if (course?.isPublished) {
+      return {
+        ok: false,
+        error: "Опубликованный курс недоступен для редактирования.",
+      };
+    }
+
     if (!courseId || !isUuid(courseId)) {
       return {
         ok: false,
@@ -249,24 +303,54 @@ function CourseBuilderPage() {
   return (
     <div className="course-builder-layout">
       <aside className="course-builder-layout-sidebar-rail">
-        <CourseBuilderSidebar course={course} pageStatus={pageStatus} />
+        <CourseBuilderSidebar
+          course={course}
+          pageStatus={pageStatus}
+          onPublishCourse={publishCourse}
+          publishStatus={publishStatus}
+          publishError={publishError}
+          canPublishCourse={
+            pageStatus === "success" &&
+            Boolean(course) &&
+            !course.isPublished &&
+            course.authorId === courseServiceAuthorId
+          }
+        />
       </aside>
 
       <main className="course-builder-layout-main-rail">
         <section className="course-builder-page">
-          <Outlet
-            context={{
-              courseId,
-              course,
-              modules,
-              pageStatus,
-              pageError,
-              viewerName,
-              reloadCourse,
-              createModule,
-              createLesson,
-            }}
-          />
+          {pageStatus === "success" && course?.isPublished ? (
+            <div className="course-editor-empty-state">
+              <strong className="course-editor-empty-title">
+                Курс уже опубликован
+              </strong>
+              <p className="course-editor-empty-body">
+                Опубликованный курс доступен студентам и закрыт для
+                редактирования.
+              </p>
+              <Link
+                to={`/courses/${course.id}`}
+                className="course-editor-primary-action"
+              >
+                Посмотреть курс
+              </Link>
+            </div>
+          ) : (
+            <Outlet
+              context={{
+                courseId,
+                course,
+                modules,
+                pageStatus,
+                pageError,
+                viewerName,
+                reloadCourse,
+                createModule,
+                createLesson,
+              }}
+            />
+          )}
         </section>
       </main>
     </div>

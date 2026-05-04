@@ -173,6 +173,11 @@ export function normalizeViewerCourseSnapshot(value) {
     tasksCount: Number(value?.tasksCount) || 0,
     coverUrl: normalizeText(value?.coverUrl),
     imageUrl: normalizeText(value?.imageUrl),
+    isPublished: Boolean(value?.isPublished),
+    isDraft:
+      typeof value?.isDraft === "boolean"
+        ? value.isDraft
+        : !value?.isPublished,
     isBackendCourse: Boolean(value?.isBackendCourse),
     syllabusLessonIds: normalizeCourseSnapshotArray(value?.syllabusLessonIds),
   };
@@ -217,6 +222,8 @@ export function createViewerCourseSnapshot(course, syllabusLessonIds = []) {
     tasksCount: course?.tasksCount,
     coverUrl: course?.coverUrl,
     imageUrl: course?.imageUrl,
+    isPublished: course?.isPublished,
+    isDraft: course?.isDraft,
     isBackendCourse: course?.isBackendCourse,
     syllabusLessonIds,
   });

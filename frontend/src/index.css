@@ -1096,7 +1096,7 @@
   }
 
   .course-editor-primary-action {
-    @apply inline-flex w-fit cursor-pointer items-center justify-center rounded-[1.2rem] border px-5 py-3 text-sm font-semibold text-white transition duration-300 sm:text-base;
+    @apply inline-flex w-fit cursor-pointer items-center justify-center self-center rounded-[1.2rem] border px-5 py-3 text-sm font-semibold text-white transition duration-300 sm:text-base;
     border-color: rgba(37, 99, 235, 0.18);
     background: linear-gradient(135deg, #2563eb 0%, #2f6ee8 54%, #14b8a6 120%);
     box-shadow: 0 22px 38px -28px rgba(37, 99, 235, 0.72);

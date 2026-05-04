@@ -3,7 +3,8 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router";
 import {
   mapReadCourseByIdResponseToCoursePageData,
-  requestAllCourses,
+  requestDraftCoursesByAuthor,
+  requestPublishedCoursesByAuthor,
   sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
 import { CourseDisplayCover } from "../../../entities/course";
@@ -13,9 +14,102 @@ import {
   selectViewer,
 } from "../../../features/viewer";
 
-function TeachCoursesSection() {
+const sectionConfig = {
+  published: {
+    title: "Опубликованные курсы",
+    emptyTitle: "Опубликованных курсов пока нет",
+    emptyText: "Здесь появятся курсы, которые уже видны студентам.",
+    loadingTitle: "Загружаем опубликованные курсы",
+    statusLabel: "Опубликован",
+    request: requestPublishedCoursesByAuthor,
+  },
+  drafts: {
+    title: "Черновики",
+    emptyTitle: "Черновиков пока нет",
+    emptyText: "Создайте курс, чтобы собрать программу и материалы.",
+    loadingTitle: "Загружаем черновики",
+    statusLabel: "Черновик",
+    request: requestDraftCoursesByAuthor,
+  },
+};
+
+function normalizeCourseForSection(course, viewerName) {
+  return {
+    ...course,
+    authorName: course.authorName || viewerName || "Автор курса",
+  };
+}
+
+function TeachCourseCard({ course, variant }) {
+  const isPublished = variant === "published";
+
+  return (
+    <article className="teach-course-card">
+      <CourseDisplayCover
+        title={course.title}
+        coverUrl={course.coverUrl}
+        imageUrl={course.imageUrl}
+        variant="card"
+      />
+
+      <div className="teach-course-card-body">
+        <div className="teach-course-card-head">
+          <div className="teach-course-card-copy">
+            <div className="teach-course-card-statuses">
+              <span className="teach-course-card-status primary">
+                {isPublished ? "Опубликован" : "Черновик"}
+              </span>
+              <span className="teach-course-card-status">
+                {sanitizeCourseDisplayLabel(
+                  course.categoryName,
+                  "Курс преподавателя",
+                )}
+              </span>
+            </div>
+
+            <strong className="teach-course-card-title">{course.title}</strong>
+          </div>
+
+          <div className="teach-course-card-meta">
+            <span>{course.durationLabel}</span>
+            <span>Уроков: {course.lessonsCount}</span>
+          </div>
+        </div>
+
+        <p className="teach-course-card-text">
+          {course.shortDescription || "Короткое описание пока не указано."}
+        </p>
+
+        <div className="teach-course-card-actions">
+          {!isPublished ? (
+            <Link
+              to={`/course/${course.id}/syllabus`}
+              className="teach-course-card-link primary"
+            >
+              Открыть конструктор
+            </Link>
+          ) : null}
+
+          <Link
+            to={`/courses/${course.id}`}
+            className={`teach-course-card-link${isPublished ? " primary" : ""}`}
+          >
+            Посмотреть курс
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function TeachCoursesSection({ variant = "drafts" }) {
+  const config = sectionConfig[variant] ?? sectionConfig.drafts;
   const currentViewerId = useSelector(selectCurrentViewerId);
   const viewer = useSelector(selectViewer);
+  const viewerName =
+    [viewer.lastName, viewer.firstName].filter(Boolean).join(" ").trim() ||
+    viewer.name ||
+    "";
   const [backendStatus, setBackendStatus] = useState("idle");
   const [backendCourses, setBackendCourses] = useState([]);
   const [backendError, setBackendError] = useState("");
@@ -27,10 +121,15 @@ function TeachCoursesSection() {
     () =>
       Object.values(viewer.courseSnapshotsById)
         .filter(
-          (course) => course.isBackendCourse && course.authorId === authorId,
+          (course) =>
+            course.isBackendCourse &&
+            course.authorId === authorId &&
+            (variant === "published"
+              ? course.isPublished
+              : !course.isPublished),
         )
         .sort((left, right) => left.title.localeCompare(right.title, "ru")),
-    [authorId, viewer.courseSnapshotsById],
+    [authorId, variant, viewer.courseSnapshotsById],
   );
 
   useEffect(() => {
@@ -45,57 +144,22 @@ function TeachCoursesSection() {
       setBackendError("");
 
       try {
-        const response = await requestAllCourses();
-        const snapshotBySignature = new Map(
-          localSnapshotCourses.map((course) => [
-            `${course.authorId}::${course.title.toLowerCase()}`,
-            course,
-          ]),
-        );
-        const backendCoursesById = new Map();
-        const backendCourseSignatures = new Set();
-
-        response.forEach((courseResponse) => {
-          const pageData = mapReadCourseByIdResponseToCoursePageData(
-            courseResponse,
-            "",
-          );
-          const backendCourse = pageData.course;
-          const signature = `${backendCourse.authorId}::${backendCourse.title.toLowerCase()}`;
-
-          backendCourseSignatures.add(signature);
-
-          const snapshotMatch = snapshotBySignature.get(signature);
-          const resolvedId = backendCourse.id || snapshotMatch?.id || "";
-
-          if (!resolvedId) {
-            return;
-          }
-
-          backendCoursesById.set(String(resolvedId), {
-            ...snapshotMatch,
-            ...backendCourse,
-            id: resolvedId,
-            coverUrl: backendCourse.coverUrl || snapshotMatch?.coverUrl || "",
-            imageUrl: backendCourse.imageUrl || snapshotMatch?.imageUrl || "",
-          });
-        });
-
-        const nextCourses = [
-          ...backendCoursesById.values(),
-          ...localSnapshotCourses.filter((course) => {
-            const signature = `${course.authorId}::${course.title.toLowerCase()}`;
-
-            return (
-              backendCourseSignatures.has(signature) &&
-              !backendCoursesById.has(String(course.id))
-            );
-          }),
-        ]
+        const response = await config.request(authorId);
+        const nextCourses = response
+          .map((courseResponse) =>
+            mapReadCourseByIdResponseToCoursePageData(courseResponse, ""),
+          )
+          .map((pageData) => pageData.course)
           .filter(
             (course) =>
-              course && course.isBackendCourse && course.authorId === authorId,
+              course &&
+              course.isBackendCourse &&
+              course.authorId === authorId &&
+              (variant === "published"
+                ? course.isPublished
+                : !course.isPublished),
           )
+          .map((course) => normalizeCourseForSection(course, viewerName))
           .sort((left, right) => left.title.localeCompare(right.title, "ru"));
 
         if (!isCancelled) {
@@ -119,10 +183,14 @@ function TeachCoursesSection() {
     return () => {
       isCancelled = true;
     };
-  }, [authorId, localSnapshotCourses]);
+  }, [authorId, config, variant, viewerName]);
 
   const authoredCourses =
-    backendStatus === "success" ? backendCourses : localSnapshotCourses;
+    backendStatus === "success"
+      ? backendCourses
+      : localSnapshotCourses.map((course) =>
+          normalizeCourseForSection(course, viewerName),
+        );
 
   if (backendStatus === "loading") {
     return (
@@ -132,7 +200,7 @@ function TeachCoursesSection() {
             Загружаем ваши курсы
           </strong>
           <p className="teach-courses-section-empty">
-            Подготавливаем список курсов.
+            {config.loadingTitle}.
           </p>
         </div>
       </section>
@@ -144,11 +212,13 @@ function TeachCoursesSection() {
       <section className="teach-courses-section">
         <div className="teach-courses-section-empty-state">
           <strong className="teach-courses-section-empty-title">
-            У вас пока нет курсов
+            {config.emptyTitle}
           </strong>
           {backendStatus === "error" ? (
             <p className="teach-courses-section-empty">{backendError}</p>
-          ) : null}
+          ) : (
+            <p className="teach-courses-section-empty">{config.emptyText}</p>
+          )}
         </div>
       </section>
     );
@@ -158,66 +228,12 @@ function TeachCoursesSection() {
     <section className="teach-courses-section teach-courses-section-list-mode">
       <div className="teach-courses-section-list-head">
         <span className="teach-panel-kicker">ПРЕПОДАВАНИЕ</span>
-        <h1 className="teach-panel-title">Ваши курсы</h1>
+        <h1 className="teach-panel-title">{config.title}</h1>
       </div>
 
       <div className="teach-courses-grid">
         {authoredCourses.map((course) => (
-          <article key={course.id} className="teach-course-card">
-            <CourseDisplayCover
-              title={course.title}
-              coverUrl={course.coverUrl}
-              imageUrl={course.imageUrl}
-              variant="card"
-            />
-
-            <div className="teach-course-card-body">
-              <div className="teach-course-card-head">
-                <div className="teach-course-card-copy">
-                  <div className="teach-course-card-statuses">
-                    <span className="teach-course-card-status primary">
-                      Черновик
-                    </span>
-                    <span className="teach-course-card-status">
-                      {sanitizeCourseDisplayLabel(
-                        course.categoryName,
-                        "Курс преподавателя",
-                      )}
-                    </span>
-                  </div>
-
-                  <strong className="teach-course-card-title">
-                    {course.title}
-                  </strong>
-                </div>
-
-                <div className="teach-course-card-meta">
-                  <span>{course.durationLabel}</span>
-                  <span>Уроков: {course.lessonsCount}</span>
-                </div>
-              </div>
-
-              <p className="teach-course-card-text">
-                {course.shortDescription ||
-                  "Короткое описание пока не указано."}
-              </p>
-
-              <div className="teach-course-card-actions">
-                <Link
-                  to={`/course/${course.id}/syllabus`}
-                  className="teach-course-card-link primary"
-                >
-                  Открыть конструктор
-                </Link>
-                <Link
-                  to={`/courses/${course.id}`}
-                  className="teach-course-card-link"
-                >
-                  Посмотреть курс
-                </Link>
-              </div>
-            </div>
-          </article>
+          <TeachCourseCard key={course.id} course={course} variant={variant} />
         ))}
       </div>
     </section>

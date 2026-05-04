@@ -26,7 +26,10 @@ export {
   requestAllCourses,
   requestCourseById,
   requestCourseCreation,
+  requestDraftCoursesByAuthor,
   requestLessonById,
+  requestPublishCourse,
+  requestPublishedCoursesByAuthor,
   requestUploadLessonAsset,
   requestUploadLessonContent,
 } from "./api/courseServiceApi";

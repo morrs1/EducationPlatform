@@ -92,6 +92,8 @@ function normalizeBackendCatalogCourse(course, authorNameById) {
       course.shortDescription || "Описание курса пока не заполнено.",
     imageUrl: course.coverUrl || course.imageUrl || "",
     coverUrl: course.coverUrl || course.imageUrl || "",
+    isPublished: true,
+    isDraft: false,
     isBackendCourse: true,
   };
 }
@@ -121,9 +123,11 @@ export function useCatalogCollections() {
 
       try {
         const response = await requestAllCourses();
-        const pageDataList = response.map((courseResponse) =>
-          mapReadCourseByIdResponseToCoursePageData(courseResponse, ""),
-        );
+        const pageDataList = response
+          .map((courseResponse) =>
+            mapReadCourseByIdResponseToCoursePageData(courseResponse, ""),
+          )
+          .filter((pageData) => pageData?.course?.isPublished);
         const uniqueAuthorIds = Array.from(
           new Set(
             pageDataList

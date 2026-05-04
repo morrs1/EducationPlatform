@@ -61,10 +61,17 @@ function LessonEditorPage() {
         );
 
         if (!isCancelled) {
-          setCourse(nextPageData.course);
-          setModules(nextPageData.syllabus.modules);
-          setPageStatus("success");
-          setPageError("");
+          if (nextPageData.course?.isPublished) {
+            setCourse(nextPageData.course);
+            setModules(nextPageData.syllabus.modules);
+            setPageStatus("error");
+            setPageError("Опубликованный курс недоступен для редактирования.");
+          } else {
+            setCourse(nextPageData.course);
+            setModules(nextPageData.syllabus.modules);
+            setPageStatus("success");
+            setPageError("");
+          }
         }
       } catch (error) {
         if (!isCancelled) {

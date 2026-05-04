@@ -107,8 +107,22 @@ const router = createBrowserRouter([
             path: "teach",
             element: <TeachPage />,
             children: [
-              { index: true, element: <Navigate to="courses" replace /> },
-              { path: "courses", element: <TeachCoursesSection /> },
+              {
+                index: true,
+                element: <Navigate to="courses/drafts" replace />,
+              },
+              {
+                path: "courses",
+                element: <Navigate to="drafts" replace />,
+              },
+              {
+                path: "courses/published",
+                element: <TeachCoursesSection variant="published" />,
+              },
+              {
+                path: "courses/drafts",
+                element: <TeachCoursesSection variant="drafts" />,
+              },
               { path: "courses/new", element: <CreateCourseSection /> },
             ],
           },

@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
-import { selectIsLogged, openLoginModal } from "../../../features/auth";
+import {
+  selectCurrentViewerId,
+  selectIsLogged,
+  openLoginModal,
+} from "../../../features/auth";
 import {
   hydrateCompletedLessonsFromLearningService,
   selectCompletedLessonIds,
@@ -11,6 +15,7 @@ import {
   completeViewerCourseWithLearningService,
   createViewerCourseSnapshot,
   enrollViewerInCourseWithLearningService,
+  resolveCourseServiceAuthorId,
   upsertViewerCourseSnapshot,
   selectIsCompletedCourse,
   selectIsFavouriteCourse,
@@ -18,6 +23,7 @@ import {
   selectCanViewCourseContent,
   selectViewerCourseById,
   selectViewerCourseProgress,
+  selectViewer,
   toggleFavouriteCourse,
 } from "../../../features/viewer";
 import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
@@ -52,6 +58,8 @@ function CoursePage() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const isLogged = useSelector(selectIsLogged);
+  const currentViewerId = useSelector(selectCurrentViewerId);
+  const viewer = useSelector(selectViewer);
   const viewerCourse = useSelector((state) =>
     resolvedCourseId != null &&
     (typeof resolvedCourseId === "string" || Number.isFinite(resolvedCourseId))
@@ -85,6 +93,10 @@ function CoursePage() {
   );
   const viewedLessonIds = useSelector(selectViewedLessonIds);
   const completedLessonIds = useSelector(selectCompletedLessonIds);
+  const courseServiceAuthorId = useMemo(
+    () => resolveCourseServiceAuthorId(currentViewerId, viewer.remoteId),
+    [currentViewerId, viewer.remoteId],
+  );
 
   const [mockDescriptionStatus, setMockDescriptionStatus] = useState("loading");
   const [mockDescriptionMarkdown, setMockDescriptionMarkdown] = useState("");
@@ -216,7 +228,10 @@ function CoursePage() {
   ]);
   const activeTab = resolveActiveTab(searchParams);
   const isBackendCourse = Boolean(course?.isBackendCourse);
-  const canUseCourseContent = canViewContent;
+  const isOwnBackendCourse =
+    isBackendCourse && course?.authorId === courseServiceAuthorId;
+  const canManageDraftCourse = isOwnBackendCourse && !course?.isPublished;
+  const canUseCourseContent = canManageDraftCourse || canViewContent;
   const isContentAccessible = isLogged;
   const descriptionStatus = !course
     ? "error"
@@ -402,6 +417,20 @@ function CoursePage() {
     );
   }
 
+  if (isBackendCourse && course.isDraft && !isOwnBackendCourse) {
+    return (
+      <div className="course-page">
+        <section className="course-not-found">
+          <p className="course-not-found-label">Курс недоступен</p>
+          <h1 className="course-not-found-title">Курс не найден</h1>
+          <p className="course-not-found-text">
+            Возможно, ссылка устарела или курс пока не опубликован.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
   function changeTab(tabId) {
     const nextSearchParams = new URLSearchParams(searchParams);
 
@@ -422,7 +451,7 @@ function CoursePage() {
 
     setLearningActionError("");
 
-    if (!canViewContent) {
+    if (!canUseCourseContent) {
       const result = await dispatch(
         enrollViewerInCourseWithLearningService({
           courseId: course.id,
@@ -459,6 +488,13 @@ function CoursePage() {
     setDescriptionRequestSeed((value) => value + 1);
   }
 
+  const sidebarCourse = canManageDraftCourse
+    ? {
+        ...course,
+        isReadOnlyCourse: true,
+        isEnrolled: true,
+      }
+    : course;
   const tabs = [
     { id: "description", label: "Описание", isLocked: false },
     { id: "content", label: "Содержание", isLocked: !canUseCourseContent },
@@ -537,7 +573,7 @@ function CoursePage() {
 
       <aside className="course-page-sidebar-rail">
         <CourseSidebar
-          course={course}
+          course={sidebarCourse}
           isLogged={isContentAccessible}
           onPrimaryAction={handlePrimaryAction}
           onToggleFavourite={handleToggleFavourite}

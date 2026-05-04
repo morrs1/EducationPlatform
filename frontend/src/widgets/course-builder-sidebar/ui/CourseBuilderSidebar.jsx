@@ -2,7 +2,14 @@ import { useState } from "react";
 import { Link, NavLink, useLocation, useResolvedPath } from "react-router";
 import { CourseDisplayCover } from "../../../entities/course";
 
-function CourseBuilderSidebar({ course, pageStatus }) {
+function CourseBuilderSidebar({
+  course,
+  pageStatus,
+  onPublishCourse,
+  publishStatus = "idle",
+  publishError = "",
+  canPublishCourse = false,
+}) {
   const location = useLocation();
   const descriptionPath = useResolvedPath("description");
   const syllabusPath = useResolvedPath("syllabus");
@@ -15,7 +22,6 @@ function CourseBuilderSidebar({ course, pageStatus }) {
     location.pathname.startsWith(syllabusPath.pathname) ||
     location.pathname.startsWith(editPath.pathname);
   const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(true);
-  const hasCourse = Boolean(course);
   const resolvedCourseTitle =
     course?.title ||
     (pageStatus === "loading" ? "Загрузка курса" : "Курс пока не найден");
@@ -26,6 +32,13 @@ function CourseBuilderSidebar({ course, pageStatus }) {
       : "Короткое описание появится после загрузки курса.");
   const lessonsCount = Number(course?.lessonsCount) || 0;
   const durationLabel = course?.durationLabel || "Длительность уточняется";
+  const isPublishing = publishStatus === "loading";
+  const isPublished = Boolean(course?.isPublished);
+  const publishButtonLabel = isPublished
+    ? "Опубликован"
+    : isPublishing
+      ? "Публикуем"
+      : "Опубликовать";
 
   return (
     <nav className="course-builder-sidebar" aria-label="Навигация по курсу">
@@ -48,7 +61,7 @@ function CourseBuilderSidebar({ course, pageStatus }) {
 
           <div className="course-builder-sidebar-statuses">
             <span className="course-builder-sidebar-status">
-              {hasCourse ? "Сохранено" : "Черновик"}
+              {isPublished ? "Опубликован" : "Черновик"}
             </span>
           </div>
 
@@ -63,10 +76,14 @@ function CourseBuilderSidebar({ course, pageStatus }) {
         <button
           type="button"
           className="course-builder-sidebar-publish"
-          disabled
+          disabled={!canPublishCourse || isPublishing}
+          onClick={onPublishCourse}
         >
-          Опубликовать
+          {publishButtonLabel}
         </button>
+        {publishError ? (
+          <p className="course-builder-sidebar-action-hint">{publishError}</p>
+        ) : null}
       </div>
 
       <div className="course-builder-sidebar-group">
