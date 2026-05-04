@@ -176,17 +176,23 @@ const viewerSlice = createSlice({
     leaveCourse: (state, action) => {
       const courseId = normalizeViewerCourseId(action.payload);
 
-      if (courseId == null || !state.enrolledCourseIds.includes(courseId)) {
+      if (courseId == null) {
         return;
       }
 
       state.enrolledCourseIds = state.enrolledCourseIds.filter(
         (id) => id !== courseId,
       );
+      state.completedCourseIds = state.completedCourseIds.filter(
+        (id) => id !== courseId,
+      );
+      state.certificateCourseIds = state.certificateCourseIds.filter(
+        (id) => id !== courseId,
+      );
 
       const storageKey = getViewerCourseStorageKey(courseId);
 
-      if (!state.completedCourseIds.includes(courseId)) {
+      if (storageKey) {
         delete state.progressByCourseId[storageKey];
       }
     },
@@ -221,6 +227,7 @@ const viewerSlice = createSlice({
       const enrolledCourseIds = action.payload?.enrolledCourseIds ?? [];
       const completedCourseIds = action.payload?.completedCourseIds ?? [];
       const courseSnapshots = action.payload?.courseSnapshots ?? [];
+      const progressByCourseId = action.payload?.progressByCourseId ?? {};
 
       courseSnapshots.forEach((courseSnapshot) => {
         upsertCourseSnapshot(
@@ -243,15 +250,18 @@ const viewerSlice = createSlice({
       state.enrolledCourseIds.forEach((courseId) => {
         const storageKey = getViewerCourseStorageKey(courseId);
 
-        if (!storageKey || state.progressByCourseId[storageKey]) {
+        if (!storageKey) {
           return;
         }
 
+        const syncedProgress = progressByCourseId[storageKey];
+
         state.progressByCourseId[storageKey] = {
-          completedLessons: 0,
-          completedTests: 0,
-          completedTasks: 0,
-          lastVisitedAt: new Date().toISOString(),
+          completedLessons: Number(syncedProgress?.completedLessons) || 0,
+          completedTests: Number(syncedProgress?.completedTests) || 0,
+          completedTasks: Number(syncedProgress?.completedTasks) || 0,
+          lastVisitedAt:
+            syncedProgress?.lastVisitedAt || new Date().toISOString(),
         };
       });
 
@@ -265,6 +275,25 @@ const viewerSlice = createSlice({
 
         state.progressByCourseId[storageKey] = createCompletedCourseProgress(course);
       });
+    },
+
+    syncCourseLessonProgress: (state, action) => {
+      const courseId = normalizeViewerCourseId(action.payload?.courseId);
+      const completedLessons = Number(action.payload?.completedLessons) || 0;
+      const storageKey = getViewerCourseStorageKey(courseId);
+
+      if (!storageKey) {
+        return;
+      }
+
+      state.progressByCourseId[storageKey] = {
+        completedLessons,
+        completedTests:
+          Number(state.progressByCourseId[storageKey]?.completedTests) || 0,
+        completedTasks:
+          Number(state.progressByCourseId[storageKey]?.completedTasks) || 0,
+        lastVisitedAt: new Date().toISOString(),
+      };
     },
 
     upsertViewerCourseSnapshot: (state, action) => {
@@ -290,6 +319,7 @@ export const {
   leaveCourse,
   markCourseCompleted,
   syncLearningEnrollment,
+  syncCourseLessonProgress,
   upsertViewerCourseSnapshot,
   restoreViewer,
   resetDemoState,

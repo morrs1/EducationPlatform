@@ -4,6 +4,7 @@ export {
   hydrateViewerFromUserService,
   hydrateViewerLearningFromLearningService,
   enrollViewerInCourseWithLearningService,
+  leaveViewerCourseWithLearningService,
   completeViewerCourseWithLearningService,
 } from "./model/thunks";
 export { default as ViewerProfileBootstrap } from "./ui/ViewerProfileBootstrap";
@@ -16,6 +17,7 @@ export {
   leaveCourse,
   markCourseCompleted,
   syncLearningEnrollment,
+  syncCourseLessonProgress,
   upsertViewerCourseSnapshot,
   restoreViewer,
   resetDemoState,

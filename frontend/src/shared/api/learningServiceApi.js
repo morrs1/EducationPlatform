@@ -78,7 +78,10 @@ async function requestLearningService(pathname, options = {}, context = "") {
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response, context));
+    const error = new Error(extractErrorMessage(response, context));
+    error.status = response.status;
+    error.responseBody = responseBody;
+    throw error;
   }
 
   return responseBody;
@@ -117,6 +120,20 @@ export async function requestEnrollUserInCourse({ userId, courseId }) {
       }),
     },
     "enrolling user in course",
+  );
+}
+
+export async function requestLeaveCourse({ userId, courseId }) {
+  return requestLearningService(
+    "/learning/enrollment/leave",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        userId: normalizeUuid(userId, "userId"),
+        courseId: normalizeUuid(courseId, "courseId"),
+      }),
+    },
+    "leaving course",
   );
 }
 

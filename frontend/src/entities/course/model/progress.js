@@ -78,14 +78,16 @@ export function getCourseProgressByCourseId({
   ).length;
 
   const interactiveLessonsCount = interactiveLessonIds.length;
-  const maxPersistedCompletedLessons = Math.max(
-    lessonsCount - interactiveLessonsCount,
-    0,
-  );
-  const baseCompletedLessons = Math.min(
-    Number(persistedProgress.completedLessons) || 0,
-    maxPersistedCompletedLessons,
-  );
+  const persistedCompletedLessons =
+    Number(persistedProgress.completedLessons) || 0;
+  const shouldUsePersistedCompletedLessons =
+    course.isBackendCourse || interactiveLessonsCount === 0;
+  const baseCompletedLessons = shouldUsePersistedCompletedLessons
+    ? persistedCompletedLessons
+    : Math.min(
+        persistedCompletedLessons,
+        Math.max(lessonsCount - interactiveLessonsCount, 0),
+      );
   const completedLessons = Math.min(
     baseCompletedLessons + completedInteractiveLessonsCount,
     lessonsCount,

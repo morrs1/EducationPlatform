@@ -840,7 +840,10 @@ async function requestCourseService(pathname, options = {}) {
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response));
+    const error = new Error(extractErrorMessage(response));
+    error.status = response.status;
+    error.responseBody = responseBody;
+    throw error;
   }
 
   return responseBody;
@@ -864,7 +867,10 @@ async function requestCourseServiceJson(pathname, requestCache) {
       const responseBody = await readResponseBody(response);
 
       if (!response.ok) {
-        throw new Error(extractErrorMessage(response));
+        const error = new Error(extractErrorMessage(response));
+        error.status = response.status;
+        error.responseBody = responseBody;
+        throw error;
       }
 
       return responseBody;
