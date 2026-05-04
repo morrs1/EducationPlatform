@@ -4,6 +4,8 @@ import org.example.learning_service.application.interactors.certificate.Certific
 import org.example.learning_service.presentation.http.v1.certificate.dto.CertificateResponse;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class CertificateMapperQuery {
 
@@ -17,5 +19,9 @@ public class CertificateMapperQuery {
                 view.serialNo(),
                 view.fileUrl()
         );
+    }
+
+    public List<CertificateResponse> toCertificateResponses(List<CertificateView> views) {
+        return views.stream().map(this::toCertificateResponse).toList();
     }
 }

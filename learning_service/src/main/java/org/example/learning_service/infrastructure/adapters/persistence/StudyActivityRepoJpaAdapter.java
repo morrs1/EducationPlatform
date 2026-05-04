@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.learning_service.application.ports.StudyActivityRepo;
 import org.example.learning_service.domain.activity.UserStudyDay;
 import org.example.learning_service.infrastructure.persistence.mappers.StudyActivityPersistenceMapper;
+import org.example.learning_service.infrastructure.persistence.models.activity.HibernateUserStudyDayId;
 import org.example.learning_service.infrastructure.persistence.repositories.StudyActivitySpringDataRepo;
 import org.springframework.stereotype.Component;
 
@@ -35,5 +36,10 @@ public class StudyActivityRepoJpaAdapter implements StudyActivityRepo {
     @Override
     public void save(UserStudyDay userStudyDay) {
         studyActivitySpringDataRepo.save(studyActivityPersistenceMapper.toEntity(userStudyDay));
+    }
+
+    @Override
+    public void deleteByUserIdAndActivityDate(UUID userId, LocalDate activityDate) {
+        studyActivitySpringDataRepo.deleteById(new HibernateUserStudyDayId(userId, activityDate));
     }
 }

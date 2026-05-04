@@ -35,4 +35,15 @@ public class UserStudyDay {
         }
         this.lessonsCompletedCount = this.lessonsCompletedCount + delta;
     }
+
+    public void decrementLessonsCompleted(int delta) throws ValidateException {
+        if (delta <= 0) {
+            throw new ValidateException("delta must be positive");
+        }
+        int next = this.lessonsCompletedCount - delta;
+        if (next < 0) {
+            throw new ValidateException("lessonsCompletedCount must not become negative");
+        }
+        this.lessonsCompletedCount = next;
+    }
 }

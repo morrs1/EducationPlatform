@@ -62,4 +62,9 @@ public class EnrollmentRepoJpaAdapter implements EnrollmentRepo {
                 .map(enrollmentPersistenceMapper::toDomainWithoutCompletions)
                 .toList();
     }
+
+    @Override
+    public void deleteById(UUID enrollmentId) {
+        enrollmentSpringDataRepo.deleteById(enrollmentId);
+    }
 }

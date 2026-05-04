@@ -11,4 +11,10 @@ public class StudyActivityDomainService extends BaseDomainService {
         Objects.requireNonNull(day);
         day.incrementLessonsCompleted(delta);
     }
+
+    /** Mirrors {@link #recordLessonCompleted}: subtracts completed-lesson counts when leave-course removes completions. */
+    public void removeRecordedLessons(UserStudyDay day, int delta) {
+        Objects.requireNonNull(day);
+        day.decrementLessonsCompleted(delta);
+    }
 }
