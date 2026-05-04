@@ -14,6 +14,7 @@ CREATE TABLE course
     estimated_minutes INTEGER      NOT NULL DEFAULT 0,
     structure         JSONB        NOT NULL DEFAULT '{"modules": []}'::jsonb,
     is_preview        BOOLEAN      DEFAULT FALSE,
+    fts_vector        tsvector     GENERATED ALWAYS AS(to_tsvector('simple'::regconfig, coalesce(title, ''))) STORED,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     CONSTRAINT chk_course_difficulty
@@ -21,6 +22,7 @@ CREATE TABLE course
     CONSTRAINT chk_course_estimated_minutes
         CHECK (estimated_minutes >= 0)
 );
+CREATE INDEX idx_course_fts_vector ON course USING GIN (fts_vector);
 
 CREATE TABLE lesson_content
 (

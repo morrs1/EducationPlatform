@@ -6,6 +6,7 @@ import com.example.course_service.application.interactors.course.read_all.ReadAl
 import com.example.course_service.application.interactors.course.publish_course.PublishCourseInteractor;
 import com.example.course_service.application.interactors.course.read_course_by_id.ReadCourseByIdInteractor;
 import com.example.course_service.application.interactors.course.read_courses_by_author.ReadDraftCoursesByAuthorInteractor;
+import com.example.course_service.application.interactors.course.search_courses.SearchCoursesInteractor;
 import com.example.course_service.application.interactors.course.read_courses_by_author.ReadPublishedCoursesByAuthorInteractor;
 import com.example.course_service.application.interactors.mappers.CourseViewMapper;
 import com.example.course_service.application.ports.TransactionManager;
@@ -45,6 +46,14 @@ public class CourseConfig {
             TransactionManager transactionManager
     ) {
         return new ReadDraftCoursesByAuthorInteractor(transactionManager, hibernateCourseRepo, new CourseViewMapper());
+    }
+
+    @Bean
+    public SearchCoursesInteractor searchCoursesInteractor(
+            HibernateCourseRepo hibernateCourseRepo,
+            TransactionManager transactionManager
+    ) {
+        return new SearchCoursesInteractor(transactionManager, hibernateCourseRepo, new CourseViewMapper());
     }
 
     @Bean
