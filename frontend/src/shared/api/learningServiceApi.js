@@ -236,6 +236,46 @@ export async function requestLearningActivityYear({ userId, year }) {
   );
 }
 
+function normalizeCertificateRecord(row) {
+  const id = normalizeText(row?.id);
+
+  if (!isUuid(id)) {
+    return null;
+  }
+
+  const courseId = normalizeText(row?.courseId);
+
+  if (!isUuid(courseId)) {
+    return null;
+  }
+
+  return {
+    id,
+    enrollmentId: normalizeText(row?.enrollmentId),
+    userId: normalizeText(row?.userId),
+    courseId,
+    issuedAt: normalizeText(row?.issuedAt),
+    serialNo: normalizeText(row?.serialNo) || "",
+    fileUrl: normalizeText(row?.fileUrl) || "",
+  };
+}
+
+export async function requestCertificatesByUser(userId) {
+  const responseBody = await requestLearningService(
+    `/learning/certificate/by-user/${normalizeUuid(userId, "userId")}`,
+    {},
+    "loading certificates",
+  );
+
+  if (!Array.isArray(responseBody)) {
+    return [];
+  }
+
+  return responseBody
+    .map(normalizeCertificateRecord)
+    .filter(Boolean);
+}
+
 export async function requestCreateCertificate({
   enrollmentId,
   issuedAt = null,

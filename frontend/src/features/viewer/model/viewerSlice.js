@@ -307,6 +307,29 @@ const viewerSlice = createSlice({
       );
     },
 
+    mergeCertificateCourseIds: (state, action) => {
+      const rawIds = action.payload?.courseIds ?? [];
+      const merged = new Map();
+
+      state.certificateCourseIds.forEach((courseId) => {
+        const normalizedCourseId = normalizeViewerCourseId(courseId);
+
+        if (normalizedCourseId != null) {
+          merged.set(String(normalizedCourseId), normalizedCourseId);
+        }
+      });
+
+      rawIds.forEach((courseId) => {
+        const normalizedCourseId = normalizeViewerCourseId(courseId);
+
+        if (normalizedCourseId != null) {
+          merged.set(String(normalizedCourseId), normalizedCourseId);
+        }
+      });
+
+      state.certificateCourseIds = Array.from(merged.values());
+    },
+
     resetDemoState: () => createInitialViewerState(),
   },
 });
@@ -322,6 +345,7 @@ export const {
   syncCourseLessonProgress,
   upsertViewerCourseSnapshot,
   restoreViewer,
+  mergeCertificateCourseIds,
   resetDemoState,
 } = viewerSlice.actions;
 

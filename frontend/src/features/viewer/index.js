@@ -20,6 +20,7 @@ export {
   syncCourseLessonProgress,
   upsertViewerCourseSnapshot,
   restoreViewer,
+  mergeCertificateCourseIds,
   resetDemoState,
 } from "./model/viewerSlice";
 

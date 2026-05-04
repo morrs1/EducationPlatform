@@ -3002,6 +3002,71 @@
     @apply flex flex-col gap-4 rounded-[2rem] p-4 md:p-6;
   }
 
+  /* Certificates section */
+
+  .certificates-section {
+    @apply flex flex-col gap-6;
+  }
+
+  .certificates-header {
+    @apply flex flex-col gap-2;
+  }
+
+  .certificates-title {
+    @apply text-2xl font-bold text-center text-gray-900 sm:text-3xl md:text-left;
+  }
+
+  .certificates-list {
+    @apply flex flex-col gap-4 rounded-[2rem] p-4 md:p-6;
+  }
+
+  .certificate-card {
+    @apply relative rounded-[1.75rem] border p-4 transition duration-300 hover:-translate-y-1 md:p-6;
+  }
+
+  .certificate-card-body {
+    @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .certificate-card-meta {
+    @apply flex min-w-0 flex-1 flex-col gap-2;
+  }
+
+  .certificate-course-title {
+    @apply text-lg font-semibold text-gray-900 md:text-xl;
+  }
+
+  .certificate-card-details {
+    @apply flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600;
+  }
+
+  .certificate-download-btn {
+    @apply shrink-0 rounded-2xl border px-5 py-3 text-sm font-medium transition cursor-pointer sm:text-base;
+    color: var(--app-accent-strong);
+    border-color: var(--app-border-strong);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .certificate-download-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .certificate-download-btn:disabled {
+    @apply cursor-not-allowed opacity-70;
+  }
+
+  .certificates-empty {
+    @apply rounded-2xl border border-dashed px-4 py-10 text-center text-sm text-gray-600;
+    border-color: rgba(16, 33, 61, 0.12);
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .certificates-error {
+    @apply rounded-2xl border px-4 py-3 text-sm text-red-700;
+    border-color: rgba(220, 38, 38, 0.25);
+    background: rgba(254, 242, 242, 0.85);
+  }
+
   .completed-course-card {
     @apply relative rounded-[1.75rem] border p-4 transition duration-300 hover:-translate-y-1 md:p-6;
   }
@@ -3845,6 +3910,7 @@
   .current-course-card,
   .completed-course-card,
   .favourite-course-card,
+  .certificate-card,
   .course-module-card,
   .course-review-card,
   .course-lesson-row {
@@ -4290,7 +4356,8 @@
 
   :root[data-theme="dark"] .current-courses-search-btn,
   :root[data-theme="dark"] .completed-courses-search-btn,
-  :root[data-theme="dark"] .favourite-courses-search-btn {
+  :root[data-theme="dark"] .favourite-courses-search-btn,
+  :root[data-theme="dark"] .certificate-download-btn {
     color: var(--app-accent-strong);
     border-color: var(--app-border-strong);
     background: rgba(91, 124, 240, 0.08);
@@ -4298,7 +4365,8 @@
 
   :root[data-theme="dark"] .current-courses-search-btn:hover,
   :root[data-theme="dark"] .completed-courses-search-btn:hover,
-  :root[data-theme="dark"] .favourite-courses-search-btn:hover {
+  :root[data-theme="dark"] .favourite-courses-search-btn:hover,
+  :root[data-theme="dark"] .certificate-download-btn:hover:not(:disabled) {
     color: #ffffff;
     border-color: transparent;
     background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
@@ -4387,6 +4455,7 @@
   :root[data-theme="dark"] .profile-activity-title,
   :root[data-theme="dark"] .current-courses-title,
   :root[data-theme="dark"] .completed-courses-title,
+  :root[data-theme="dark"] .certificates-title,
   :root[data-theme="dark"] .favourite-courses-title,
   :root[data-theme="dark"] .search-results-empty-title,
   :root[data-theme="dark"] .course-hero-title,
@@ -4404,6 +4473,7 @@
 
   :root[data-theme="dark"] .current-course-card-title,
   :root[data-theme="dark"] .completed-course-card-title,
+  :root[data-theme="dark"] .certificate-course-title,
   :root[data-theme="dark"] .favourite-course-card-title,
   :root[data-theme="dark"] .current-course-review-btn,
   :root[data-theme="dark"] .completed-course-review-btn,
@@ -4416,6 +4486,7 @@
   }
 
   :root[data-theme="dark"] .settings-section-description,
+  :root[data-theme="dark"] .certificate-card-details,
   :root[data-theme="dark"] .settings-helper-text,
   :root[data-theme="dark"] .settings-file-name,
   :root[data-theme="dark"] .settings-note,
@@ -4434,6 +4505,7 @@
   :root[data-theme="dark"] .current-course-progress-head,
   :root[data-theme="dark"] .completed-course-progress-head,
   :root[data-theme="dark"] .search-results-empty-text,
+  :root[data-theme="dark"] .certificates-empty,
   :root[data-theme="dark"] .course-hero-description,
   :root[data-theme="dark"] .course-hero-meta,
   :root[data-theme="dark"] .course-side-card-note,
@@ -4459,6 +4531,12 @@
 
   :root[data-theme="dark"] .settings-feedback-error {
     color: #fca5a5;
+  }
+
+  :root[data-theme="dark"] .certificates-error {
+    color: #fecaca;
+    border-color: rgba(248, 113, 113, 0.35);
+    background: rgba(127, 29, 29, 0.28);
   }
 
   :root[data-theme="dark"] .teach-layout-sidebar-rail {
@@ -5697,6 +5775,112 @@
   @apply overflow-x-auto font-mono text-xs leading-6 text-gray-700 break-words whitespace-pre-wrap;
 }
 
+.lesson-certificate-callout {
+  @apply flex flex-col gap-4 p-5 mt-6 rounded-[1.75rem] border md:flex-row md:items-center md:justify-between;
+  border-color: var(--app-border-strong);
+  background:
+    linear-gradient(
+      125deg,
+      rgba(37, 99, 235, 0.1) 0%,
+      rgba(255, 255, 255, 0.92) 42%,
+      rgba(245, 158, 11, 0.08) 100%
+    );
+  box-shadow: 0 20px 48px -32px rgba(15, 23, 42, 0.28);
+}
+
+.lesson-certificate-callout-inner {
+  @apply flex items-start gap-4 min-w-0;
+}
+
+.lesson-certificate-callout-badge {
+  @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg font-bold;
+  background: var(--app-accent-soft);
+  color: var(--app-accent-strong);
+}
+
+.lesson-certificate-callout-copy {
+  @apply flex flex-col gap-1 min-w-0 text-left;
+}
+
+.lesson-certificate-callout-title {
+  @apply text-base font-bold text-gray-900;
+}
+
+.lesson-certificate-callout-text {
+  @apply text-sm leading-relaxed text-gray-600;
+}
+
+.lesson-certificate-callout-btn {
+  @apply shrink-0 self-stretch md:self-center;
+}
+
+.certificate-success-dialog-root {
+  @apply fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6;
+}
+
+.certificate-success-dialog-backdrop {
+  @apply absolute inset-0 border-0 cursor-pointer;
+  background: rgba(10, 15, 28, 0.52);
+  backdrop-filter: blur(12px);
+}
+
+.certificate-success-dialog-panel {
+  @apply relative z-10 w-full max-w-[420px];
+}
+
+.certificate-success-dialog-card {
+  @apply relative rounded-[2rem] border px-6 pb-7 pt-12 text-center shadow-2xl;
+  border-color: var(--app-border);
+  background: var(--app-surface-strong);
+  box-shadow: var(--app-shadow);
+}
+
+.certificate-success-dialog-card.is-error {
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+.certificate-success-dialog-x {
+  @apply absolute top-3 right-3 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 text-2xl leading-none transition;
+  color: var(--app-muted);
+  background: transparent;
+}
+
+.certificate-success-dialog-x:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--app-ink);
+}
+
+:root[data-theme="dark"] .certificate-success-dialog-x:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--app-ink);
+}
+
+.certificate-success-dialog-icon {
+  @apply mb-2 text-4xl;
+}
+
+.certificate-success-dialog-title {
+  @apply mb-3 text-xl font-bold;
+  color: var(--app-ink);
+}
+
+.certificate-success-dialog-body {
+  @apply mb-6 text-sm leading-relaxed;
+  color: var(--app-muted);
+}
+
+.certificate-success-dialog-body strong {
+  color: var(--app-ink);
+}
+
+.certificate-success-dialog-actions {
+  @apply flex flex-col flex-wrap justify-center gap-3 sm:flex-row;
+}
+
+.certificate-success-dialog-primary {
+  @apply inline-flex justify-center no-underline;
+}
+
 .lesson-navigation-footer {
   @apply flex flex-col gap-4 pt-5 mt-6 border-t border-gray-200 sm:flex-row sm:items-center sm:justify-between;
 }
@@ -6057,6 +6241,26 @@
 :root[data-theme="dark"] .assistant-panel-form,
 :root[data-theme="dark"] .assistant-panel-form-footer {
   border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .lesson-certificate-callout {
+  border-color: var(--app-border-strong);
+  background:
+    linear-gradient(
+      125deg,
+      rgba(91, 124, 240, 0.16) 0%,
+      rgba(17, 24, 38, 0.94) 46%,
+      rgba(214, 166, 109, 0.1) 100%
+    );
+  box-shadow: 0 26px 56px -34px rgba(0, 0, 0, 0.72);
+}
+
+:root[data-theme="dark"] .lesson-certificate-callout-title {
+  color: var(--app-ink);
+}
+
+:root[data-theme="dark"] .lesson-certificate-callout-text {
+  color: var(--app-muted);
 }
 
 :root[data-theme="dark"] .course-outline-lesson,

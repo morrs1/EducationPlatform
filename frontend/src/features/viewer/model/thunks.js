@@ -2,6 +2,7 @@ import {
   enrollInCourse,
   leaveCourse,
   markCourseCompleted,
+  mergeCertificateCourseIds,
   restoreViewer,
   syncLearningEnrollment,
   updateViewerProfile,
@@ -20,9 +21,11 @@ import {
 } from "../../../entities/course";
 import {
   isUuid as isLearningUuid,
+  requestCertificatesByUser,
   requestCompletedCoursesByUser,
   requestCompletedLessonsForCourse,
   requestCompleteCourse,
+  requestCreateCertificate,
   requestEnrollUserInCourse,
   requestIncompleteCoursesByUser,
   requestLeaveCourse,
@@ -504,10 +507,12 @@ export function hydrateViewerLearningFromLearningService(options = {}) {
     }
 
     try {
-      const [enrolledCourseIds, completedCourseIds] = await Promise.all([
-        requestIncompleteCoursesByUser(remoteViewerId),
-        requestCompletedCoursesByUser(remoteViewerId),
-      ]);
+      const [enrolledCourseIds, completedCourseIds, certificates] =
+        await Promise.all([
+          requestIncompleteCoursesByUser(remoteViewerId),
+          requestCompletedCoursesByUser(remoteViewerId),
+          requestCertificatesByUser(remoteViewerId).catch(() => []),
+        ]);
       const { courseSnapshots, missingCourseIds } =
         await loadCourseSnapshotsFromCourseService([
           ...enrolledCourseIds,
@@ -539,6 +544,22 @@ export function hydrateViewerLearningFromLearningService(options = {}) {
         }),
       );
 
+      const certificateCourseIdsFromApi = certificates
+        .map((certificate) => certificate.courseId)
+        .filter(
+          (certificateCourseId) =>
+            certificateCourseId &&
+            !missingCourseIds.includes(certificateCourseId),
+        );
+
+      if (certificateCourseIdsFromApi.length) {
+        dispatch(
+          mergeCertificateCourseIds({
+            courseIds: certificateCourseIdsFromApi,
+          }),
+        );
+      }
+
       syncCompletedLessonsForActiveCourses(dispatch, completedLessonEntries);
 
       await Promise.allSettled(
@@ -555,6 +576,7 @@ export function hydrateViewerLearningFromLearningService(options = {}) {
         viewerId: remoteViewerId,
         enrolledCourseIds: activeEnrolledCourseIds,
         completedCourseIds: activeCompletedCourseIds,
+        certificates,
       };
     } catch (error) {
       return {
@@ -717,10 +739,26 @@ export function completeViewerCourseWithLearningService(payload) {
     }
 
     try {
-      await requestCompleteCourse({
+      const completeCourseBody = await requestCompleteCourse({
         userId: remoteViewerId,
         courseId,
       });
+      const enrollmentId = normalizeCourseId(
+        completeCourseBody?.enrollmentId,
+      );
+
+      if (isLearningUuid(enrollmentId)) {
+        try {
+          await requestCreateCertificate({
+            enrollmentId,
+          });
+          dispatch(mergeCertificateCourseIds({ courseIds: [courseId] }));
+        } catch (certificateError) {
+          if (certificateError?.status === 409) {
+            dispatch(mergeCertificateCourseIds({ courseIds: [courseId] }));
+          }
+        }
+      }
 
       const hydrationResult = await dispatch(
         hydrateViewerLearningFromLearningService({
