@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Repository
@@ -99,9 +100,10 @@ public class HibernateCourseRepo implements CourseRepo {
     public List<Course> readAll() {
         return entityManager
                 .createQuery(
-                        "select distinct c from HibernateCourse c left join fetch c.tags order by c.createdAt desc",
+                        "select distinct c from HibernateCourse c left join fetch c.tags where c.isPreview =:isPreview order by c.createdAt desc",
                         HibernateCourse.class
                 )
+                .setParameter("isPreview", true)
                 .getResultList()
                 .stream().map(mapper::toDomainCourse)
                 .toList();
@@ -136,6 +138,55 @@ public class HibernateCourseRepo implements CourseRepo {
                 .stream()
                 .map(mapper::toDomainCourse)
                 .toList();
+    }
+
+
+    @Override
+    public List<Course> readByString(String request) {
+        String q = Objects.requireNonNullElse(request, "").trim();
+        if (q.isEmpty()) {
+            return List.of();
+        }
+
+        List<?> idRows = entityManager
+                .createNativeQuery(
+                        """
+                                SELECT c.id
+                                FROM course c
+                                WHERE c.fts_vector @@ plainto_tsquery('simple', :q)
+                                  AND c.is_preview = true
+                                ORDER BY ts_rank(c.fts_vector, plainto_tsquery('simple', :q)) DESC
+                                """
+                )
+                .setParameter("q", q)
+                .getResultList();
+        if (idRows.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> ids = idRows.stream().map(HibernateCourseRepo::toUuid).toList();
+        List<HibernateCourse> fetched = entityManager
+                .createQuery(
+                        "select distinct c from HibernateCourse c left join fetch c.tags where c.id in :ids",
+                        HibernateCourse.class
+                )
+                .setParameter("ids", ids)
+                .getResultList();
+
+        var byId = fetched.stream()
+                .collect(Collectors.toMap(HibernateCourse::getId, Function.identity()));
+
+        return ids.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .map(mapper::toDomainCourse)
+                .toList();
+    }
+
+    private static UUID toUuid(Object row) {
+        if (row instanceof UUID uuid) {
+            return uuid;
+        }
+        return UUID.fromString(row.toString());
     }
 
     @Override
