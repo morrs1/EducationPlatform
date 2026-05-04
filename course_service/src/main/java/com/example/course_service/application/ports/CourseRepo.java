@@ -23,5 +23,7 @@ public interface CourseRepo {
 
     List<Course> readDraftCoursesByAuthor(UUID authorId);
 
+    List<Course> readByString(String request);
+
     void publishCourse(UUID courseId);
 }
