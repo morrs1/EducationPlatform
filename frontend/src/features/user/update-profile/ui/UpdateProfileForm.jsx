@@ -156,7 +156,7 @@ function UpdateProfileForm({ viewer, onSubmit }) {
           type="text"
           className="settings-input"
           name="status"
-          placeholder="Например: STUDENT"
+          placeholder="Например: Ищу первую стажировку"
           value={formState.status}
           onChange={handleFieldChange}
         />

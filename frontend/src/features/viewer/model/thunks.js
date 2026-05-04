@@ -55,10 +55,8 @@ function pickCourseIdsForHydration(remoteCourseIds, localCourseIds) {
     : remoteCourseIds;
 }
 
-const VIEWER_STATUS_PATTERN = /^[A-Z][A-Z_]{1,31}$/;
-
 function normalizeStatus(value) {
-  return (value ?? "").trim().replace(/\s+/g, "_").toUpperCase();
+  return (value ?? "").trim();
 }
 
 function normalizeCourseId(value) {
@@ -169,21 +167,6 @@ export function submitViewerProfileUpdate(payload) {
       return {
         ok: false,
         error: "Введите отчество.",
-      };
-    }
-
-    if (!nextStatus) {
-      return {
-        ok: false,
-        error: "Введите статус пользователя.",
-      };
-    }
-
-    if (!VIEWER_STATUS_PATTERN.test(nextStatus)) {
-      return {
-        ok: false,
-        error:
-          "Статус должен содержать только латинские заглавные буквы и символы подчеркивания, например STUDENT или ACTIVE_USER.",
       };
     }
 
