@@ -364,4 +364,423 @@ SET structure = jsonb_set(
                 )
 WHERE jsonb_typeof(structure -> 'modules') = 'array';
 
+--changeset morrs:course-service-fts-demo-courses
+
+INSERT INTO course (id,
+                    author_id,
+                    title,
+                    short_description,
+                    description,
+                    difficulty,
+                    language_code,
+                    estimated_minutes,
+                    structure,
+                    is_preview,
+                    created_at,
+                    updated_at)
+VALUES (
+           'b1010101-a010-4010-8010-010101010101',
+           'ed0bda1c-5f0b-4677-9698-b522b3efacc4',
+           'Java для начинающих: первые шаги',
+           'Старт по Java для тех, кто только входит в язык.',
+           'После этого курса вы разберётесь с базовым синтаксисом и простыми программами.',
+           'beginner',
+           'ru',
+           45,
+           '{
+             "modules": [
+               {
+                 "id": "c010101a-a010-4010-8010-a0101010101a",
+                 "courseId": "b1010101-a010-4010-8010-010101010101",
+                 "title": "Модуль 1",
+                 "description": "Введение.",
+                 "position": 1,
+                 "estimatedMinutes": 45,
+                 "lessons": [
+                   {
+                     "id": "e010101a-a010-4010-8010-e0101010101a",
+                     "type": "theory",
+                     "title": "Вводная лекция",
+                     "position": 1,
+                     "estimatedMinutes": 45,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 10:00:00+03',
+           TIMESTAMPTZ '2026-04-23 10:00:00+03'
+       ),
+       (
+           'b2020202-a020-4020-8020-020202020202',
+           'ed0bda1c-5f0b-4677-9698-b522b3efacc4',
+           'Java для начинающих: практика коллекций',
+           'Продолжение базового трека — списки, множества и карты.',
+           'Много коротких задач на ArrayList, HashSet и HashMap.',
+           'beginner',
+           'ru',
+           60,
+           '{
+             "modules": [
+               {
+                 "id": "c020202a-a020-4020-8020-a0202020202a",
+                 "courseId": "b2020202-a020-4020-8020-020202020202",
+                 "title": "Модуль 1",
+                 "description": "Коллекции.",
+                 "position": 1,
+                 "estimatedMinutes": 60,
+                 "lessons": [
+                   {
+                     "id": "e020202a-a020-4020-8020-e0202020202a",
+                     "type": "theory",
+                     "title": "Коллекции в Java",
+                     "position": 1,
+                     "estimatedMinutes": 60,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 10:15:00+03',
+           TIMESTAMPTZ '2026-04-23 10:15:00+03'
+       ),
+       (
+           'b3030303-a030-4030-8030-030303030303',
+           '4ddf2ae0-3da9-46c0-a088-a28726f2aff6',
+           'Spring Security с нуля',
+           'Защита REST-приложений на Spring.',
+           'Аутентификация, авторизация, базовая конфигурация security chain.',
+           'intermediate',
+           'ru',
+           90,
+           '{
+             "modules": [
+               {
+                 "id": "c030303a-a030-4030-8030-a0303030303a",
+                 "courseId": "b3030303-a030-4030-8030-030303030303",
+                 "title": "Модуль 1",
+                 "description": "Security.",
+                 "position": 1,
+                 "estimatedMinutes": 90,
+                 "lessons": [
+                   {
+                     "id": "e030303a-a030-4030-8030-e0303030303a",
+                     "type": "theory",
+                     "title": "Введение в Spring Security",
+                     "position": 1,
+                     "estimatedMinutes": 90,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 10:30:00+03',
+           TIMESTAMPTZ '2026-04-23 10:30:00+03'
+       ),
+       (
+           'b4040404-a040-4040-8040-040404040404',
+           '4ddf2ae0-3da9-46c0-a088-a28726f2aff6',
+           'Spring Boot и микросервисы',
+           'Как собрать несколько сервисов на Spring Boot.',
+           'Конфигурация, профили, межсервисное взаимодействие на introductory уровне.',
+           'intermediate',
+           'ru',
+           100,
+           '{
+             "modules": [
+               {
+                 "id": "c040404a-a040-4040-8040-a0404040404a",
+                 "courseId": "b4040404-a040-4040-8040-040404040404",
+                 "title": "Модуль 1",
+                 "description": "Микросервисы.",
+                 "position": 1,
+                 "estimatedMinutes": 100,
+                 "lessons": [
+                   {
+                     "id": "e040404a-a040-4040-8040-e0404040404a",
+                     "type": "theory",
+                     "title": "Обзор паттернов",
+                     "position": 1,
+                     "estimatedMinutes": 100,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 10:45:00+03',
+           TIMESTAMPTZ '2026-04-23 10:45:00+03'
+       ),
+       (
+           'b5050505-a050-4050-8050-050505050505',
+           '4ddf2ae0-3da9-46c0-a088-a28726f2aff6',
+           'Spring Data JPA в Spring Boot',
+           'Репозитории и сущности в типичном Spring Boot проекте.',
+           'От Entity до CrudRepository и простых запросов.',
+           'intermediate',
+           'ru',
+           85,
+           '{
+             "modules": [
+               {
+                 "id": "c050505a-a050-4050-8050-a0505050505a",
+                 "courseId": "b5050505-a050-4050-8050-050505050505",
+                 "title": "Модуль 1",
+                 "description": "JPA.",
+                 "position": 1,
+                 "estimatedMinutes": 85,
+                 "lessons": [
+                   {
+                     "id": "e050505a-a050-4050-8050-e0505050505a",
+                     "type": "theory",
+                     "title": "Первая сущность",
+                     "position": 1,
+                     "estimatedMinutes": 85,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 11:00:00+03',
+           TIMESTAMPTZ '2026-04-23 11:00:00+03'
+       ),
+       (
+           'b6060606-a060-4060-8060-060606060606',
+           'ed0bda1c-5f0b-4677-9698-b522b3efacc4',
+           'Python основы: синтаксис',
+           'Первый модуль по Python.',
+           'Переменные, типы, ветвления и циклы.',
+           'beginner',
+           'ru',
+           55,
+           '{
+             "modules": [
+               {
+                 "id": "c060606a-a060-4060-8060-a0606060606a",
+                 "courseId": "b6060606-a060-4060-8060-060606060606",
+                 "title": "Модуль 1",
+                 "description": "Синтаксис.",
+                 "position": 1,
+                 "estimatedMinutes": 55,
+                 "lessons": [
+                   {
+                     "id": "e060606a-a060-4060-8060-e0606060606a",
+                     "type": "theory",
+                     "title": "Что такое Python",
+                     "position": 1,
+                     "estimatedMinutes": 55,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 11:15:00+03',
+           TIMESTAMPTZ '2026-04-23 11:15:00+03'
+       ),
+       (
+           'b7070707-a070-4070-8070-070707070707',
+           'ed0bda1c-5f0b-4677-9698-b522b3efacc4',
+           'Python основы: структуры данных',
+           'Списки, словари, множества в Python.',
+           'Продолжаем тему базового Python на практике.',
+           'beginner',
+           'ru',
+           65,
+           '{
+             "modules": [
+               {
+                 "id": "c070707a-a070-4070-8070-a0707070707a",
+                 "courseId": "b7070707-a070-4070-8070-070707070707",
+                 "title": "Модуль 1",
+                 "description": "Структуры.",
+                 "position": 1,
+                 "estimatedMinutes": 65,
+                 "lessons": [
+                   {
+                     "id": "e070707a-a070-4070-8070-e0707070707a",
+                     "type": "theory",
+                     "title": "Структуры данных",
+                     "position": 1,
+                     "estimatedMinutes": 65,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 11:30:00+03',
+           TIMESTAMPTZ '2026-04-23 11:30:00+03'
+       ),
+       (
+           'b8080808-a080-4080-8080-080808080808',
+           '4ddf2ae0-3da9-46c0-a088-a28726f2aff6',
+           'Алгоритмы: введение',
+           'Обзор темы перед графами.',
+           'Оценка сложности, простые задачи.',
+           'beginner',
+           'ru',
+           70,
+           '{
+             "modules": [
+               {
+                 "id": "c080808a-a080-4080-8080-a0808080808a",
+                 "courseId": "b8080808-a080-4080-8080-080808080808",
+                 "title": "Модуль 1",
+                 "description": "Вводный модуль алгоритмов.",
+                 "position": 1,
+                 "estimatedMinutes": 70,
+                 "lessons": [
+                   {
+                     "id": "e080808a-a080-4080-8080-e0808080808a",
+                     "type": "theory",
+                     "title": "Сложность и примеры",
+                     "position": 1,
+                     "estimatedMinutes": 70,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 11:45:00+03',
+           TIMESTAMPTZ '2026-04-23 11:45:00+03'
+       ),
+       (
+           'b9090909-a090-4090-8090-090909090909',
+           '4ddf2ae0-3da9-46c0-a088-a28726f2aff6',
+           'Алгоритмы на графах',
+           'Обходы, кратчайшие пути — вводный уровень.',
+           'Связь с курсом «Алгоритмы: введение» тем же автором.',
+           'intermediate',
+           'ru',
+           110,
+           '{
+             "modules": [
+               {
+                 "id": "c090909a-a090-4090-8090-a0909090909a",
+                 "courseId": "b9090909-a090-4090-8090-090909090909",
+                 "title": "Модуль 1",
+                 "description": "Графы.",
+                 "position": 1,
+                 "estimatedMinutes": 110,
+                 "lessons": [
+                   {
+                     "id": "e090909a-a090-4090-8090-e0909090909a",
+                     "type": "theory",
+                     "title": "BFS и DFS",
+                     "position": 1,
+                     "estimatedMinutes": 110,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 12:00:00+03',
+           TIMESTAMPTZ '2026-04-23 12:00:00+03'
+       ),
+       (
+           'ba0a0a0a-a0a0-40a0-80a0-0a0a0a0a0a0a',
+           'ed0bda1c-5f0b-4677-9698-b522b3efacc4',
+           'SQL и базы данных для разработчиков',
+           'Модели, запросы, индексы — то, что пригодится в работе.',
+           'Фокус на PostgreSQL-синтаксисе без углублённого администрирования.',
+           'intermediate',
+           'ru',
+           95,
+           '{
+             "modules": [
+               {
+                 "id": "c0a0a0aa-a0a0-40a0-80a0-a0a0a0a0a0aa",
+                 "courseId": "ba0a0a0a-a0a0-40a0-80a0-0a0a0a0a0a0a",
+                 "title": "Модуль 1",
+                 "description": "SQL.",
+                 "position": 1,
+                 "estimatedMinutes": 95,
+                 "lessons": [
+                   {
+                     "id": "e0a0a0aa-a0a0-40a0-80a0-e0a0a0a0a0aa",
+                     "type": "theory",
+                     "title": "SELECT и JOIN",
+                     "position": 1,
+                     "estimatedMinutes": 95,
+                     "isPreview": true
+                   }
+                 ]
+               }
+             ]
+           }'::jsonb,
+           TRUE,
+           TIMESTAMPTZ '2026-04-23 12:15:00+03',
+           TIMESTAMPTZ '2026-04-23 12:15:00+03'
+       );
+
+INSERT INTO course_tag (course_id, tag_id)
+VALUES ('b1010101-a010-4010-8010-010101010101', 'f3b7f1cf-97f7-4460-8d92-bbc9acd7348b'),
+       ('b1010101-a010-4010-8010-010101010101', '3d92fdb9-0db1-43ca-8b8f-f805d5fb4bd9'),
+       ('b2020202-a020-4020-8020-020202020202', 'f3b7f1cf-97f7-4460-8d92-bbc9acd7348b'),
+       ('b3030303-a030-4030-8030-030303030303', '53a70a48-4985-4298-b9d0-45e7752d25d4'),
+       ('b3030303-a030-4030-8030-030303030303', '0e71f8b8-7b0d-48bf-9cef-7a8dd6ae9c39'),
+       ('b4040404-a040-4040-8040-040404040404', '53a70a48-4985-4298-b9d0-45e7752d25d4'),
+       ('b5050505-a050-4050-8050-050505050505', '53a70a48-4985-4298-b9d0-45e7752d25d4'),
+       ('b5050505-a050-4050-8050-050505050505', '0e71f8b8-7b0d-48bf-9cef-7a8dd6ae9c39'),
+       ('b6060606-a060-4060-8060-060606060606', '0e71f8b8-7b0d-48bf-9cef-7a8dd6ae9c39'),
+       ('b7070707-a070-4070-8070-070707070707', '0e71f8b8-7b0d-48bf-9cef-7a8dd6ae9c39'),
+       ('b7070707-a070-4070-8070-070707070707', '3d92fdb9-0db1-43ca-8b8f-f805d5fb4bd9'),
+       ('b8080808-a080-4080-8080-080808080808', '3d92fdb9-0db1-43ca-8b8f-f805d5fb4bd9'),
+       ('b9090909-a090-4090-8090-090909090909', '3d92fdb9-0db1-43ca-8b8f-f805d5fb4bd9'),
+       ('ba0a0a0a-a0a0-40a0-80a0-0a0a0a0a0a0a', '0e71f8b8-7b0d-48bf-9cef-7a8dd6ae9c39');
+
+INSERT INTO lesson_content (lesson_id,
+                            course_id,
+                            lesson_type,
+                            title,
+                            content,
+                            created_at,
+                            updated_at)
+VALUES ('e010101a-a010-4010-8010-e0101010101a', 'b1010101-a010-4010-8010-010101010101', 'theory', 'Вводная лекция',
+        '{"markdown": "# Добро пожаловать\nКороткое знакомество с курсом."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 10:05:00+03', TIMESTAMPTZ '2026-04-23 10:05:00+03'),
+       ('e020202a-a020-4020-8020-e0202020202a', 'b2020202-a020-4020-8020-020202020202', 'theory', 'Коллекции в Java',
+        '{"markdown": "# Коллекции\nArrayList, HashSet, HashMap."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 10:20:00+03', TIMESTAMPTZ '2026-04-23 10:20:00+03'),
+       ('e030303a-a030-4030-8030-e0303030303a', 'b3030303-a030-4030-8030-030303030303', 'theory',
+        'Введение в Spring Security',
+        '{"markdown": "# Security\nЦепочка фильтров и базовые концепции."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 10:35:00+03', TIMESTAMPTZ '2026-04-23 10:35:00+03'),
+       ('e040404a-a040-4040-8040-e0404040404a', 'b4040404-a040-4040-8040-040404040404', 'theory', 'Обзор паттернов',
+        '{"markdown": "# Микросервисы\nОбзор на уровне Spring Boot."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 10:50:00+03', TIMESTAMPTZ '2026-04-23 10:50:00+03'),
+       ('e050505a-a050-4050-8050-e0505050505a', 'b5050505-a050-4050-8050-050505050505', 'theory', 'Первая сущность',
+        '{"markdown": "# JPA\nEntity и репозиторий."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 11:05:00+03', TIMESTAMPTZ '2026-04-23 11:05:00+03'),
+       ('e060606a-a060-4060-8060-e0606060606a', 'b6060606-a060-4060-8060-060606060606', 'theory', 'Что такое Python',
+        '{"markdown": "# Python\nСинтаксис и первые программы."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 11:20:00+03', TIMESTAMPTZ '2026-04-23 11:20:00+03'),
+       ('e070707a-a070-4070-8070-e0707070707a', 'b7070707-a070-4070-8070-070707070707', 'theory', 'Структуры данных',
+        '{"markdown": "# Python\nlist, dict, set."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 11:35:00+03', TIMESTAMPTZ '2026-04-23 11:35:00+03'),
+       ('e080808a-a080-4080-8080-e0808080808a', 'b8080808-a080-4080-8080-080808080808', 'theory', 'Сложность и примеры',
+        '{"markdown": "# Алгоритмы\nO-нотация."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 11:50:00+03', TIMESTAMPTZ '2026-04-23 11:50:00+03'),
+       ('e090909a-a090-4090-8090-e0909090909a', 'b9090909-a090-4090-8090-090909090909', 'theory', 'BFS и DFS',
+        '{"markdown": "# Графы\nОбход в ширину и глубину."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 12:05:00+03', TIMESTAMPTZ '2026-04-23 12:05:00+03'),
+       ('e0a0a0aa-a0a0-40a0-80a0-e0a0a0a0a0aa', 'ba0a0a0a-a0a0-40a0-80a0-0a0a0a0a0a0a', 'theory', 'SELECT и JOIN',
+        '{"markdown": "# SQL\nБазовые запросы."}'::jsonb,
+        TIMESTAMPTZ '2026-04-23 12:20:00+03', TIMESTAMPTZ '2026-04-23 12:20:00+03');
 
