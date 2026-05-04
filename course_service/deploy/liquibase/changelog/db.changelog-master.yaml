@@ -3,5 +3,3 @@ databaseChangeLog:
       file: migrations/v.1.0.0/init.sql
   - include:
       file: migrations/v.1.0.1/test-seed.sql
-  - include:
-      file: migrations/v.1.0.2/delete-spring-demo-course.sql
