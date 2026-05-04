@@ -99,9 +99,10 @@ public class HibernateCourseRepo implements CourseRepo {
     public List<Course> readAll() {
         return entityManager
                 .createQuery(
-                        "select distinct c from HibernateCourse c left join fetch c.tags order by c.createdAt desc",
+                        "select distinct c from HibernateCourse c left join fetch c.tags where c.isPreview =:isPreview order by c.createdAt desc",
                         HibernateCourse.class
                 )
+                .setParameter("isPreview", true)
                 .getResultList()
                 .stream().map(mapper::toDomainCourse)
                 .toList();
