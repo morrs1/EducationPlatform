@@ -10,6 +10,7 @@ import {
   upsertViewerCourseSnapshot,
 } from "../../../features/viewer";
 import {
+  enrichCoursePageDataWithAuthorName,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
   requestCourseCreation,
@@ -94,9 +95,11 @@ function CreateCourseSection() {
 
       try {
         const response = await requestCourseById(courseId);
-        const pageData = mapReadCourseByIdResponseToCoursePageData(
-          response,
-          courseId,
+        const pageData = await enrichCoursePageDataWithAuthorName(
+          mapReadCourseByIdResponseToCoursePageData(
+            response,
+            courseId,
+          ),
         );
         const syllabusLessonIds = collectSyllabusLessonIds(
           pageData.syllabus.modules,

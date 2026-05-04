@@ -16,6 +16,7 @@ export {
   mapCourseToPreview,
 } from "./model/selectors";
 export {
+  enrichCoursePageDataWithAuthorName,
   extractLessonCoverAssetFromLessonResponse,
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,

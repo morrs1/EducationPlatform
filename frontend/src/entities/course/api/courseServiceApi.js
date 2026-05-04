@@ -1,3 +1,4 @@
+import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import { sanitizeCourseDisplayLabel } from "../model/courseDisplayLabels";
 
 const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course-service";
@@ -834,6 +835,45 @@ export function isUuid(value) {
   return UUID_PATTERN.test(normalizeText(value));
 }
 
+/**
+ * Подставляет ФИО автора из user service по course.authorId (в ответе course-service есть только id).
+ */
+export async function enrichCoursePageDataWithAuthorName(pageData) {
+  if (!pageData?.course) {
+    return pageData;
+  }
+
+  const authorId = normalizeText(pageData.course.authorId);
+  const existingName = normalizeText(pageData.course.authorName);
+
+  if (existingName) {
+    return pageData;
+  }
+
+  if (!authorId || !isUuid(authorId)) {
+    return pageData;
+  }
+
+  try {
+    const authorProfile = await requestViewerDisplayProfileById(authorId);
+    const name = normalizeText(authorProfile?.name);
+
+    if (!name) {
+      return pageData;
+    }
+
+    return {
+      ...pageData,
+      course: {
+        ...pageData.course,
+        authorName: name,
+      },
+    };
+  } catch {
+    return pageData;
+  }
+}
+
 async function requestCourseService(pathname, options = {}) {
   const requestUrl = buildCourseServiceUrl(pathname).toString();
   const response = await fetch(requestUrl, options);
@@ -1079,7 +1119,7 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
     course: {
       id: resolvedCourseId || courseId,
       authorId: normalizeText(response?.authorId),
-      authorName: "",
+      authorName: normalizeText(response?.authorName),
       title: normalizeText(response?.title) || "Курс без названия",
       shortDescription:
         normalizeText(response?.shortDescription) ||

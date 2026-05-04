@@ -9,8 +9,8 @@ import {
   selectViewerName,
   upsertViewerCourseSnapshot,
 } from "../../../features/viewer";
-import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import {
+  enrichCoursePageDataWithAuthorName,
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestAddLessonToCourse,
@@ -48,48 +48,6 @@ function CourseBuilderPage() {
     [currentViewerId, viewer.remoteId],
   );
 
-  const enrichBackendCourseAuthor = useCallback(async (nextPageData) => {
-    const nextCourse = nextPageData?.course;
-
-    if (!nextCourse) {
-      return nextPageData;
-    }
-
-    if (viewerName && nextCourse.authorId === courseServiceAuthorId) {
-      return {
-        ...nextPageData,
-        course: {
-          ...nextCourse,
-          authorName: viewerName,
-        },
-      };
-    }
-
-    if (!nextCourse.authorId) {
-      return nextPageData;
-    }
-
-    try {
-      const authorProfile = await requestViewerDisplayProfileById(
-        nextCourse.authorId,
-      );
-
-      if (!authorProfile?.name) {
-        return nextPageData;
-      }
-
-      return {
-        ...nextPageData,
-        course: {
-          ...nextCourse,
-          authorName: authorProfile.name,
-        },
-      };
-    } catch {
-      return nextPageData;
-    }
-  }, [courseServiceAuthorId, viewerName]);
-
   const applyPageData = useCallback((nextPageData) => {
     const nextCourse = nextPageData.course;
     const nextModules = nextPageData.syllabus.modules;
@@ -123,7 +81,7 @@ function CourseBuilderPage() {
 
     try {
       const response = await requestCourseById(courseId);
-      const nextPageData = await enrichBackendCourseAuthor(
+      const nextPageData = await enrichCoursePageDataWithAuthorName(
         mapReadCourseByIdResponseToCoursePageData(
           response,
           courseId,
@@ -148,7 +106,7 @@ function CourseBuilderPage() {
         error: nextError,
       };
     }
-  }, [applyPageData, courseId, enrichBackendCourseAuthor, hasValidCourseId]);
+  }, [applyPageData, courseId, hasValidCourseId]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -169,7 +127,7 @@ function CourseBuilderPage() {
 
       try {
         const response = await requestCourseById(courseId);
-        const nextPageData = await enrichBackendCourseAuthor(
+        const nextPageData = await enrichCoursePageDataWithAuthorName(
           mapReadCourseByIdResponseToCoursePageData(
             response,
             courseId,
@@ -196,13 +154,7 @@ function CourseBuilderPage() {
     return () => {
       isCancelled = true;
     };
-  }, [
-    applyPageData,
-    courseId,
-    enrichBackendCourseAuthor,
-    hasValidCourseId,
-    requestSeed,
-  ]);
+  }, [applyPageData, courseId, hasValidCourseId, requestSeed]);
 
   function reloadCourse() {
     setRequestSeed((value) => value + 1);

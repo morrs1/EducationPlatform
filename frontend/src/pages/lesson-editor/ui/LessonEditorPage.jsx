@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, useParams } from "react-router";
 import {
+  enrichCoursePageDataWithAuthorName,
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
@@ -55,9 +56,11 @@ function LessonEditorPage() {
 
       try {
         const response = await requestCourseById(courseId);
-        const nextPageData = mapReadCourseByIdResponseToCoursePageData(
-          response,
-          courseId,
+        const nextPageData = await enrichCoursePageDataWithAuthorName(
+          mapReadCourseByIdResponseToCoursePageData(
+            response,
+            courseId,
+          ),
         );
 
         if (!isCancelled) {

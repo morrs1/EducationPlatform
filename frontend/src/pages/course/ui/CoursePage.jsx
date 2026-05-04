@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import {
@@ -26,7 +26,6 @@ import {
   selectViewer,
   toggleFavouriteCourse,
 } from "../../../features/viewer";
-import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import { getLessonProgressMap } from "../../../entities/lesson";
 import { CourseTabs } from "../../../widgets/course-tabs";
 import { CourseSidebar } from "../../../widgets/course-sidebar";
@@ -37,6 +36,7 @@ import { getCoursePageData } from "../lib/getCoursePageData";
 import { getCourseDescriptionMarkdown } from "../lib/getCourseDescriptionMarkdown";
 import { parseCourseDescriptionMarkdown } from "../lib/parseCourseDescriptionMarkdown";
 import {
+  enrichCoursePageDataWithAuthorName,
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
@@ -107,32 +107,6 @@ function CoursePage() {
   const [backendRequestSeed, setBackendRequestSeed] = useState(0);
   const [learningActionError, setLearningActionError] = useState("");
 
-  const enrichBackendCourseAuthor = useCallback(async (nextPageData) => {
-    const authorId = nextPageData?.course?.authorId;
-
-    if (!authorId) {
-      return nextPageData;
-    }
-
-    try {
-      const authorProfile = await requestViewerDisplayProfileById(authorId);
-
-      if (!authorProfile?.name) {
-        return nextPageData;
-      }
-
-      return {
-        ...nextPageData,
-        course: {
-          ...nextPageData.course,
-          authorName: authorProfile.name,
-        },
-      };
-    } catch {
-      return nextPageData;
-    }
-  }, []);
-
   useEffect(() => {
     if (!isBackendCourseRoute || !courseIdParam) {
       return;
@@ -146,7 +120,7 @@ function CoursePage() {
 
       try {
         const response = await requestCourseById(courseIdParam);
-        const nextPageData = await enrichBackendCourseAuthor(
+        const nextPageData = await enrichCoursePageDataWithAuthorName(
           mapReadCourseByIdResponseToCoursePageData(
             response,
             courseIdParam,
@@ -177,7 +151,6 @@ function CoursePage() {
     courseIdParam,
     isBackendCourseRoute,
     backendRequestSeed,
-    enrichBackendCourseAuthor,
   ]);
 
   const pageData = useMemo(() => {

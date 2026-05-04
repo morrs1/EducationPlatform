@@ -14,6 +14,7 @@ import {
 } from "../../../entities/lesson";
 import { getCourseSyllabus } from "../../../entities/course";
 import {
+  enrichCoursePageDataWithAuthorName,
   isUuid,
   mapReadLessonByIdResponseToLessonPageData,
   requestCourseById,
@@ -107,9 +108,11 @@ function LessonPage() {
           courseResponse,
           lessonResponse,
         });
+        const enrichedPageData =
+          await enrichCoursePageDataWithAuthorName(nextPageData);
 
         if (!isCancelled) {
-          setBackendPageData(nextPageData);
+          setBackendPageData(enrichedPageData);
           setBackendResolvedLessonId(lessonId);
           setBackendPageStatus("success");
         }

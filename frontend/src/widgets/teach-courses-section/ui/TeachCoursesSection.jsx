@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router";
 import {
+  enrichCoursePageDataWithAuthorName,
   mapReadCourseByIdResponseToCoursePageData,
   requestDraftCoursesByAuthor,
   requestPublishedCoursesByAuthor,
@@ -145,10 +146,18 @@ function TeachCoursesSection({ variant = "drafts" }) {
 
       try {
         const response = await config.request(authorId);
-        const nextCourses = response
-          .map((courseResponse) =>
-            mapReadCourseByIdResponseToCoursePageData(courseResponse, ""),
+        const nextCourses = (
+          await Promise.all(
+            response.map(async (courseResponse) =>
+              enrichCoursePageDataWithAuthorName(
+                mapReadCourseByIdResponseToCoursePageData(
+                  courseResponse,
+                  "",
+                ),
+              ),
+            ),
           )
+        )
           .map((pageData) => pageData.course)
           .filter(
             (course) =>

@@ -16,6 +16,7 @@ import {
   getViewerCourseStorageKey,
 } from "../../../entities/viewer";
 import {
+  enrichCoursePageDataWithAuthorName,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
 } from "../../../entities/course";
@@ -103,14 +104,17 @@ async function loadCourseSnapshotFromCourseService(courseId) {
       courseResponse,
       courseId,
     );
+    const enrichedPageData = await enrichCoursePageDataWithAuthorName(
+      pageData,
+    );
 
-    if (!pageData?.course) {
+    if (!enrichedPageData?.course) {
       return null;
     }
 
     return createViewerCourseSnapshot(
-      pageData.course,
-      getSyllabusLessonIds(pageData.syllabus),
+      enrichedPageData.course,
+      getSyllabusLessonIds(enrichedPageData.syllabus),
     );
   } catch (error) {
     if (error?.status !== 404) {
