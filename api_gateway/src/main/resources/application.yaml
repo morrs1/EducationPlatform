@@ -1,0 +1,40 @@
+server:
+  # Чтобы не конфликтовать с downstream на одной машине.
+  port: ${SERVER_PORT:8090}
+
+spring:
+  application:
+    name: api_gateway
+
+# Базовый префикс входа на шлюзе; downstream-пути совпадают с теми, что в сервисах (без лишнего /api).
+gateway:
+  proxy:
+    entry-path-prefix: /api
+  routes:
+    # --- course_service (server.port 8081): длинный префикс выше короткого ---
+    - id: course-lesson
+      path-prefix: /api/course/lesson
+      target-base-uri: http://localhost:8081
+      strip-prefix: /api
+    - id: course
+      path-prefix: /api/course
+      target-base-uri: http://localhost:8081
+      strip-prefix: /api
+
+    # --- learning_service (server.port 8082) ---
+    - id: learning
+      path-prefix: /api/learning
+      target-base-uri: http://localhost:8082
+      strip-prefix: /api
+
+    # --- user_service (server.port 8080) ---
+    - id: user
+      path-prefix: /api/user
+      target-base-uri: http://localhost:8080
+      strip-prefix: /api
+
+# Примеры:
+#   GET http://localhost:8090/api/course/...     -> http://localhost:8081/course/...
+#   GET http://localhost:8090/api/course/lesson/... -> http://localhost:8081/course/lesson/...
+#   GET http://localhost:8090/api/learning/...   -> http://localhost:8082/learning/...
+#   POST http://localhost:8090/api/user/...      -> http://localhost:8080/user/...
