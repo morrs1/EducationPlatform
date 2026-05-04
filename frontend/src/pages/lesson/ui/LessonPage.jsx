@@ -172,7 +172,9 @@ function LessonPage() {
     ? completedLessonIds.includes(lesson.id)
     : false;
   const isBackendCourse = Boolean(course?.isBackendCourse);
-  const canUseCourseContent = isBackendCourse ? true : canViewContent;
+  const canUseCourseContent = isBackendCourse
+    ? isEnrolled || isCompletedCourse
+    : canViewContent;
 
   const syllabus = useMemo(
     () =>
@@ -219,14 +221,7 @@ function LessonPage() {
   const assistantContextKey = lesson ? lesson.id : null;
   const isAssistantOpen = useSelector(selectAssistantIsOpen);
   const assistantThread = useSelector((state) =>
-    assistantContextKey
-      ? selectAssistantThreadByContextKey(state, assistantContextKey)
-      : {
-          messages: [],
-          status: "idle",
-          error: null,
-          threadId: null,
-        },
+    selectAssistantThreadByContextKey(state, assistantContextKey),
   );
   const assistantMessages = assistantThread.messages;
   const assistantStatus = assistantThread.status;
@@ -250,12 +245,26 @@ function LessonPage() {
   const assistantSubtitle = lesson?.title ?? "";
 
   useEffect(() => {
-    if (!lesson) {
+    if (!lesson || !canUseCourseContent) {
       return;
     }
 
-    dispatch(openLesson({ lesson, courseId: course?.id ?? null }));
-  }, [course?.id, dispatch, lesson]);
+    dispatch(
+      openLesson({
+        lesson,
+        courseId: course?.id ?? null,
+        courseLessonIds: syllabusLessonIds,
+      }),
+    );
+  }, [
+    canUseCourseContent,
+    course?.id,
+    dispatch,
+    isCompletedCourse,
+    isEnrolled,
+    lesson,
+    syllabusLessonIds,
+  ]);
 
   useEffect(() => {
     if (
@@ -476,7 +485,13 @@ function LessonPage() {
     setIsSubmitting(true);
 
     try {
-      await dispatch(submitLessonAnswer({ lesson, courseId: course?.id }));
+      await dispatch(
+        submitLessonAnswer({
+          lesson,
+          courseId: course?.id,
+          courseLessonIds: syllabusLessonIds,
+        }),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -596,6 +611,26 @@ function LessonPage() {
           <h1 className="lesson-title">Неверный курс</h1>
           <p className="lesson-text">
             Этот урок не относится к выбранному курсу.
+          </p>
+          <Link
+            to={`/courses/${courseId}?tab=content`}
+            className="course-inline-btn"
+          >
+            Вернуться к курсу
+          </Link>
+        </section>
+      </div>
+    );
+  }
+
+  if (isBackendCourse && !canUseCourseContent) {
+    return (
+      <div className="lesson-page">
+        <section className="lesson-card">
+          <p className="lesson-label">Урок недоступен</p>
+          <h1 className="lesson-title">Сначала запишитесь на курс</h1>
+          <p className="lesson-text">
+            Прогресс уроков сохраняется после записи на курс.
           </p>
           <Link
             to={`/courses/${courseId}?tab=content`}
