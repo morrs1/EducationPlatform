@@ -1,8 +1,6 @@
 package org.example.user_service.setup.config_beans.user;
 
 import org.example.user_service.application.interactors.mappers.UserViewMapper;
-import org.example.user_service.application.interactors.user.add_current_course.AddCurrentCourseInteractor;
-import org.example.user_service.application.interactors.user.add_finished_course.AddFinishedCourseInteractor;
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoInteractor;
 import org.example.user_service.application.interactors.user.create_user.CreateUserInteractor;
 import org.example.user_service.application.interactors.user.read_user_by_id.ReadUserByIdInteractor;
@@ -64,24 +62,4 @@ public class UserBeansConfig {
     ) {
         return new AddProfilePhotoInteractor(photoStorage, transactionManager, userRepo, userDomainService);
     }
-
-    @Bean
-    public AddCurrentCourseInteractor addCurrentCourseInteractor(
-            TransactionManager transactionManager,
-            UserRepo userRepo,
-            UserDomainService userDomainService
-    ) {
-        return new AddCurrentCourseInteractor(transactionManager, userRepo, userDomainService);
-    }
-
-    @Bean
-    public AddFinishedCourseInteractor addFinishedCourseInteractor(
-            TransactionManager transactionManager,
-            UserRepo userRepo,
-            UserDomainService userDomainService
-    ) {
-        return new AddFinishedCourseInteractor(transactionManager, userRepo, userDomainService);
-    }
-
-
 }

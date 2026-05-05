@@ -20,6 +20,12 @@ public class CreateUserInteractor {
     public UUID add(CreateUserCommand command) {
 
         return transactionManager.inTransaction(() -> {
+            if (userRepo.readByEmail(command.userEmail()).isPresent()) {
+                throw new UserAlreadyExistsException(
+                        String.format("User with email %s already exists", command.userEmail())
+                );
+            }
+
             var user = userService.add(
                     command.surname(),
                     command.name(),
@@ -27,15 +33,8 @@ public class CreateUserInteractor {
                     command.userStatus(),
                     command.userEmail(),
                     command.userPassword(),
-                    command.userProfilePhotoLink(),
-                    command.currentCourses(),
-                    command.finishedCourses(),
-                    command.certificates()
+                    command.userProfilePhotoLink()
             );
-
-            if (userRepo.readByEmail(user.getEmail().getEmail()).isPresent()) {
-                throw new UserAlreadyExistsException(String.format("User with email %s already exists", user.getEmail().getEmail()));
-            }
 
             eventBus.publish(userService.pull_events());
             return userRepo.add(user);
