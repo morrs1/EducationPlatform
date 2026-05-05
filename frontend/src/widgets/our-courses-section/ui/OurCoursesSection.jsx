@@ -1,37 +1,49 @@
 import { useState } from "react";
 import { CoursePreviewCard } from "../../../entities/course";
+import {
+  ALL_TAG_KEY,
+  getCatalogCoursesForTagKey,
+} from "../../../features/catalog";
 
 const COURSES_PER_PAGE = 6;
 
-function OurCoursesSection({ courseCategories, coursesByCategory }) {
-  const [activeCategoryId, setActiveCategoryId] = useState(null);
+function OurCoursesSection({ allCourses, catalogTagModel }) {
+  const [activeTagKey, setActiveTagKey] = useState(ALL_TAG_KEY);
   const [currentPage, setCurrentPage] = useState(0);
   const [animationDirection, setAnimationDirection] = useState("reset");
 
-  const hasActiveCategory = courseCategories.some(
-    (category) => category.id === activeCategoryId,
+  const tagList = catalogTagModel?.tagList ?? [];
+  const hasActiveTag =
+    activeTagKey === ALL_TAG_KEY ||
+    tagList.some((tag) => tag.key === activeTagKey);
+  const resolvedActiveTagKey = hasActiveTag ? activeTagKey : ALL_TAG_KEY;
+  const effectiveCurrentPage = currentPage;
+
+  const courseById = new Map(
+    (Array.isArray(allCourses) ? allCourses : []).map((course) => [
+      course.id,
+      course,
+    ]),
   );
-
-  const resolvedActiveCategoryId = hasActiveCategory
-    ? activeCategoryId
-    : (courseCategories[0]?.id ?? null);
-  const effectiveCurrentPage = resolvedActiveCategoryId ? currentPage : 0;
-
-  const activeCategoryCourses = resolvedActiveCategoryId
-    ? (coursesByCategory[resolvedActiveCategoryId] ?? [])
-    : [];
+  const activeCourseRows = getCatalogCoursesForTagKey(
+    catalogTagModel,
+    resolvedActiveTagKey,
+  );
+  const activeTagCourses = activeCourseRows
+    .map((row) => courseById.get(row.id))
+    .filter(Boolean);
   const totalPages = Math.max(
     1,
-    Math.ceil(activeCategoryCourses.length / COURSES_PER_PAGE),
+    Math.ceil(activeTagCourses.length / COURSES_PER_PAGE),
   );
   const safeCurrentPage = Math.min(effectiveCurrentPage, totalPages - 1);
-  const visibleCourses = activeCategoryCourses.slice(
+  const visibleCourses = activeTagCourses.slice(
     safeCurrentPage * COURSES_PER_PAGE,
     safeCurrentPage * COURSES_PER_PAGE + COURSES_PER_PAGE,
   );
 
-  function handleCategoryChange(categoryId) {
-    setActiveCategoryId(categoryId);
+  function handleTagChange(tagKey) {
+    setActiveTagKey(tagKey);
     setCurrentPage(0);
     setAnimationDirection("reset");
   }
@@ -58,12 +70,12 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
     <section className="home-section">
       <div className="home-section-header">
         <div className="home-section-heading">
-          <p className="home-section-eyebrow">Категории платформы</p>
+          <p className="home-section-eyebrow">Теги курсов</p>
           <h2 className="home-section-title">Наши курсы</h2>
         </div>
 
         <p className="home-section-description">
-          Переключайтесь между направлениями и просматривайте подборки курсов.
+          Переключайтесь между тегами и просматривайте подборки курсов.
         </p>
 
         <div className="home-section-controls">
@@ -96,17 +108,26 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
       </div>
 
       <div className="home-category-tabs">
-        {courseCategories.map((category) => {
-          const isActive = category.id === resolvedActiveCategoryId;
+        <button
+          type="button"
+          onClick={() => handleTagChange(ALL_TAG_KEY)}
+          className={`home-category-tab ${
+            resolvedActiveTagKey === ALL_TAG_KEY ? "active" : ""
+          }`}
+        >
+          Все
+        </button>
+        {tagList.map((tag) => {
+          const isActive = tag.key === resolvedActiveTagKey;
 
           return (
             <button
-              key={category.id}
+              key={tag.key}
               type="button"
-              onClick={() => handleCategoryChange(category.id)}
+              onClick={() => handleTagChange(tag.key)}
               className={`home-category-tab ${isActive ? "active" : ""}`}
             >
-              {category.name}
+              {tag.label}
             </button>
           );
         })}
@@ -114,7 +135,7 @@ function OurCoursesSection({ courseCategories, coursesByCategory }) {
 
       <div className="home-courses-viewport">
         <div
-          key={`${resolvedActiveCategoryId}-${safeCurrentPage}`}
+          key={`${resolvedActiveTagKey}-${safeCurrentPage}`}
           className={`home-courses-grid is-${animationDirection}`}
         >
           {visibleCourses.map((course) => (
