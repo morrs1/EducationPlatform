@@ -261,6 +261,8 @@ function splitLessonsByModule(totalLessons, modulesCount) {
 }
 
 function buildFallbackSyllabus(course) {
+  const primaryTag =
+    (Array.isArray(course?.tags) && course.tags[0]) ? course.tags[0] : "курс";
   const modulesCount = Math.min(4, Math.max(3, Math.ceil(course.lessonsCount / 8)));
   const lessonDistribution = splitLessonsByModule(course.lessonsCount, modulesCount);
 
@@ -271,10 +273,10 @@ function buildFallbackSyllabus(course) {
       title:
         fallbackModuleTitles[moduleIndex] ??
         `Модуль ${moduleIndex + 1}`,
-      summary: `Погружаемся в направление «${course.subcategoryName}» и доводим ключевые навыки до практического результата.`,
+      summary: `Погружаемся в тему «${primaryTag}» и доводим ключевые навыки до практического результата.`,
       lessons: Array.from({ length: lessonsCount }, (_, lessonIndex) => ({
         id: `${course.id}-lesson-${moduleIndex + 1}-${lessonIndex + 1}`,
-        title: `${course.subcategoryName}: занятие ${lessonIndex + 1}`,
+        title: `${primaryTag}: занятие ${lessonIndex + 1}`,
         durationLabel: `${12 + ((course.id + moduleIndex + lessonIndex) % 16)} мин`,
       })),
     })),
@@ -302,7 +304,7 @@ function normalizeSyllabus(course, syllabus) {
 
     targetModule.lessons.push({
       id: `${course.id}-extra-lesson-${lessonIndex + 1}`,
-      title: `${course.subcategoryName}: дополнительная практика ${lessonIndex + 1}`,
+      title: `${primaryTag}: дополнительная практика ${lessonIndex + 1}`,
       durationLabel: `${14 + ((course.id + lessonIndex) % 14)} мин`,
     });
   }

@@ -65,8 +65,8 @@ function attachViewerState(
     ? getCourseProgressByCourseId({
         courseId: course.id,
         viewerProgress: viewer.progressByCourseId[storageKey] ?? null,
-        viewedLessonIds,
-        completedLessonIds,
+        viewedLessonIds: course.isBackendCourse ? [] : viewedLessonIds,
+        completedLessonIds: course.isBackendCourse ? [] : completedLessonIds,
         courseSnapshot: course,
         isCompletedCourse: isCompleted,
       })
@@ -119,14 +119,17 @@ export const selectViewerCourseProgress = createSelector(
       return null;
     }
 
+    const courseSnapshot = getViewerCourseRecord(viewer, normalizedCourseId);
+    const isBackendCourse = Boolean(courseSnapshot?.isBackendCourse);
+
     return getCourseProgressByCourseId({
       courseId: normalizedCourseId,
       viewerProgress:
         viewer.progressByCourseId[getViewerCourseStorageKey(normalizedCourseId)] ??
         null,
-      viewedLessonIds,
-      completedLessonIds,
-      courseSnapshot: getViewerCourseRecord(viewer, normalizedCourseId),
+      viewedLessonIds: isBackendCourse ? [] : viewedLessonIds,
+      completedLessonIds: isBackendCourse ? [] : completedLessonIds,
+      courseSnapshot,
       isCompletedCourse: viewer.completedCourseIds.includes(normalizedCourseId),
     });
   },

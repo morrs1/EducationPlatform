@@ -6,10 +6,6 @@ function getDifficultyLabel(difficulty) {
   }
 
   if (difficulty === "intermediate") {
-    return "Средний уровень";
-  }
-
-  if (difficulty === "advanced") {
     return "Продвинутый уровень";
   }
 

@@ -78,7 +78,10 @@ async function requestLearningService(pathname, options = {}, context = "") {
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response, context));
+    const error = new Error(extractErrorMessage(response, context));
+    error.status = response.status;
+    error.responseBody = responseBody;
+    throw error;
   }
 
   return responseBody;
@@ -117,6 +120,20 @@ export async function requestEnrollUserInCourse({ userId, courseId }) {
       }),
     },
     "enrolling user in course",
+  );
+}
+
+export async function requestLeaveCourse({ userId, courseId }) {
+  return requestLearningService(
+    "/learning/enrollment/leave",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        userId: normalizeUuid(userId, "userId"),
+        courseId: normalizeUuid(courseId, "courseId"),
+      }),
+    },
+    "leaving course",
   );
 }
 
@@ -217,6 +234,46 @@ export async function requestLearningActivityYear({ userId, year }) {
     {},
     "loading activity year",
   );
+}
+
+function normalizeCertificateRecord(row) {
+  const id = normalizeText(row?.id);
+
+  if (!isUuid(id)) {
+    return null;
+  }
+
+  const courseId = normalizeText(row?.courseId);
+
+  if (!isUuid(courseId)) {
+    return null;
+  }
+
+  return {
+    id,
+    enrollmentId: normalizeText(row?.enrollmentId),
+    userId: normalizeText(row?.userId),
+    courseId,
+    issuedAt: normalizeText(row?.issuedAt),
+    serialNo: normalizeText(row?.serialNo) || "",
+    fileUrl: normalizeText(row?.fileUrl) || "",
+  };
+}
+
+export async function requestCertificatesByUser(userId) {
+  const responseBody = await requestLearningService(
+    `/learning/certificate/by-user/${normalizeUuid(userId, "userId")}`,
+    {},
+    "loading certificates",
+  );
+
+  if (!Array.isArray(responseBody)) {
+    return [];
+  }
+
+  return responseBody
+    .map(normalizeCertificateRecord)
+    .filter(Boolean);
 }
 
 export async function requestCreateCertificate({

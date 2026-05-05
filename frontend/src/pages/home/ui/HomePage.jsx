@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { getHomePageData } from "../lib/getHomePageData";
+import { useHomePopularCourses } from "../lib/useHomePopularCourses";
 import { useCatalogCollections } from "../../../features/catalog";
 import { HomeDiscoveryPanel } from "../../../widgets/home-discovery";
 import { OurCoursesSection } from "../../../widgets/our-courses-section";
@@ -9,22 +9,9 @@ import { PopularCoursesSection } from "../../../widgets/popular-courses-section"
 function Home() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({
-    filter1: false,
-    filter2: false,
-  });
 
-  const { popularCourses } = getHomePageData();
-  const { courseCategories, coursesByCategory } = useCatalogCollections();
-
-  function handleFilterChange(event) {
-    const { name, checked } = event.target;
-
-    setFilters((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
-  }
+  const popularCourses = useHomePopularCourses(18);
+  const { allCourses, catalogTagModel } = useCatalogCollections();
 
   function handleSearchSubmit(event) {
     event.preventDefault();
@@ -36,14 +23,6 @@ function Home() {
       params.set("query", normalizedQuery);
     }
 
-    if (filters.filter1) {
-      params.set("filter1", "true");
-    }
-
-    if (filters.filter2) {
-      params.set("filter2", "true");
-    }
-
     const search = params.toString();
     navigate(search ? `/search?${search}` : "/search");
   }
@@ -52,15 +31,13 @@ function Home() {
     <div className="home-page">
       <HomeDiscoveryPanel
         searchQuery={searchQuery}
-        filters={filters}
         onSearchChange={(event) => setSearchQuery(event.target.value)}
-        onFilterChange={handleFilterChange}
         onSubmit={handleSearchSubmit}
       />
 
       <OurCoursesSection
-        courseCategories={courseCategories}
-        coursesByCategory={coursesByCategory}
+        allCourses={allCourses}
+        catalogTagModel={catalogTagModel}
       />
 
       <PopularCoursesSection popularCourses={popularCourses} />

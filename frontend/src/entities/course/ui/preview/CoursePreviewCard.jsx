@@ -1,11 +1,13 @@
 import { Link } from "react-router";
-import { sanitizeCourseDisplayLabel } from "../../model/courseDisplayLabels";
+import {
+  formatCourseTagLabel,
+  sanitizeCourseDisplayLabel,
+} from "../../model/courseDisplayLabels";
 
 function CoursePreviewCard({ course }) {
   const levelLabelMap = {
-    beginner: "Для начинающих",
-    intermediate: "Средний уровень",
-    advanced: "Продвинутый",
+    beginner: "Начальный уровень",
+    intermediate: "Продвинутый уровень",
   };
   const levelLabel = levelLabelMap[course.level] ?? "Любой уровень";
   const ratingLabel =
@@ -17,11 +19,34 @@ function CoursePreviewCard({ course }) {
       ? `${course.studentsCount} студентов`
       : "Новый курс";
   const categoryLabel = sanitizeCourseDisplayLabel(course.categoryName);
+  const tagLabels = Array.isArray(course.tags)
+    ? course.tags
+        .map((label) => formatCourseTagLabel(label))
+        .filter(Boolean)
+    : [];
+  const fromTags = tagLabels.length > 0;
+  const visibleTags = fromTags ? tagLabels : [categoryLabel];
+  const overflowTagCount =
+    visibleTags.length > 3 ? visibleTags.length - 3 : 0;
 
   return (
     <Link className="course-preview-card" to={`/courses/${course.id}`}>
       <div className="course-preview-card-badges">
-        <span className="course-preview-card-badge">{categoryLabel}</span>
+        {visibleTags.slice(0, 3).map((label, index) => (
+          <span
+            key={`${label}-${index}`}
+            className="course-preview-card-badge"
+          >
+            {fromTags
+              ? formatCourseTagLabel(label) || "—"
+              : sanitizeCourseDisplayLabel(label)}
+          </span>
+        ))}
+        {overflowTagCount > 0 ? (
+          <span className="course-preview-card-badge course-preview-card-badge-more">
+            +{overflowTagCount}
+          </span>
+        ) : null}
         <span className="course-preview-card-level">{levelLabel}</span>
       </div>
 
@@ -44,7 +69,11 @@ function CoursePreviewCard({ course }) {
           ) : (
             <div className="course-preview-card-placeholder">
               <span className="course-preview-card-category">
-                {categoryLabel}
+                {fromTags
+                  ? formatCourseTagLabel(visibleTags[0]) || "—"
+                  : sanitizeCourseDisplayLabel(
+                      visibleTags[0] ?? categoryLabel,
+                    )}
               </span>
             </div>
           )}

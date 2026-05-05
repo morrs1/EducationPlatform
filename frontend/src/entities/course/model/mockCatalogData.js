@@ -1,4 +1,4 @@
 import { buildCatalogData } from "./buildCatalogData";
-import { mockCourses } from "./mockCourses";
+import { getMockCourses } from "./mockCourses";
 
-export const mockCatalogData = buildCatalogData(mockCourses);
+export const mockCatalogData = buildCatalogData(getMockCourses());

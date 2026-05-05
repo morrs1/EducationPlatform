@@ -3,6 +3,7 @@ import CurrentCourseCard from "./CurrentCourseCard";
 function CurrentCoursesList({
   courses,
   emptyMessage,
+  leavingCourseId,
   onToggleFavouriteCourse,
   onLeaveCourse,
 }) {
@@ -20,6 +21,7 @@ function CurrentCoursesList({
         <CurrentCourseCard
           key={course.id}
           course={course}
+          isLeaving={leavingCourseId === course.id}
           onToggleFavouriteCourse={onToggleFavouriteCourse}
           onLeaveCourse={onLeaveCourse}
         />

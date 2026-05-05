@@ -4,6 +4,7 @@ import { getCourseCoverSrc } from "../../model/getCourseCoverSrc";
 
 function CurrentCourseCard({
   course,
+  isLeaving = false,
   onToggleFavouriteCourse,
   onLeaveCourse,
 }) {
@@ -72,12 +73,17 @@ function CurrentCourseCard({
               type="button"
               className="current-course-menu-item"
               role="menuitem"
+              disabled={isLeaving}
               onClick={() => {
+                if (isLeaving) {
+                  return;
+                }
+
                 onLeaveCourse(course.id);
                 setIsMenuOpen(false);
               }}
             >
-              Покинуть курс
+              {isLeaving ? "Выходим..." : "Покинуть курс"}
             </button>
 
             <button
