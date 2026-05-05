@@ -5,8 +5,6 @@ import lombok.ToString;
 import org.example.user_service.domain.base.BaseValueObject;
 import org.example.user_service.domain.base.exceptions.ValidateException;
 
-import java.util.Objects;
-
 @ToString
 @Getter
 public class UserProfilePhotoLink extends BaseValueObject {
@@ -20,9 +18,8 @@ public class UserProfilePhotoLink extends BaseValueObject {
 
     @Override
     public void validate() throws ValidateException {
-        if (Objects.isNull(profilePhotoLink)) {
-            throw new ValidateException("Profile photo link must not be null");
+        if (profilePhotoLink != null && profilePhotoLink.length() > 1024) {
+            throw new ValidateException("Profile photo link must not exceed 1024 characters");
         }
-
     }
 }
