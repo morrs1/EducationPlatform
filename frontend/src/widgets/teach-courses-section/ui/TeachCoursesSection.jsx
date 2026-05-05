@@ -6,6 +6,7 @@ import {
   mapReadCourseByIdResponseToCoursePageData,
   requestDraftCoursesByAuthor,
   requestPublishedCoursesByAuthor,
+  formatCourseTagLabel,
   sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
 import { CourseDisplayCover } from "../../../entities/course";
@@ -43,6 +44,14 @@ function normalizeCourseForSection(course, viewerName) {
 
 function TeachCourseCard({ course, variant }) {
   const isPublished = variant === "published";
+  const tagLabels = Array.isArray(course.tags)
+    ? course.tags
+        .map((label) => String(label).trim())
+        .filter(Boolean)
+    : [];
+  const maxStatusTags = 4;
+  const visibleTags = tagLabels.slice(0, maxStatusTags);
+  const extraTagCount = tagLabels.length - visibleTags.length;
 
   return (
     <article className="teach-course-card">
@@ -60,12 +69,30 @@ function TeachCourseCard({ course, variant }) {
               <span className="teach-course-card-status primary">
                 {isPublished ? "Опубликован" : "Черновик"}
               </span>
-              <span className="teach-course-card-status">
-                {sanitizeCourseDisplayLabel(
-                  course.categoryName,
-                  "Курс преподавателя",
-                )}
-              </span>
+              {visibleTags.length > 0 ? (
+                <>
+                  {visibleTags.map((label, index) => (
+                    <span
+                      key={`${label}-${index}`}
+                      className="teach-course-card-status"
+                    >
+                      {formatCourseTagLabel(label) || "—"}
+                    </span>
+                  ))}
+                  {extraTagCount > 0 ? (
+                    <span className="teach-course-card-status">
+                      +{extraTagCount}
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                <span className="teach-course-card-status">
+                  {sanitizeCourseDisplayLabel(
+                    course.categoryName,
+                    "Курс преподавателя",
+                  )}
+                </span>
+              )}
             </div>
 
             <strong className="teach-course-card-title">{course.title}</strong>

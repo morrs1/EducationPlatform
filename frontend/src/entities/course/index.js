@@ -3,8 +3,14 @@ export { filterCoursesByQuery } from "./model/filterCoursesByQuery";
 export { getCourseCoverSrc } from "./model/getCourseCoverSrc";
 export { getCourseProgressByCourseId } from "./model/progress";
 export { mockCatalogData } from "./model/mockCatalogData";
-export { mockCourses } from "./model/mockCourses";
-export { sanitizeCourseDisplayLabel } from "./model/courseDisplayLabels";
+export {
+  getMockCourses,
+  INCLUDE_MOCK_COURSES_IN_UI,
+} from "./model/mockCourses";
+export {
+  formatCourseTagLabel,
+  sanitizeCourseDisplayLabel,
+} from "./model/courseDisplayLabels";
 export {
   enrichCourse,
   getAllCourses,
@@ -28,6 +34,7 @@ export {
   requestCourseById,
   requestCourseCreation,
   requestDraftCoursesByAuthor,
+  requestSearchCourses,
   requestLessonById,
   requestPublishCourse,
   requestPublishedCoursesByAuthor,

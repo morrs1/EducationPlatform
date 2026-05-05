@@ -1,10 +1,6 @@
 import { getCourseSyllabus } from "./mockCourseSyllabus";
-import { mockCourses } from "./mockCourses";
+import { getMockCourses } from "./mockCourses";
 import { getLessonProgressMap } from "../../lesson/model/progress";
-
-const mockCoursesById = new Map(
-  mockCourses.map((course) => [course.id, course]),
-);
 
 function getInteractiveLessonIds(syllabus) {
   return (syllabus?.modules ?? [])
@@ -32,7 +28,10 @@ export function getCourseProgressByCourseId({
   courseSnapshot = null,
   isCompletedCourse = false,
 }) {
-  const course = courseSnapshot ?? mockCoursesById.get(courseId) ?? null;
+  const course =
+    courseSnapshot ??
+    getMockCourses().find((row) => row.id === courseId) ??
+    null;
 
   if (!course) {
     return viewerProgress ?? null;

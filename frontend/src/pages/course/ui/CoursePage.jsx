@@ -40,6 +40,7 @@ import {
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
+  formatCourseTagLabel,
   sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
 
@@ -199,6 +200,19 @@ function CoursePage() {
     viewerCourse,
     viewerCourseProgress,
   ]);
+
+  const courseTagLabels = useMemo(() => {
+    if (!Array.isArray(course?.tags)) {
+      return [];
+    }
+
+    return course.tags
+      .map((label) => formatCourseTagLabel(label))
+      .filter(Boolean);
+  }, [course?.tags]);
+
+  const hasCourseTagPills = courseTagLabels.length > 0;
+
   const activeTab = resolveActiveTab(searchParams);
   const isBackendCourse = Boolean(course?.isBackendCourse);
   const isOwnBackendCourse =
@@ -483,12 +497,32 @@ function CoursePage() {
       <div className="course-page-main">
         <section className="course-hero">
           <div className="course-hero-copy">
+            {hasCourseTagPills ? (
+              <ul className="course-hero-tags" aria-label="Теги курса">
+                {courseTagLabels.map((label, index) => (
+                  <li key={`${label}-${index}`}>
+                    <span className="course-hero-tag-pill">
+                      {formatCourseTagLabel(label) || "—"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <p className="course-hero-eyebrow">
-              {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
-              {sanitizeCourseDisplayLabel(
-                course.subcategoryName,
-                "Описание структуры",
-              )}
+              {hasCourseTagPills
+                ? sanitizeCourseDisplayLabel(
+                    course.subcategoryName,
+                    "Уровень и метаданные",
+                  )
+                : (
+                    <>
+                      {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
+                      {sanitizeCourseDisplayLabel(
+                        course.subcategoryName,
+                        "Описание структуры",
+                      )}
+                    </>
+                  )}
             </p>
             <h1 className="course-hero-title">{course.title}</h1>
             <p className="course-hero-description">{course.shortDescription}</p>

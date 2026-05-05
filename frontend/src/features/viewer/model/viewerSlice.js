@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { mockCourses } from "../../../entities/course";
+import { getMockCourses } from "../../../entities/course";
 import {
   buildAvatarUrl,
   buildViewerDisplayName,
@@ -12,7 +12,7 @@ import {
 } from "../../../entities/viewer";
 
 function getCourseById(courseId) {
-  return mockCourses.find((course) => course.id === courseId) ?? null;
+  return getMockCourses().find((course) => course.id === courseId) ?? null;
 }
 
 function getViewerCourseRecord(state, courseId) {

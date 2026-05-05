@@ -1,5 +1,8 @@
 import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
-import { sanitizeCourseDisplayLabel } from "../model/courseDisplayLabels";
+import {
+  formatCourseTagLabel,
+  sanitizeCourseDisplayLabel,
+} from "../model/courseDisplayLabels";
 
 const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course-service";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
@@ -10,6 +13,7 @@ const courseRequestCache = new Map();
 const lessonRequestCache = new Map();
 const courseListRequestCache = new Map();
 const authorCourseListRequestCache = new Map();
+const courseSearchRequestCache = new Map();
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -458,10 +462,6 @@ function formatDifficultyLabel(difficulty) {
   }
 
   if (difficulty === "intermediate") {
-    return "Средний уровень";
-  }
-
-  if (difficulty === "advanced") {
     return "Продвинутый уровень";
   }
 
@@ -488,7 +488,8 @@ function formatMinutesLabel(estimatedMinutes) {
 }
 
 function buildCourseEyebrow(tags, difficulty) {
-  const primaryTag = sanitizeCourseDisplayLabel(tags[0]);
+  const primaryTag =
+    formatCourseTagLabel(tags?.[0]) || sanitizeCourseDisplayLabel("");
   const parts = [formatDifficultyLabel(difficulty)];
 
   return {
@@ -933,6 +934,21 @@ export async function requestAllCourses() {
   const responseBody = await requestCourseServiceJson(
     "/course",
     courseListRequestCache,
+  );
+
+  return normalizeArray(responseBody);
+}
+
+export async function requestSearchCourses(query) {
+  const normalizedQuery = normalizeText(query);
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const responseBody = await requestCourseServiceJson(
+    `/course/search?q=${encodeURIComponent(normalizedQuery)}`,
+    courseSearchRequestCache,
   );
 
   return normalizeArray(responseBody);
