@@ -1,4 +1,4 @@
-const DEFAULT_LEARNING_SERVICE_API_BASE_URL = "/api/learning-service";
+const DEFAULT_LEARNING_SERVICE_API_BASE_URL = "/api/learning";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -111,7 +111,7 @@ function normalizeCourseIdsResponse(responseBody) {
 
 export async function requestEnrollUserInCourse({ userId, courseId }) {
   return requestLearningService(
-    "/learning/enrollment",
+    "/enrollment",
     {
       method: "POST",
       body: JSON.stringify({
@@ -125,7 +125,7 @@ export async function requestEnrollUserInCourse({ userId, courseId }) {
 
 export async function requestLeaveCourse({ userId, courseId }) {
   return requestLearningService(
-    "/learning/enrollment/leave",
+    "/enrollment/leave",
     {
       method: "POST",
       body: JSON.stringify({
@@ -139,7 +139,7 @@ export async function requestLeaveCourse({ userId, courseId }) {
 
 export async function requestIncompleteCoursesByUser(userId) {
   const responseBody = await requestLearningService(
-    appendQuery("/learning/enrollment/courses/by-user/incomplete", {
+    appendQuery("/enrollment/courses/by-user/incomplete", {
       userId: normalizeUuid(userId, "userId"),
     }),
     {},
@@ -151,7 +151,7 @@ export async function requestIncompleteCoursesByUser(userId) {
 
 export async function requestCompletedCoursesByUser(userId) {
   const responseBody = await requestLearningService(
-    appendQuery("/learning/enrollment/courses/by-user/completed", {
+    appendQuery("/enrollment/courses/by-user/completed", {
       userId: normalizeUuid(userId, "userId"),
     }),
     {},
@@ -163,7 +163,7 @@ export async function requestCompletedCoursesByUser(userId) {
 
 export async function requestCompletedLessonsForCourse({ userId, courseId }) {
   const responseBody = await requestLearningService(
-    appendQuery("/learning/enrollment/completed-lessons", {
+    appendQuery("/enrollment/completed-lessons", {
       userId: normalizeUuid(userId, "userId"),
       courseId: normalizeUuid(courseId, "courseId"),
     }),
@@ -192,7 +192,7 @@ export async function requestCompleteLesson({
   completedAt = null,
 }) {
   return requestLearningService(
-    "/learning/enrollment/complete-lesson",
+    "/enrollment/complete-lesson",
     {
       method: "POST",
       body: JSON.stringify({
@@ -212,7 +212,7 @@ export async function requestCompleteCourse({
   completedAt = null,
 }) {
   return requestLearningService(
-    "/learning/enrollment/complete-course",
+    "/enrollment/complete-course",
     {
       method: "POST",
       body: JSON.stringify({
@@ -227,7 +227,7 @@ export async function requestCompleteCourse({
 
 export async function requestLearningActivityYear({ userId, year }) {
   return requestLearningService(
-    appendQuery("/learning/activity/year", {
+    appendQuery("/activity/year", {
       userId: normalizeUuid(userId, "userId"),
       year: String(year),
     }),
@@ -262,7 +262,7 @@ function normalizeCertificateRecord(row) {
 
 export async function requestCertificatesByUser(userId) {
   const responseBody = await requestLearningService(
-    `/learning/certificate/by-user/${normalizeUuid(userId, "userId")}`,
+    `/certificate/by-user/${normalizeUuid(userId, "userId")}`,
     {},
     "loading certificates",
   );
@@ -282,7 +282,7 @@ export async function requestCreateCertificate({
   serialNo = "",
 }) {
   return requestLearningService(
-    "/learning/certificate",
+    "/certificate",
     {
       method: "POST",
       body: JSON.stringify({
@@ -297,7 +297,7 @@ export async function requestCreateCertificate({
 
 export async function requestCertificateById(certificateId) {
   return requestLearningService(
-    `/learning/certificate/${normalizeUuid(certificateId, "certificateId")}`,
+    `/certificate/${normalizeUuid(certificateId, "certificateId")}`,
     {},
     "loading certificate",
   );

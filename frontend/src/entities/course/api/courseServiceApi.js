@@ -4,7 +4,7 @@ import {
   sanitizeCourseDisplayLabel,
 } from "../model/courseDisplayLabels";
 
-const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course-service";
+const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const UUID_PATTERN =
@@ -127,12 +127,12 @@ function invalidateCourseCache(courseId) {
   }
 
   courseRequestCache.delete(
-    buildCourseServiceUrl(`/course/${normalizedCourseId}`).toString(),
+    buildCourseServiceUrl(`/${normalizedCourseId}`).toString(),
   );
 }
 
 function invalidateCourseListCache() {
-  courseListRequestCache.delete(buildCourseServiceUrl("/course").toString());
+  courseListRequestCache.delete(buildCourseServiceUrl("").toString());
 }
 
 function invalidateAuthorCourseListCache(authorId) {
@@ -145,12 +145,12 @@ function invalidateAuthorCourseListCache(authorId) {
 
   authorCourseListRequestCache.delete(
     buildCourseServiceUrl(
-      `/course/by-author/${normalizedAuthorId}/published`,
+      `/by-author/${normalizedAuthorId}/published`,
     ).toString(),
   );
   authorCourseListRequestCache.delete(
     buildCourseServiceUrl(
-      `/course/by-author/${normalizedAuthorId}/drafts`,
+      `/by-author/${normalizedAuthorId}/drafts`,
     ).toString(),
   );
 }
@@ -163,7 +163,7 @@ function invalidateLessonCache(lessonId) {
   }
 
   lessonRequestCache.delete(
-    buildCourseServiceUrl(`/course/lesson/${normalizedLessonId}`).toString(),
+    buildCourseServiceUrl(`/lesson/${normalizedLessonId}`).toString(),
   );
 }
 
@@ -927,12 +927,12 @@ async function requestCourseServiceJson(pathname, requestCache) {
 }
 
 export async function requestCourseById(courseId) {
-  return requestCourseServiceJson(`/course/${courseId}`, courseRequestCache);
+  return requestCourseServiceJson(`/${courseId}`, courseRequestCache);
 }
 
 export async function requestAllCourses() {
   const responseBody = await requestCourseServiceJson(
-    "/course",
+    "",
     courseListRequestCache,
   );
 
@@ -947,7 +947,7 @@ export async function requestSearchCourses(query) {
   }
 
   const responseBody = await requestCourseServiceJson(
-    `/course/search?q=${encodeURIComponent(normalizedQuery)}`,
+    `/search?q=${encodeURIComponent(normalizedQuery)}`,
     courseSearchRequestCache,
   );
 
@@ -957,7 +957,7 @@ export async function requestSearchCourses(query) {
 export async function requestPublishedCoursesByAuthor(authorId) {
   const normalizedAuthorId = normalizeText(authorId);
   const responseBody = await requestCourseServiceJson(
-    `/course/by-author/${normalizedAuthorId}/published`,
+    `/by-author/${normalizedAuthorId}/published`,
     authorCourseListRequestCache,
   );
 
@@ -967,7 +967,7 @@ export async function requestPublishedCoursesByAuthor(authorId) {
 export async function requestDraftCoursesByAuthor(authorId) {
   const normalizedAuthorId = normalizeText(authorId);
   const responseBody = await requestCourseServiceJson(
-    `/course/by-author/${normalizedAuthorId}/drafts`,
+    `/by-author/${normalizedAuthorId}/drafts`,
     authorCourseListRequestCache,
   );
 
@@ -976,13 +976,13 @@ export async function requestDraftCoursesByAuthor(authorId) {
 
 export async function requestLessonById(lessonId) {
   return requestCourseServiceJson(
-    `/course/lesson/${lessonId}`,
+    `/lesson/${lessonId}`,
     lessonRequestCache,
   );
 }
 
 export async function requestCourseCreation(payload) {
-  const responseBody = await requestCourseService("/course", {
+  const responseBody = await requestCourseService("", {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -1000,7 +1000,7 @@ export async function requestCourseCreation(payload) {
 export async function requestAddModuleToCourse(courseId, payload) {
   const normalizedCourseId = normalizeText(courseId);
   const responseBody = await requestCourseService(
-    `/course/${normalizedCourseId}/module`,
+    `/${normalizedCourseId}/module`,
     {
       method: "POST",
       headers: {
@@ -1020,7 +1020,7 @@ export async function requestAddModuleToCourse(courseId, payload) {
 
 export async function requestAddLessonToCourse(payload) {
   const normalizedCourseId = normalizeText(payload?.courseId);
-  const responseBody = await requestCourseService("/course/lesson", {
+  const responseBody = await requestCourseService("/lesson", {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -1041,7 +1041,7 @@ export async function requestAddLessonToCourse(payload) {
 export async function requestPublishCourse(courseId) {
   const normalizedCourseId = normalizeText(courseId);
 
-  await requestCourseService(`/course/${normalizedCourseId}/publish`, {
+  await requestCourseService(`/${normalizedCourseId}/publish`, {
     method: "PATCH",
     headers: {
       Accept: "application/json",
@@ -1056,7 +1056,7 @@ export async function requestPublishCourse(courseId) {
 export async function requestUploadLessonContent(lessonId, payload) {
   const normalizedLessonId = normalizeText(lessonId);
   const responseBody = await requestCourseService(
-    `/course/lesson/${normalizedLessonId}`,
+    `/lesson/${normalizedLessonId}`,
     {
       method: "PATCH",
       headers: {
@@ -1096,7 +1096,7 @@ export async function requestUploadLessonAsset(
   );
 
   const responseBody = await requestCourseService(
-    `/course/lesson/${normalizedLessonId}/asset`,
+    `/lesson/${normalizedLessonId}/asset`,
     {
       method: "POST",
       headers: {

@@ -5,11 +5,11 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-const USER_SERVICE_API_PROXY_PATH = "/api/user-service";
+const USER_SERVICE_API_PROXY_PATH = "/api/user";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
-const COURSE_SERVICE_API_PROXY_PATH = "/api/course-service";
+const COURSE_SERVICE_API_PROXY_PATH = "/api/course";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
-const LEARNING_SERVICE_API_PROXY_PATH = "/api/learning-service";
+const LEARNING_SERVICE_API_PROXY_PATH = "/api/learning";
 const DEFAULT_COURSE_SERVICE_S3_BUCKET = "course-service-local";
 
 function normalizeBoolean(value, fallback = false) {
@@ -275,32 +275,20 @@ export default defineConfig(({ mode }) => {
   const learningServiceUrl = env.VITE_LEARNING_SERVICE_URL?.trim();
   const proxy = {};
 
-  if (userServiceUrl) {
-    proxy[USER_SERVICE_API_PROXY_PATH] = {
-      target: userServiceUrl,
-      changeOrigin: true,
-      rewrite: (path) =>
-        path.replace(/^\/api\/user-service/, ""),
-    };
-  }
-
-  if (courseServiceUrl) {
-    proxy[COURSE_SERVICE_API_PROXY_PATH] = {
-      target: courseServiceUrl,
-      changeOrigin: true,
-      rewrite: (path) =>
-        path.replace(/^\/api\/course-service/, ""),
-    };
-  }
-
-  if (learningServiceUrl) {
-    proxy[LEARNING_SERVICE_API_PROXY_PATH] = {
-      target: learningServiceUrl,
-      changeOrigin: true,
-      rewrite: (path) =>
-        path.replace(/^\/api\/learning-service/, ""),
-    };
-  }
+  // API идёт в gateway (8090). Media остаётся мимо gateway (плагин).
+  const gatewayUrl = env.VITE_API_GATEWAY_URL?.trim() || "http://localhost:8090";
+  proxy[USER_SERVICE_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
+  proxy[COURSE_SERVICE_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
+  proxy[LEARNING_SERVICE_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
 
   return {
     plugins: [
