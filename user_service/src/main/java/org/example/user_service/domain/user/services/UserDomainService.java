@@ -58,4 +58,12 @@ public class UserDomainService extends BaseDomainService {
     public void updateProfilePhotoLink(User user, String newProfilePhotoLink) {
         user.setProfilePhotoLink(new UserProfilePhotoLink(newProfilePhotoLink));
     }
+
+    public void assignAuthorRole(User user) {
+        user.setRole(new UserRole(UserRole.AUTHOR));
+    }
+
+    public void assignAdminRole(User user) {
+        user.setRole(new UserRole(UserRole.ADMIN));
+    }
 }

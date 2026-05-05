@@ -12,8 +12,10 @@ import java.util.Set;
 public class UserRole extends BaseValueObject {
 
     public static final String DEFAULT = "USER";
+    public static final String AUTHOR = "AUTHOR";
+    public static final String ADMIN = "ADMIN";
 
-    private static final Set<String> ALLOWED = Set.of("USER", "ADMIN", "AUTHOR");
+    private static final Set<String> ALLOWED = Set.of(DEFAULT, ADMIN, AUTHOR);
 
     private final String role;
 
