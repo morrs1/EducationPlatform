@@ -6,6 +6,7 @@ public record ReadUserByIdResponse(
         String patronymic,
         String userStatus,
         String userEmail,
-        String userProfilePhotoLink
+        String userProfilePhotoLink,
+        String role
 ) {
 }

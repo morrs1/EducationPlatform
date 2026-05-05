@@ -2,6 +2,7 @@ package org.example.user_service.setup.config_beans.user;
 
 import org.example.user_service.application.interactors.mappers.UserViewMapper;
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoInteractor;
+import org.example.user_service.application.interactors.user.authenticate_user.AuthenticateUserInteractor;
 import org.example.user_service.application.interactors.user.create_user.CreateUserInteractor;
 import org.example.user_service.application.interactors.user.read_user_by_id.ReadUserByIdInteractor;
 import org.example.user_service.application.interactors.user.update_user.ChangePersonalDataUserInteractor;
@@ -30,6 +31,15 @@ public class UserBeansConfig {
             EventBus eventBus
     ) {
         return new CreateUserInteractor(transactionManager, userRepo, userDomainService, eventBus);
+    }
+
+    @Bean
+    public AuthenticateUserInteractor authenticateUserInteractor(
+            TransactionManager transactionManager,
+            UserRepo userRepo,
+            PasswordHasher passwordHasher
+    ) {
+        return new AuthenticateUserInteractor(transactionManager, userRepo, passwordHasher);
     }
 
     @Bean

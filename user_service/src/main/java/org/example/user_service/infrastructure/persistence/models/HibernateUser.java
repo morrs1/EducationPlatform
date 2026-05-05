@@ -29,4 +29,5 @@ public class HibernateUser {
     private String password;
     @Column(name = "profile_photo_link")
     private String profilePhotoLink;
+    private String role;
 }

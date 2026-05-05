@@ -20,6 +20,7 @@ public class User extends BaseEntity {
     private UserEmail email;
     private UserPassword password;
     private UserProfilePhotoLink profilePhotoLink;
+    private UserRole role;
 
     public User(
             UUID id,
@@ -29,7 +30,8 @@ public class User extends BaseEntity {
             UserStatus userStatus,
             UserEmail email,
             UserPassword password,
-            UserProfilePhotoLink profilePhotoLink
+            UserProfilePhotoLink profilePhotoLink,
+            UserRole role
     ) {
         super(id);
         this.surname = surname;
@@ -39,5 +41,6 @@ public class User extends BaseEntity {
         this.email = email;
         this.password = password;
         this.profilePhotoLink = profilePhotoLink;
+        this.role = role;
     }
 }

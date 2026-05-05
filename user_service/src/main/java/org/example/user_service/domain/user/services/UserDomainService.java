@@ -32,7 +32,8 @@ public class UserDomainService extends BaseDomainService {
                         new UserStatus(userStatus),
                         new UserEmail(email),
                         new UserPassword(passwordHasher.hash(password)),
-                        new UserProfilePhotoLink(profilePhotoLink)
+                        new UserProfilePhotoLink(profilePhotoLink),
+                        new UserRole(UserRole.DEFAULT)
                 );
         this.recordEvent(new CreateUserDomainEvent(user.getId(), user.getEmail().getEmail()));
         return user;

@@ -17,7 +17,8 @@ public interface UserMapperHibernate {
                 user.getUserStatus().getStatus(),
                 user.getEmail().getEmail(),
                 user.getPassword().getPassword(),
-                user.getProfilePhotoLink().getProfilePhotoLink()
+                user.getProfilePhotoLink().getProfilePhotoLink(),
+                user.getRole().getRole()
         );
     }
 
@@ -30,7 +31,8 @@ public interface UserMapperHibernate {
                 new UserStatus(hibernateUser.getUserStatus()),
                 new UserEmail(hibernateUser.getEmail()),
                 new UserPassword(hibernateUser.getPassword()),
-                new UserProfilePhotoLink(hibernateUser.getProfilePhotoLink())
+                new UserProfilePhotoLink(hibernateUser.getProfilePhotoLink()),
+                new UserRole(hibernateUser.getRole())
         );
     }
 }

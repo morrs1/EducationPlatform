@@ -12,6 +12,7 @@ public class UserViewMapper {
                 user.getPatronymic().getPatronymic(),
                 user.getUserStatus().getStatus(),
                 user.getEmail().getEmail(),
-                user.getProfilePhotoLink().getProfilePhotoLink());
+                user.getProfilePhotoLink().getProfilePhotoLink(),
+                user.getRole().getRole());
     }
 }
