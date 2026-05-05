@@ -35,6 +35,30 @@ public class ProxyForwardService {
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
         HttpHeaders outgoing = buildOutgoingRequestHeaders(request);
         byte[] body = readRequestBodyIfPresent(request);
+        forward(request, response, matched, body, method, outgoing);
+    }
+
+    public void forward(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            MatchedRoute matched,
+            byte[] body)
+            throws IOException {
+
+        HttpMethod method = HttpMethod.valueOf(request.getMethod());
+        HttpHeaders outgoing = buildOutgoingRequestHeaders(request);
+        forward(request, response, matched, body, method, outgoing);
+    }
+
+    private void forward(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            MatchedRoute matched,
+            byte[] body,
+            HttpMethod method,
+            HttpHeaders outgoing)
+            throws IOException {
+
         URI target = matched.targetUri();
 
         try {
