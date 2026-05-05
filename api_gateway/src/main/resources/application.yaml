@@ -6,6 +6,14 @@ spring:
   application:
     name: api_gateway
 
+auth:
+  user-service:
+    base-uri: ${USER_SERVICE_BASE_URI:http://localhost:8080}
+  jwt:
+    # Только dev default. Для реального окружения обязательно переопределить переменной JWT_SECRET.
+    secret: ${JWT_SECRET:dev-secret-change-me-at-least-32-chars}
+    ttl: ${JWT_TTL:15m}
+
 # Базовый префикс входа на шлюзе; downstream-пути совпадают с теми, что в сервисах (без лишнего /api).
 gateway:
   proxy:
