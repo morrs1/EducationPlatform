@@ -12,7 +12,5 @@ CREATE TABLE users
     email              VARCHAR(255),
     password           VARCHAR,
     profile_photo_link VARCHAR,
-    current_courses    TEXT[] DEFAULT '{}',
-    finished_courses   TEXT[] DEFAULT '{}',
-    certificates       TEXT[] DEFAULT '{}'
+    role               VARCHAR DEFAULT 'USER'
 );

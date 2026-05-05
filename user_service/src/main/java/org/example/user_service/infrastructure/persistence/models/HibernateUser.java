@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -30,11 +29,5 @@ public class HibernateUser {
     private String password;
     @Column(name = "profile_photo_link")
     private String profilePhotoLink;
-    @Column(name = "current_courses")
-    private List<UUID> currentCourses;
-    @Column(name = "finished_courses")
-    private List<UUID> finishedCourses;
-    private List<UUID> certificates;
-
-
+    private String role;
 }
