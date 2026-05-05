@@ -13,6 +13,7 @@ import org.example.user_service.domain.user.vo.UserName;
 import org.example.user_service.domain.user.vo.UserPassword;
 import org.example.user_service.domain.user.vo.UserPatronymic;
 import org.example.user_service.domain.user.vo.UserProfilePhotoLink;
+import org.example.user_service.domain.user.vo.UserRole;
 import org.example.user_service.domain.user.vo.UserStatus;
 import org.example.user_service.domain.user.vo.UserSurname;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,8 @@ class CreateUserInteractorTest {
                 new UserStatus("USER"),
                 new UserEmail(email),
                 new UserPassword("Password1"),
-                new UserProfilePhotoLink(null)
+                new UserProfilePhotoLink("https://example.com/photo.png"),
+                new UserRole("USER")
         );
     }
 
