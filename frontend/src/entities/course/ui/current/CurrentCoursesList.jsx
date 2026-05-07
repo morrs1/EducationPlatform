@@ -4,7 +4,6 @@ function CurrentCoursesList({
   courses,
   emptyMessage,
   leavingCourseId,
-  onToggleFavouriteCourse,
   onLeaveCourse,
 }) {
   if (courses.length === 0) {
@@ -22,7 +21,6 @@ function CurrentCoursesList({
           key={course.id}
           course={course}
           isLeaving={leavingCourseId === course.id}
-          onToggleFavouriteCourse={onToggleFavouriteCourse}
           onLeaveCourse={onLeaveCourse}
         />
       ))}

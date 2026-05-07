@@ -3,7 +3,6 @@ import CompletedCourseCard from "./CompletedCourseCard";
 function CompletedCoursesList({
   courses,
   emptyMessage,
-  onToggleFavouriteCourse,
 }) {
   if (courses.length === 0) {
     return (
@@ -19,7 +18,6 @@ function CompletedCoursesList({
         <CompletedCourseCard
           key={course.id}
           course={course}
-          onToggleFavouriteCourse={onToggleFavouriteCourse}
         />
       ))}
     </div>

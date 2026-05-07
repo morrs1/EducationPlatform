@@ -467,7 +467,6 @@ export function hydrateViewerFromUserService(options = {}) {
             response?.currentCourses,
             localViewer.enrolledCourseIds,
           ),
-          favouriteCourseIds: localViewer.favouriteCourseIds,
           completedCourseIds: pickCourseIdsForHydration(
             response?.finishedCourses,
             localViewer.completedCourseIds,

@@ -2,7 +2,6 @@ function CourseActionsPanel({
   course,
   isLogged,
   onPrimaryAction,
-  onToggleFavourite,
 }) {
   const isReadOnlyCourse = course.isReadOnlyCourse;
   const isLearningAvailable = course.isEnrolled || course.isCompleted;
@@ -13,9 +12,6 @@ function CourseActionsPanel({
       : isLearningAvailable
         ? "Перейти к содержанию"
         : "Записаться на курс";
-  const secondaryButtonLabel = course.isFavourite
-    ? "Убрать из избранного"
-    : "Добавить в избранное";
   const statusText = isReadOnlyCourse
     ? "Содержание курса уже доступно для просмотра."
     : !isLogged
@@ -41,16 +37,6 @@ function CourseActionsPanel({
         >
           {primaryButtonLabel}
         </button>
-
-        {!isReadOnlyCourse ? (
-          <button
-            type="button"
-            className={`course-secondary-btn ${course.isFavourite ? "active" : ""}`}
-            onClick={onToggleFavourite}
-          >
-            {secondaryButtonLabel}
-          </button>
-        ) : null}
       </div>
 
       <p className="course-side-card-note">{statusText}</p>
