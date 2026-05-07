@@ -12,9 +12,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -23,7 +25,7 @@ import static org.mockito.Mockito.when;
 class ProxyControllerTest {
 
     @Test
-    void rejectsUnauthorizedRequestsBeforeForwarding() throws Exception {
+    void allowsPublicCourseListWithoutJwt() throws Exception {
         RouteResolver routeResolver = mock(RouteResolver.class);
         ProxyForwardService proxyForwardService = mock(ProxyForwardService.class);
         JwtTokenService jwtTokenService = mock(JwtTokenService.class);
@@ -39,12 +41,38 @@ class ProxyControllerTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(routeResolver.resolve("/api/course", null))
                 .thenReturn(Optional.of(new MatchedRoute(null, URI.create("http://localhost:8081/course"))));
+
+        controller.proxy(request, response);
+
+        verify(jwtTokenService, never()).parseBearerToken(any());
+        verify(authorizationPolicy, never()).authorize(any(), any(), any(), any(), any());
+        verify(proxyForwardService).forward(eq(request), eq(response), any(), any());
+    }
+
+    @Test
+    void rejectsDraftsWithoutJwtBeforeForwarding() throws Exception {
+        RouteResolver routeResolver = mock(RouteResolver.class);
+        ProxyForwardService proxyForwardService = mock(ProxyForwardService.class);
+        JwtTokenService jwtTokenService = mock(JwtTokenService.class);
+        AuthorizationPolicy authorizationPolicy = mock(AuthorizationPolicy.class);
+        ProxyController controller = new ProxyController(
+                routeResolver,
+                proxyForwardService,
+                jwtTokenService,
+                authorizationPolicy
+        );
+        String authorId = UUID.randomUUID().toString();
+        String path = "/api/course/by-author/" + authorId + "/drafts";
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
+        request.setServletPath(path);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(routeResolver.resolve(path, null))
+                .thenReturn(Optional.of(new MatchedRoute(null, URI.create("http://localhost:8081/course/by-author/" + authorId + "/drafts"))));
         when(jwtTokenService.parseBearerToken(null))
                 .thenThrow(new JwtAuthenticationException("Missing bearer token"));
 
         assertThrows(JwtAuthenticationException.class, () -> controller.proxy(request, response));
 
-        verify(proxyForwardService, never())
-                .forward(any(), any(), any(), any());
+        verify(proxyForwardService, never()).forward(any(), any(), any(), any());
     }
 }

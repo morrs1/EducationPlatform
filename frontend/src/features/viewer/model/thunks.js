@@ -1,23 +1,35 @@
 import {
   enrollInCourse,
+  leaveCourse,
   markCourseCompleted,
+  mergeCertificateCourseIds,
   restoreViewer,
   syncLearningEnrollment,
   updateViewerProfile,
 } from "./viewerSlice";
 import {
+  resetCourseLessonSessions,
+  syncCompletedLessonsForCourse,
+} from "../../lesson-session/model/lessonSessionSlice";
+import {
   createViewerCourseSnapshot,
+  getViewerCourseStorageKey,
 } from "../../../entities/viewer";
 import {
+  enrichCoursePageDataWithAuthorName,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
 } from "../../../entities/course";
 import {
   isUuid as isLearningUuid,
+  requestCertificatesByUser,
   requestCompletedCoursesByUser,
+  requestCompletedLessonsForCourse,
   requestCompleteCourse,
+  requestCreateCertificate,
   requestEnrollUserInCourse,
   requestIncompleteCoursesByUser,
+  requestLeaveCourse,
 } from "../../../shared/api/learningServiceApi";
 import {
   buildUserServiceMediaProxyUrl,
@@ -55,10 +67,8 @@ function pickCourseIdsForHydration(remoteCourseIds, localCourseIds) {
     : remoteCourseIds;
 }
 
-const VIEWER_STATUS_PATTERN = /^[A-Z][A-Z_]{1,31}$/;
-
 function normalizeStatus(value) {
-  return (value ?? "").trim().replace(/\s+/g, "_").toUpperCase();
+  return (value ?? "").trim();
 }
 
 function normalizeCourseId(value) {
@@ -94,26 +104,54 @@ async function loadCourseSnapshotFromCourseService(courseId) {
       courseResponse,
       courseId,
     );
+    const enrichedPageData = await enrichCoursePageDataWithAuthorName(
+      pageData,
+    );
 
-    if (!pageData?.course) {
+    if (!enrichedPageData?.course) {
       return null;
     }
 
     return createViewerCourseSnapshot(
-      pageData.course,
-      getSyllabusLessonIds(pageData.syllabus),
+      enrichedPageData.course,
+      getSyllabusLessonIds(enrichedPageData.syllabus),
     );
-  } catch {
-    return null;
+  } catch (error) {
+    if (error?.status !== 404) {
+      return null;
+    }
+
+    return {
+      courseId,
+      isMissing: true,
+    };
   }
 }
 
 async function loadCourseSnapshotsFromCourseService(courseIds) {
-  const snapshots = await Promise.all(
+  const results = await Promise.all(
     getUniqueCourseIds(courseIds).map(loadCourseSnapshotFromCourseService),
   );
+  const courseSnapshots = [];
+  const missingCourseIds = [];
 
-  return snapshots.filter(Boolean);
+  results.forEach((result) => {
+    if (!result) {
+      return;
+    }
+
+    if (result.isMissing) {
+      missingCourseIds.push(result.courseId);
+      return;
+    }
+
+    courseSnapshots.push(result);
+  });
+
+  return {
+    courseSnapshots,
+    missingCourseIds,
+  };
 }
 
 function resolveLearningViewerId(state, explicitRemoteViewerId = null) {
@@ -121,6 +159,110 @@ function resolveLearningViewerId(state, explicitRemoteViewerId = null) {
     state.auth.currentViewerId,
     explicitRemoteViewerId ?? state.viewer.remoteId,
   );
+}
+
+function getCourseLessonIdsForReset(state, courseId) {
+  const storageKey = getViewerCourseStorageKey(courseId);
+
+  if (!storageKey) {
+    return [];
+  }
+
+  const courseSnapshot = state.viewer.courseSnapshotsById[storageKey];
+
+  return Array.isArray(courseSnapshot?.syllabusLessonIds)
+    ? courseSnapshot.syllabusLessonIds.filter(Boolean)
+    : [];
+}
+
+function resetLessonStateForCourse(dispatch, lessonIds) {
+  if (!lessonIds.length) {
+    return;
+  }
+
+  dispatch(
+    resetCourseLessonSessions({
+      lessonIds,
+    }),
+  );
+}
+
+function getCourseSnapshotById(courseSnapshots, courseId) {
+  return (
+    courseSnapshots.find((courseSnapshot) => courseSnapshot.id === courseId) ??
+    null
+  );
+}
+
+async function loadCompletedLessonIdsForCourse({ userId, courseId }) {
+  const response = await requestCompletedLessonsForCourse({
+    userId,
+    courseId,
+  });
+
+  return response.completedLessons.map((lesson) => lesson.lessonId);
+}
+
+function buildProgressByCourseIdFromCompletedLessons(entries) {
+  return entries.reduce((progressMap, entry) => {
+    const storageKey = getViewerCourseStorageKey(entry.courseId);
+
+    if (!storageKey) {
+      return progressMap;
+    }
+
+    progressMap[storageKey] = {
+      completedLessons: entry.completedLessonIds.length,
+      completedTests: 0,
+      completedTasks: 0,
+      lastVisitedAt: new Date().toISOString(),
+    };
+
+    return progressMap;
+  }, {});
+}
+
+async function loadCompletedLessonsForActiveCourses({
+  userId,
+  courseIds,
+  courseSnapshots,
+}) {
+  const results = await Promise.allSettled(
+    courseIds.map(async (courseId) => {
+      const courseSnapshot = getCourseSnapshotById(courseSnapshots, courseId);
+      const courseLessonIds = courseSnapshot?.syllabusLessonIds ?? [];
+
+      if (!courseLessonIds.length) {
+        return null;
+      }
+
+      const completedLessonIds = await loadCompletedLessonIdsForCourse({
+        userId,
+        courseId,
+      });
+
+      return {
+        courseId,
+        courseLessonIds,
+        completedLessonIds,
+      };
+    }),
+  );
+
+  return results
+    .filter((result) => result.status === "fulfilled" && result.value)
+    .map((result) => result.value);
+}
+
+function syncCompletedLessonsForActiveCourses(dispatch, entries) {
+  entries.forEach(({ courseLessonIds, completedLessonIds }) => {
+    dispatch(
+      syncCompletedLessonsForCourse({
+        courseLessonIds,
+        completedLessonIds,
+      }),
+    );
+  });
 }
 
 function saveViewerProfileLocally(dispatch, viewer, profile) {
@@ -169,21 +311,6 @@ export function submitViewerProfileUpdate(payload) {
       return {
         ok: false,
         error: "Введите отчество.",
-      };
-    }
-
-    if (!nextStatus) {
-      return {
-        ok: false,
-        error: "Введите статус пользователя.",
-      };
-    }
-
-    if (!VIEWER_STATUS_PATTERN.test(nextStatus)) {
-      return {
-        ok: false,
-        error:
-          "Статус должен содержать только латинские заглавные буквы и символы подчеркивания, например STUDENT или ACTIVE_USER.",
       };
     }
 
@@ -384,28 +511,76 @@ export function hydrateViewerLearningFromLearningService(options = {}) {
     }
 
     try {
-      const [enrolledCourseIds, completedCourseIds] = await Promise.all([
-        requestIncompleteCoursesByUser(remoteViewerId),
-        requestCompletedCoursesByUser(remoteViewerId),
-      ]);
-      const courseSnapshots = await loadCourseSnapshotsFromCourseService([
-        ...enrolledCourseIds,
-        ...completedCourseIds,
-      ]);
+      const [enrolledCourseIds, completedCourseIds, certificates] =
+        await Promise.all([
+          requestIncompleteCoursesByUser(remoteViewerId),
+          requestCompletedCoursesByUser(remoteViewerId),
+          requestCertificatesByUser(remoteViewerId).catch(() => []),
+        ]);
+      const { courseSnapshots, missingCourseIds } =
+        await loadCourseSnapshotsFromCourseService([
+          ...enrolledCourseIds,
+          ...completedCourseIds,
+        ]);
+      const activeEnrolledCourseIds = enrolledCourseIds.filter(
+        (courseId) => !missingCourseIds.includes(courseId),
+      );
+      const activeCompletedCourseIds = completedCourseIds.filter(
+        (courseId) => !missingCourseIds.includes(courseId),
+      );
+      const completedLessonEntries = await loadCompletedLessonsForActiveCourses(
+        {
+          userId: remoteViewerId,
+          courseIds: activeEnrolledCourseIds,
+          courseSnapshots,
+        },
+      );
 
       dispatch(
         syncLearningEnrollment({
-          enrolledCourseIds,
-          completedCourseIds,
+          enrolledCourseIds: activeEnrolledCourseIds,
+          completedCourseIds: activeCompletedCourseIds,
           courseSnapshots,
+          progressByCourseId:
+            buildProgressByCourseIdFromCompletedLessons(
+              completedLessonEntries,
+            ),
         }),
+      );
+
+      const certificateCourseIdsFromApi = certificates
+        .map((certificate) => certificate.courseId)
+        .filter(
+          (certificateCourseId) =>
+            certificateCourseId &&
+            !missingCourseIds.includes(certificateCourseId),
+        );
+
+      if (certificateCourseIdsFromApi.length) {
+        dispatch(
+          mergeCertificateCourseIds({
+            courseIds: certificateCourseIdsFromApi,
+          }),
+        );
+      }
+
+      syncCompletedLessonsForActiveCourses(dispatch, completedLessonEntries);
+
+      await Promise.allSettled(
+        missingCourseIds.map((courseId) =>
+          requestLeaveCourse({
+            userId: remoteViewerId,
+            courseId,
+          }),
+        ),
       );
 
       return {
         ok: true,
         viewerId: remoteViewerId,
-        enrolledCourseIds,
-        completedCourseIds,
+        enrolledCourseIds: activeEnrolledCourseIds,
+        completedCourseIds: activeCompletedCourseIds,
+        certificates,
       };
     } catch (error) {
       return {
@@ -427,7 +602,6 @@ export function enrollViewerInCourseWithLearningService(payload) {
       state,
       payload?.remoteViewerId,
     );
-
     if (!state.auth.isLogged) {
       return {
         ok: false,
@@ -474,6 +648,81 @@ export function enrollViewerInCourseWithLearningService(payload) {
   };
 }
 
+export function leaveViewerCourseWithLearningService(payload) {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const courseId = normalizeCourseId(payload?.courseId ?? payload);
+    const remoteViewerId = resolveLearningViewerId(
+      state,
+      payload?.remoteViewerId,
+    );
+    const courseLessonIds = getCourseLessonIdsForReset(state, courseId);
+
+    if (!state.auth.isLogged) {
+      return {
+        ok: false,
+        error: "Войдите в аккаунт, чтобы покинуть курс.",
+      };
+    }
+
+    if (!isLearningUuid(courseId) || !remoteViewerId) {
+      dispatch(leaveCourse(courseId));
+      resetLessonStateForCourse(dispatch, courseLessonIds);
+
+      return {
+        ok: true,
+        local: true,
+      };
+    }
+
+    try {
+      await requestLeaveCourse({
+        userId: remoteViewerId,
+        courseId,
+      });
+
+      const hydrationResult = await dispatch(
+        hydrateViewerLearningFromLearningService({
+          remoteViewerId,
+        }),
+      );
+
+      if (!hydrationResult?.ok) {
+        dispatch(leaveCourse(courseId));
+      }
+
+      resetLessonStateForCourse(dispatch, courseLessonIds);
+
+      return {
+        ok: true,
+        viewerId: remoteViewerId,
+      };
+    } catch (error) {
+      if (error?.status === 404) {
+        dispatch(leaveCourse(courseId));
+        resetLessonStateForCourse(dispatch, courseLessonIds);
+        await dispatch(
+          hydrateViewerLearningFromLearningService({
+            remoteViewerId,
+          }),
+        );
+
+        return {
+          ok: true,
+          viewerId: remoteViewerId,
+        };
+      }
+
+      return {
+        ok: false,
+        error:
+          error?.message ??
+          "Не удалось покинуть курс.",
+      };
+    }
+  };
+}
+
 export function completeViewerCourseWithLearningService(payload) {
   return async (dispatch, getState) => {
     const state = getState();
@@ -494,10 +743,26 @@ export function completeViewerCourseWithLearningService(payload) {
     }
 
     try {
-      await requestCompleteCourse({
+      const completeCourseBody = await requestCompleteCourse({
         userId: remoteViewerId,
         courseId,
       });
+      const enrollmentId = normalizeCourseId(
+        completeCourseBody?.enrollmentId,
+      );
+
+      if (isLearningUuid(enrollmentId)) {
+        try {
+          await requestCreateCertificate({
+            enrollmentId,
+          });
+          dispatch(mergeCertificateCourseIds({ courseIds: [courseId] }));
+        } catch (certificateError) {
+          if (certificateError?.status === 409) {
+            dispatch(mergeCertificateCourseIds({ courseIds: [courseId] }));
+          }
+        }
+      }
 
       const hydrationResult = await dispatch(
         hydrateViewerLearningFromLearningService({

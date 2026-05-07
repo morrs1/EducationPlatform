@@ -10,11 +10,13 @@ export function filterCoursesByQuery(courses, query) {
   }
 
   return courses.filter((course) => {
+    const tagText = Array.isArray(course?.tags)
+      ? course.tags.join(" ")
+      : "";
     const searchableText = [
       course.title,
       course.authorName,
-      course.categoryName,
-      course.subcategoryName,
+      tagText,
     ]
       .filter(Boolean)
       .join(" ")

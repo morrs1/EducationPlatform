@@ -1,9 +1,8 @@
 function HomeDiscoveryPanel({
   searchQuery,
-  filters,
   onSearchChange,
-  onFilterChange,
   onSubmit,
+  filtersSlot = null,
 }) {
   return (
     <section className="home-discovery-panel">
@@ -14,10 +13,6 @@ function HomeDiscoveryPanel({
         <h2 className="home-discovery-title">
           Подбирайте курсы под свой темп, уровень и интереc.
         </h2>
-        <p className="home-discovery-lead">
-          Ищите по теме, преподавателю или направлению, а потом быстро сужайте
-          подборку фильтрами.
-        </p>
       </div>
 
       <form className="home-discovery-form" onSubmit={onSubmit}>
@@ -28,32 +23,14 @@ function HomeDiscoveryPanel({
             type="search"
             value={searchQuery}
             onChange={onSearchChange}
-            placeholder="Название курса, автор или предмет"
+            placeholder="Название курса"
             className="home-discovery-input"
           />
         </div>
 
-        <div className="home-discovery-filters">
-          <label className="home-discovery-filter">
-            <input
-              type="checkbox"
-              name="filter1"
-              checked={filters.filter1}
-              onChange={onFilterChange}
-            />
-            Для начинающих
-          </label>
-
-          <label className="home-discovery-filter">
-            <input
-              type="checkbox"
-              name="filter2"
-              checked={filters.filter2}
-              onChange={onFilterChange}
-            />
-            Рейтинг 4.8+
-          </label>
-        </div>
+        {filtersSlot ? (
+          <div className="home-discovery-filters">{filtersSlot}</div>
+        ) : null}
 
         <button type="submit" className="home-discovery-submit">
           Найти курс

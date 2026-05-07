@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import {
@@ -26,7 +26,6 @@ import {
   selectViewer,
   toggleFavouriteCourse,
 } from "../../../features/viewer";
-import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import { getLessonProgressMap } from "../../../entities/lesson";
 import { CourseTabs } from "../../../widgets/course-tabs";
 import { CourseSidebar } from "../../../widgets/course-sidebar";
@@ -37,9 +36,11 @@ import { getCoursePageData } from "../lib/getCoursePageData";
 import { getCourseDescriptionMarkdown } from "../lib/getCourseDescriptionMarkdown";
 import { parseCourseDescriptionMarkdown } from "../lib/parseCourseDescriptionMarkdown";
 import {
+  enrichCoursePageDataWithAuthorName,
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
+  formatCourseTagLabel,
   sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
 
@@ -107,32 +108,6 @@ function CoursePage() {
   const [backendRequestSeed, setBackendRequestSeed] = useState(0);
   const [learningActionError, setLearningActionError] = useState("");
 
-  const enrichBackendCourseAuthor = useCallback(async (nextPageData) => {
-    const authorId = nextPageData?.course?.authorId;
-
-    if (!authorId) {
-      return nextPageData;
-    }
-
-    try {
-      const authorProfile = await requestViewerDisplayProfileById(authorId);
-
-      if (!authorProfile?.name) {
-        return nextPageData;
-      }
-
-      return {
-        ...nextPageData,
-        course: {
-          ...nextPageData.course,
-          authorName: authorProfile.name,
-        },
-      };
-    } catch {
-      return nextPageData;
-    }
-  }, []);
-
   useEffect(() => {
     if (!isBackendCourseRoute || !courseIdParam) {
       return;
@@ -146,7 +121,7 @@ function CoursePage() {
 
       try {
         const response = await requestCourseById(courseIdParam);
-        const nextPageData = await enrichBackendCourseAuthor(
+        const nextPageData = await enrichCoursePageDataWithAuthorName(
           mapReadCourseByIdResponseToCoursePageData(
             response,
             courseIdParam,
@@ -177,7 +152,6 @@ function CoursePage() {
     courseIdParam,
     isBackendCourseRoute,
     backendRequestSeed,
-    enrichBackendCourseAuthor,
   ]);
 
   const pageData = useMemo(() => {
@@ -226,6 +200,19 @@ function CoursePage() {
     viewerCourse,
     viewerCourseProgress,
   ]);
+
+  const courseTagLabels = useMemo(() => {
+    if (!Array.isArray(course?.tags)) {
+      return [];
+    }
+
+    return course.tags
+      .map((label) => formatCourseTagLabel(label))
+      .filter(Boolean);
+  }, [course?.tags]);
+
+  const hasCourseTagPills = courseTagLabels.length > 0;
+
   const activeTab = resolveActiveTab(searchParams);
   const isBackendCourse = Boolean(course?.isBackendCourse);
   const isOwnBackendCourse =
@@ -510,12 +497,32 @@ function CoursePage() {
       <div className="course-page-main">
         <section className="course-hero">
           <div className="course-hero-copy">
+            {hasCourseTagPills ? (
+              <ul className="course-hero-tags" aria-label="Теги курса">
+                {courseTagLabels.map((label, index) => (
+                  <li key={`${label}-${index}`}>
+                    <span className="course-hero-tag-pill">
+                      {formatCourseTagLabel(label) || "—"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <p className="course-hero-eyebrow">
-              {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
-              {sanitizeCourseDisplayLabel(
-                course.subcategoryName,
-                "Описание структуры",
-              )}
+              {hasCourseTagPills
+                ? sanitizeCourseDisplayLabel(
+                    course.subcategoryName,
+                    "Уровень и метаданные",
+                  )
+                : (
+                    <>
+                      {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
+                      {sanitizeCourseDisplayLabel(
+                        course.subcategoryName,
+                        "Описание структуры",
+                      )}
+                    </>
+                  )}
             </p>
             <h1 className="course-hero-title">{course.title}</h1>
             <p className="course-hero-description">{course.shortDescription}</p>

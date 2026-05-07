@@ -14,7 +14,11 @@ export function getCourseCoverSrc(course) {
 
   const icon = course.categoryIcon ?? "📘";
   const title = escapeXml(course.title);
-  const subtitle = escapeXml(course.subcategoryName ?? course.categoryName);
+  const subtitle = escapeXml(
+    Array.isArray(course?.tags) && course.tags[0]
+      ? String(course.tags[0])
+      : course.categoryName ?? "",
+  );
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
       <defs>

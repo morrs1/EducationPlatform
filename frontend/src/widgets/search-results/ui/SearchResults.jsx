@@ -1,21 +1,21 @@
 import { CoursePreviewCard } from "../../../entities/course";
 
-const FILTER_LABELS = {
-  filter1: "Для новичков",
-  filter2: "Рейтинг 4.8+",
+const LEVEL_LABELS = {
+  beginner: "Начальный уровень",
+  intermediate: "Продвинутый уровень",
 };
 
-function SearchResults({ searchQuery, filters, results }) {
+function SearchResults({ searchQuery, levelFilters, results }) {
   const hasResults = results.length > 0;
   const hasSearchQuery = searchQuery.length > 0;
   const activeFilters = [];
 
-  if (filters.filter1) {
-    activeFilters.push(FILTER_LABELS.filter1);
+  if (levelFilters?.beginner) {
+    activeFilters.push(LEVEL_LABELS.beginner);
   }
 
-  if (filters.filter2) {
-    activeFilters.push(FILTER_LABELS.filter2);
+  if (levelFilters?.intermediate) {
+    activeFilters.push(LEVEL_LABELS.intermediate);
   }
 
   return (
@@ -59,8 +59,7 @@ function SearchResults({ searchQuery, filters, results }) {
             Ничего не нашлось
           </strong>
           <p className="search-results-empty-text">
-            Попробуйте поискать по названию курса, автору, категории или
-            подкатегории.
+            Попробуйте поискать по названию курса.
           </p>
         </div>
       )}

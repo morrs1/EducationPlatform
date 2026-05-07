@@ -2,11 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 
 import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import {
+  INCLUDE_MOCK_COURSES_IN_UI,
   buildCatalogData,
   getAllCourses,
+  getMockCourses,
   mapReadCourseByIdResponseToCoursePageData,
   requestAllCourses,
 } from "../../../entities/course";
+
+import { buildCatalogTagModel } from "./buildCatalogTagModel";
 
 const INFORMATION_TECHNOLOGY_CATEGORY = {
   id: 1,
@@ -65,8 +69,27 @@ function inferBackendSubcategory(course) {
   return BASICS_SUBCATEGORY;
 }
 
+function normalizeBackendCourseTags(course) {
+  const raw = course?.tags;
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw
+    .map((tag) => {
+      if (typeof tag === "string") {
+        return tag.trim();
+      }
+      if (tag && typeof tag.name === "string") {
+        return tag.name.trim();
+      }
+      return "";
+    })
+    .filter(Boolean);
+}
+
 function normalizeBackendCatalogCourse(course, authorNameById) {
   const subcategory = inferBackendSubcategory(course);
+  const tags = normalizeBackendCourseTags(course);
 
   return {
     id: course.id,
@@ -81,6 +104,7 @@ function normalizeBackendCatalogCourse(course, authorNameById) {
     categoryIcon: INFORMATION_TECHNOLOGY_CATEGORY.icon,
     subcategoryId: subcategory.id,
     subcategoryName: subcategory.name,
+    tags,
     level: course.level || course.difficulty || "beginner",
     durationLabel: course.durationLabel || "Длительность уточняется",
     rating: null,
@@ -113,6 +137,7 @@ export function useCatalogCollections() {
   const [backendCourses, setBackendCourses] = useState([]);
   const [backendStatus, setBackendStatus] = useState("idle");
   const [backendError, setBackendError] = useState("");
+  const mockCourseCount = getMockCourses().length;
 
   useEffect(() => {
     let isCancelled = false;
@@ -180,9 +205,13 @@ export function useCatalogCollections() {
 
   const allCourses = useMemo(
     () => [...backendCourses, ...getAllCourses()],
-    [backendCourses],
+    [backendCourses, INCLUDE_MOCK_COURSES_IN_UI, mockCourseCount],
   );
   const catalogData = useMemo(() => buildCatalogData(allCourses), [allCourses]);
+  const catalogTagModel = useMemo(
+    () => buildCatalogTagModel(allCourses),
+    [allCourses],
+  );
   const courseCategories = useMemo(
     () =>
       catalogData.map((category) => ({
@@ -198,9 +227,11 @@ export function useCatalogCollections() {
   );
 
   return {
+    allCourses,
     courseCategories,
     coursesByCategory,
     catalogData,
+    catalogTagModel,
     backendStatus,
     backendError,
   };

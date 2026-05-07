@@ -1,10 +1,6 @@
-import { mockCourses } from "./mockCourses";
+import { getMockCourses } from "./mockCourses";
 import { getCourseCoverSrc } from "./getCourseCoverSrc";
 import { mockUsersById } from "../../user/model/mockUsers";
-
-const mockCoursesById = new Map(
-  mockCourses.map((course) => [course.id, course]),
-);
 
 function sortByPopularity(courseA, courseB) {
   if (courseB.studentsCount !== courseA.studentsCount) {
@@ -15,7 +11,7 @@ function sortByPopularity(courseA, courseB) {
 }
 
 export function getCourseById(courseId) {
-  return mockCoursesById.get(courseId) ?? null;
+  return getMockCourses().find((course) => course.id === courseId) ?? null;
 }
 
 export function getCourseAuthor(course) {
@@ -24,6 +20,11 @@ export function getCourseAuthor(course) {
 
 export function enrichCourse(course) {
   const author = getCourseAuthor(course);
+  const tags = Array.isArray(course?.tags)
+    ? course.tags
+    : course?.subcategoryName
+      ? [course.subcategoryName]
+      : [];
 
   return {
     ...course,
@@ -32,11 +33,15 @@ export function enrichCourse(course) {
     authorHeadline: author?.headline ?? "",
     authorAvatarUrl: author?.avatarUrl ?? "",
     imageUrl: course.imageUrl || getCourseCoverSrc(course),
+    tags,
   };
 }
 
 export function mapCourseToPreview(course) {
   const enrichedCourse = enrichCourse(course);
+  const tags = Array.isArray(enrichedCourse.tags)
+    ? enrichedCourse.tags
+    : [];
 
   return {
     id: enrichedCourse.id,
@@ -54,17 +59,18 @@ export function mapCourseToPreview(course) {
     subcategoryName: enrichedCourse.subcategoryName,
     shortDescription: enrichedCourse.shortDescription,
     level: enrichedCourse.level,
+    tags,
   };
 }
 
 export function getAllCourses() {
-  return mockCourses.map(enrichCourse);
+  return getMockCourses().map(enrichCourse);
 }
 
 export function getCourseCategories() {
   const categoriesMap = new Map();
 
-  for (const course of mockCourses) {
+  for (const course of getMockCourses()) {
     if (categoriesMap.has(course.categoryId)) {
       continue;
     }
@@ -80,7 +86,7 @@ export function getCourseCategories() {
 }
 
 export function getCoursesByCategory() {
-  return mockCourses.reduce((acc, course) => {
+  return getMockCourses().reduce((acc, course) => {
     if (!acc[course.categoryId]) {
       acc[course.categoryId] = [];
     }
@@ -91,7 +97,7 @@ export function getCoursesByCategory() {
 }
 
 export function getPopularCourses(limit = 18) {
-  return [...mockCourses]
+  return [...getMockCourses()]
     .sort(sortByPopularity)
     .slice(0, limit)
     .map(mapCourseToPreview);

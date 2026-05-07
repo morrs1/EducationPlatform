@@ -209,6 +209,16 @@ const lessonSessionSlice = createSlice({
       clearLessonState(state, lessonId);
     },
 
+    resetCourseLessonSessions: (state, action) => {
+      const lessonIds = Array.isArray(action.payload?.lessonIds)
+        ? action.payload.lessonIds.filter(Boolean)
+        : [];
+
+      lessonIds.forEach((lessonId) => {
+        clearLessonState(state, lessonId);
+      });
+    },
+
     resetAllLessonSessions: () => initialState,
   },
 });
@@ -224,6 +234,7 @@ export const {
   setSubmissionResult,
   restoreLessonSession,
   resetLessonSession,
+  resetCourseLessonSessions,
   resetAllLessonSessions,
 } = lessonSessionSlice.actions;
 

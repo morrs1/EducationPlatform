@@ -1,11 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
+  ALL_TAG_KEY,
   closeCatalog,
+  getCatalogCoursesForTagKey,
   resetSelectedCategory,
-  selectCategory,
+  selectCatalogTag,
   selectIsCatalogOpen,
-  selectSelectedCategoryId,
+  selectSelectedCatalogTagKey,
 } from "../../../features/catalog";
 import { Link } from "react-router";
 
@@ -14,15 +16,30 @@ import { useCatalogCollections } from "../../../features/catalog";
 function CatalogSidebar({ headerHeight }) {
   const dispatch = useDispatch();
   const isCatalogOpen = useSelector(selectIsCatalogOpen);
-  const selectedCategoryId = useSelector(selectSelectedCategoryId);
-  const { catalogData } = useCatalogCollections();
-  const resolvedSelectedCategoryId = catalogData.some(
-    (category) => category.id === selectedCategoryId,
-  )
-    ? selectedCategoryId
-    : (catalogData[0]?.id ?? null);
-  const currentCategory = catalogData.find(
-    (category) => category.id === resolvedSelectedCategoryId,
+  const selectedCatalogTagKey = useSelector(selectSelectedCatalogTagKey);
+  const { catalogTagModel } = useCatalogCollections();
+
+  const resolvedCatalogTagKey = useMemo(() => {
+    if (!catalogTagModel?.tagList) {
+      return ALL_TAG_KEY;
+    }
+    if (
+      selectedCatalogTagKey === ALL_TAG_KEY ||
+      !selectedCatalogTagKey
+    ) {
+      return ALL_TAG_KEY;
+    }
+    if (
+      catalogTagModel.tagList.some((tag) => tag.key === selectedCatalogTagKey)
+    ) {
+      return selectedCatalogTagKey;
+    }
+    return ALL_TAG_KEY;
+  }, [catalogTagModel, selectedCatalogTagKey]);
+
+  const visibleCourseRows = useMemo(
+    () => getCatalogCoursesForTagKey(catalogTagModel, resolvedCatalogTagKey),
+    [catalogTagModel, resolvedCatalogTagKey],
   );
 
   useEffect(() => {
@@ -93,46 +110,48 @@ function CatalogSidebar({ headerHeight }) {
           height: `calc(100dvh - ${sidebarOffset})`,
         }}
       >
-        <div className="catalog-pane catalog-pane-nav">
-          {catalogData.map((category) => (
+        <div className="catalog-pane catalog-pane-nav catalog-pane-nav-tags">
+          <button
+            type="button"
+            className={`catalog-tag-nav-btn ${
+              resolvedCatalogTagKey === ALL_TAG_KEY ? "active" : ""
+            }`}
+            onClick={() => dispatch(selectCatalogTag(ALL_TAG_KEY))}
+          >
+            <span className="catalog-tag-nav-label">Все курсы</span>
+          </button>
+          {catalogTagModel?.tagList?.map((tag) => (
             <button
               type="button"
-              className={`catalog-category-btn ${
-                resolvedSelectedCategoryId === category.id ? "active" : ""
+              key={tag.key}
+              className={`catalog-tag-nav-btn ${
+                resolvedCatalogTagKey === tag.key ? "active" : ""
               }`}
-              key={category.id}
-              onClick={() => dispatch(selectCategory(category.id))}
+              onClick={() => dispatch(selectCatalogTag(tag.key))}
             >
-              <span className="catalog-category-name">{category.name}</span>
-              <span className="catalog-category-arrow" aria-hidden="true">
-                -&gt;
+              <span className="catalog-tag-nav-label">{tag.label}</span>
+              <span className="catalog-tag-nav-count" aria-hidden="true">
+                {tag.count}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="catalog-pane catalog-pane-content">
-          <div className="catalog-grid">
-            {currentCategory?.subcategories.map((subcategory) => (
-              <div key={subcategory.id} className="catalog-subcategory-card">
-                <span className="catalog-subcategory-title">
-                  {subcategory.name}
+        <div className="catalog-pane catalog-pane-content catalog-pane-tag-courses">
+          <div className="catalog-tag-course-list">
+            {visibleCourseRows.map((course) => (
+              <Link
+                key={course.id}
+                className="catalog-tag-course-tile"
+                to={`/courses/${course.id}`}
+                onClick={() => {
+                  dispatch(closeCatalog());
+                }}
+              >
+                <span className="catalog-tag-course-tile-label">
+                  {course.title}
                 </span>
-                <div className="catalog-course-list">
-                  {subcategory.courses.map((course) => (
-                    <Link
-                      key={course.id}
-                      className="catalog-course-link"
-                      to={`/courses/${course.id}`}
-                      onClick={() => {
-                        dispatch(closeCatalog());
-                      }}
-                    >
-                      {course.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

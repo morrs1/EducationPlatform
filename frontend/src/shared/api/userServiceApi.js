@@ -1,6 +1,6 @@
 import { buildAvatarUrl, buildViewerDisplayName } from "../lib/viewerProfile";
 
-const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user-service";
+const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -14,7 +14,7 @@ function isUuid(value) {
   return UUID_PATTERN.test(normalizeText(value));
 }
 
-function buildUserServiceUrl(pathname = "/user") {
+function buildUserServiceUrl(pathname = "") {
   const apiBaseUrl = getUserServiceApiBaseUrl();
 
   return new URL(`${apiBaseUrl}${pathname}`, window.location.origin);
@@ -221,7 +221,7 @@ export async function requestViewerProfileById(viewerId) {
     return cachedRequest;
   }
 
-  const url = buildUserServiceUrl("/user");
+  const url = buildUserServiceUrl("");
 
   url.searchParams.set("id", normalizedViewerId);
 
@@ -266,7 +266,7 @@ function createJsonRequestOptions(payload) {
 
 export async function requestViewerNameUpdate(viewerId, nextFirstName) {
   return requestUserService(
-    buildUserServiceUrl(`/user/${viewerId}/change_name`),
+    buildUserServiceUrl(`/${viewerId}/change_name`),
     createJsonRequestOptions({
       newName: nextFirstName,
     }),
@@ -275,7 +275,7 @@ export async function requestViewerNameUpdate(viewerId, nextFirstName) {
 
 export async function requestViewerSurnameUpdate(viewerId, nextLastName) {
   return requestUserService(
-    buildUserServiceUrl(`/user/${viewerId}/change_surname`),
+    buildUserServiceUrl(`/${viewerId}/change_surname`),
     createJsonRequestOptions({
       newSurname: nextLastName,
     }),
@@ -287,7 +287,7 @@ export async function requestViewerPatronymicUpdate(
   nextPatronymic,
 ) {
   return requestUserService(
-    buildUserServiceUrl(`/user/${viewerId}/change_patronymic`),
+    buildUserServiceUrl(`/${viewerId}/change_patronymic`),
     createJsonRequestOptions({
       newPatronymic: nextPatronymic,
     }),
@@ -296,7 +296,7 @@ export async function requestViewerPatronymicUpdate(
 
 export async function requestViewerStatusUpdate(viewerId, nextStatus) {
   return requestUserService(
-    buildUserServiceUrl(`/user/${viewerId}/change_status`),
+    buildUserServiceUrl(`/${viewerId}/change_status`),
     createJsonRequestOptions({
       newStatus: nextStatus,
     }),
@@ -309,7 +309,7 @@ export async function uploadViewerProfilePhoto(viewerId, file) {
   formData.set("user_id", viewerId);
   formData.set("file", file);
 
-  return requestUserService(buildUserServiceUrl("/user/add_photo"), {
+  return requestUserService(buildUserServiceUrl("/add_photo"), {
     method: "POST",
     body: formData,
   });

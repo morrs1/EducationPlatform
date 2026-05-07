@@ -1,6 +1,10 @@
-import { sanitizeCourseDisplayLabel } from "../model/courseDisplayLabels";
+import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
+import {
+  formatCourseTagLabel,
+  sanitizeCourseDisplayLabel,
+} from "../model/courseDisplayLabels";
 
-const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course-service";
+const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const UUID_PATTERN =
@@ -9,6 +13,7 @@ const courseRequestCache = new Map();
 const lessonRequestCache = new Map();
 const courseListRequestCache = new Map();
 const authorCourseListRequestCache = new Map();
+const courseSearchRequestCache = new Map();
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -122,12 +127,12 @@ function invalidateCourseCache(courseId) {
   }
 
   courseRequestCache.delete(
-    buildCourseServiceUrl(`/course/${normalizedCourseId}`).toString(),
+    buildCourseServiceUrl(`/${normalizedCourseId}`).toString(),
   );
 }
 
 function invalidateCourseListCache() {
-  courseListRequestCache.delete(buildCourseServiceUrl("/course").toString());
+  courseListRequestCache.delete(buildCourseServiceUrl("").toString());
 }
 
 function invalidateAuthorCourseListCache(authorId) {
@@ -140,12 +145,12 @@ function invalidateAuthorCourseListCache(authorId) {
 
   authorCourseListRequestCache.delete(
     buildCourseServiceUrl(
-      `/course/by-author/${normalizedAuthorId}/published`,
+      `/by-author/${normalizedAuthorId}/published`,
     ).toString(),
   );
   authorCourseListRequestCache.delete(
     buildCourseServiceUrl(
-      `/course/by-author/${normalizedAuthorId}/drafts`,
+      `/by-author/${normalizedAuthorId}/drafts`,
     ).toString(),
   );
 }
@@ -158,7 +163,7 @@ function invalidateLessonCache(lessonId) {
   }
 
   lessonRequestCache.delete(
-    buildCourseServiceUrl(`/course/lesson/${normalizedLessonId}`).toString(),
+    buildCourseServiceUrl(`/lesson/${normalizedLessonId}`).toString(),
   );
 }
 
@@ -457,10 +462,6 @@ function formatDifficultyLabel(difficulty) {
   }
 
   if (difficulty === "intermediate") {
-    return "Средний уровень";
-  }
-
-  if (difficulty === "advanced") {
     return "Продвинутый уровень";
   }
 
@@ -487,7 +488,8 @@ function formatMinutesLabel(estimatedMinutes) {
 }
 
 function buildCourseEyebrow(tags, difficulty) {
-  const primaryTag = sanitizeCourseDisplayLabel(tags[0]);
+  const primaryTag =
+    formatCourseTagLabel(tags?.[0]) || sanitizeCourseDisplayLabel("");
   const parts = [formatDifficultyLabel(difficulty)];
 
   return {
@@ -834,13 +836,55 @@ export function isUuid(value) {
   return UUID_PATTERN.test(normalizeText(value));
 }
 
+/**
+ * Подставляет ФИО автора из user service по course.authorId (в ответе course-service есть только id).
+ */
+export async function enrichCoursePageDataWithAuthorName(pageData) {
+  if (!pageData?.course) {
+    return pageData;
+  }
+
+  const authorId = normalizeText(pageData.course.authorId);
+  const existingName = normalizeText(pageData.course.authorName);
+
+  if (existingName) {
+    return pageData;
+  }
+
+  if (!authorId || !isUuid(authorId)) {
+    return pageData;
+  }
+
+  try {
+    const authorProfile = await requestViewerDisplayProfileById(authorId);
+    const name = normalizeText(authorProfile?.name);
+
+    if (!name) {
+      return pageData;
+    }
+
+    return {
+      ...pageData,
+      course: {
+        ...pageData.course,
+        authorName: name,
+      },
+    };
+  } catch {
+    return pageData;
+  }
+}
+
 async function requestCourseService(pathname, options = {}) {
   const requestUrl = buildCourseServiceUrl(pathname).toString();
   const response = await fetch(requestUrl, options);
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response));
+    const error = new Error(extractErrorMessage(response));
+    error.status = response.status;
+    error.responseBody = responseBody;
+    throw error;
   }
 
   return responseBody;
@@ -864,7 +908,10 @@ async function requestCourseServiceJson(pathname, requestCache) {
       const responseBody = await readResponseBody(response);
 
       if (!response.ok) {
-        throw new Error(extractErrorMessage(response));
+        const error = new Error(extractErrorMessage(response));
+        error.status = response.status;
+        error.responseBody = responseBody;
+        throw error;
       }
 
       return responseBody;
@@ -880,13 +927,28 @@ async function requestCourseServiceJson(pathname, requestCache) {
 }
 
 export async function requestCourseById(courseId) {
-  return requestCourseServiceJson(`/course/${courseId}`, courseRequestCache);
+  return requestCourseServiceJson(`/${courseId}`, courseRequestCache);
 }
 
 export async function requestAllCourses() {
   const responseBody = await requestCourseServiceJson(
-    "/course",
+    "",
     courseListRequestCache,
+  );
+
+  return normalizeArray(responseBody);
+}
+
+export async function requestSearchCourses(query) {
+  const normalizedQuery = normalizeText(query);
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const responseBody = await requestCourseServiceJson(
+    `/search?q=${encodeURIComponent(normalizedQuery)}`,
+    courseSearchRequestCache,
   );
 
   return normalizeArray(responseBody);
@@ -895,7 +957,7 @@ export async function requestAllCourses() {
 export async function requestPublishedCoursesByAuthor(authorId) {
   const normalizedAuthorId = normalizeText(authorId);
   const responseBody = await requestCourseServiceJson(
-    `/course/by-author/${normalizedAuthorId}/published`,
+    `/by-author/${normalizedAuthorId}/published`,
     authorCourseListRequestCache,
   );
 
@@ -905,7 +967,7 @@ export async function requestPublishedCoursesByAuthor(authorId) {
 export async function requestDraftCoursesByAuthor(authorId) {
   const normalizedAuthorId = normalizeText(authorId);
   const responseBody = await requestCourseServiceJson(
-    `/course/by-author/${normalizedAuthorId}/drafts`,
+    `/by-author/${normalizedAuthorId}/drafts`,
     authorCourseListRequestCache,
   );
 
@@ -914,13 +976,13 @@ export async function requestDraftCoursesByAuthor(authorId) {
 
 export async function requestLessonById(lessonId) {
   return requestCourseServiceJson(
-    `/course/lesson/${lessonId}`,
+    `/lesson/${lessonId}`,
     lessonRequestCache,
   );
 }
 
 export async function requestCourseCreation(payload) {
-  const responseBody = await requestCourseService("/course", {
+  const responseBody = await requestCourseService("", {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -938,7 +1000,7 @@ export async function requestCourseCreation(payload) {
 export async function requestAddModuleToCourse(courseId, payload) {
   const normalizedCourseId = normalizeText(courseId);
   const responseBody = await requestCourseService(
-    `/course/${normalizedCourseId}/module`,
+    `/${normalizedCourseId}/module`,
     {
       method: "POST",
       headers: {
@@ -958,7 +1020,7 @@ export async function requestAddModuleToCourse(courseId, payload) {
 
 export async function requestAddLessonToCourse(payload) {
   const normalizedCourseId = normalizeText(payload?.courseId);
-  const responseBody = await requestCourseService("/course/lesson", {
+  const responseBody = await requestCourseService("/lesson", {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -979,7 +1041,7 @@ export async function requestAddLessonToCourse(payload) {
 export async function requestPublishCourse(courseId) {
   const normalizedCourseId = normalizeText(courseId);
 
-  await requestCourseService(`/course/${normalizedCourseId}/publish`, {
+  await requestCourseService(`/${normalizedCourseId}/publish`, {
     method: "PATCH",
     headers: {
       Accept: "application/json",
@@ -994,7 +1056,7 @@ export async function requestPublishCourse(courseId) {
 export async function requestUploadLessonContent(lessonId, payload) {
   const normalizedLessonId = normalizeText(lessonId);
   const responseBody = await requestCourseService(
-    `/course/lesson/${normalizedLessonId}`,
+    `/lesson/${normalizedLessonId}`,
     {
       method: "PATCH",
       headers: {
@@ -1034,7 +1096,7 @@ export async function requestUploadLessonAsset(
   );
 
   const responseBody = await requestCourseService(
-    `/course/lesson/${normalizedLessonId}/asset`,
+    `/lesson/${normalizedLessonId}/asset`,
     {
       method: "POST",
       headers: {
@@ -1073,7 +1135,7 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
     course: {
       id: resolvedCourseId || courseId,
       authorId: normalizeText(response?.authorId),
-      authorName: "",
+      authorName: normalizeText(response?.authorName),
       title: normalizeText(response?.title) || "Курс без названия",
       shortDescription:
         normalizeText(response?.shortDescription) ||

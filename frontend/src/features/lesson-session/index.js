@@ -18,6 +18,7 @@ export {
   setSubmissionResult,
   restoreLessonSession,
   resetLessonSession,
+  resetCourseLessonSessions,
   resetAllLessonSessions,
   createInitialLessonSessionState,
 } from "./model/lessonSessionSlice";

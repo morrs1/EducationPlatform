@@ -96,6 +96,8 @@ const fallbackAuthorIds = Object.values(mockUsersById)
   .map((user) => user.id);
 
 function buildFallbackReviews(course) {
+  const primaryTag =
+    (Array.isArray(course?.tags) && course.tags[0]) ? course.tags[0] : "курса";
   return Array.from({ length: 3 }, (_, index) => {
     const authorId =
       fallbackAuthorIds[(course.id + index) % fallbackAuthorIds.length];
@@ -109,7 +111,7 @@ function buildFallbackReviews(course) {
         index === 0
           ? `Курс «${course.title}» дает понятную структуру входа в направление и помогает не потеряться в теме уже на первой неделе.`
           : index === 1
-            ? `Особенно полезны практические блоки: видно, как знания из раздела «${course.subcategoryName}» складываются в понятный рабочий навык.`
+            ? `Особенно полезны практические блоки: видно, как знания по теме «${primaryTag}» складываются в понятный рабочий навык.`
             : `Подойдет тем, кто хочет спокойно и последовательно освоить «${course.categoryName}» без перегруза лишней теорией.`,
       createdAt: `2026-03-${String(10 + index + (course.id % 8)).padStart(2, "0")}T12:00:00.000Z`,
     };
