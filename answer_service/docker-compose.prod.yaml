@@ -138,9 +138,6 @@ services:
           memory: 512M
     ports:
       - "127.0.0.1:${CHROMA_PORT}:${CHROMA_PORT}"
-    healthcheck:
-      test: [ "CMD", "python", "-c", "import urllib.request,sys,os;sys.exit(0 if urllib.request.urlopen(f'http://localhost:{os.environ[\"CHROMA_SERVER_HTTP_PORT\"]}/api/v2/heartbeat').status==200 else 1)" ]
-      <<: *hc-interval
     volumes:
       - answer_service.chroma.data:/chroma/chroma
 
