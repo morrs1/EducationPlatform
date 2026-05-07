@@ -30,16 +30,6 @@ from answer_service.setup.ioc import setup_providers
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
-async def startup(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
-    setup_map_tables()
-    logger.info("Taskiq worker started")
-
-
-async def shutdown(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
-    clear_mappers()
-    logger.info("Taskiq worker stopped")
-
-
 def create_worker_taskiq_app() -> AsyncBroker:
     """Create and configure the taskiq worker application."""
     configs: AppConfig = AppConfig()
@@ -56,6 +46,16 @@ def create_worker_taskiq_app() -> AsyncBroker:
 
     rabbit_broker: RabbitBroker = setup_rabbit_broker(configs.rabbit)
     setup_rabbit_routes(rabbit_broker)
+
+    async def startup(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
+        setup_map_tables()
+        await rabbit_broker.start()
+        logger.info("Taskiq worker started")
+
+    async def shutdown(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
+        clear_mappers()
+        await rabbit_broker.stop()
+        logger.info("Taskiq worker stopped")
 
     worker_broker.on_event(TaskiqEvents.WORKER_STARTUP)(startup)
     worker_broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)(shutdown)
