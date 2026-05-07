@@ -1,4 +1,9 @@
-import { buildAvatarUrl, buildViewerDisplayName } from "../lib/viewerProfile";
+import {
+  buildAvatarInitialsSeed,
+  buildAvatarUrl,
+  buildViewerDisplayName,
+} from "../lib/viewerProfile";
+import { withGatewayAuth } from "./gatewayFetch";
 
 const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
@@ -45,7 +50,7 @@ function extractErrorMessage(response, context = "") {
 }
 
 async function requestUserService(url, options = {}, context = "") {
-  const response = await fetch(url.toString(), options);
+  const response = await fetch(url.toString(), withGatewayAuth(options));
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
@@ -193,6 +198,12 @@ export function mapReadUserByIdResponseToViewerProfile(response, viewerId) {
   const avatarUrl = normalizeUserServicePhotoUrl(
     response?.userProfilePhotoLink,
   );
+  const avatarSeed =
+    buildAvatarInitialsSeed({
+      firstName,
+      lastName: surname,
+      name: displayName,
+    }) || displayName;
 
   return {
     id: viewerId,
@@ -204,7 +215,7 @@ export function mapReadUserByIdResponseToViewerProfile(response, viewerId) {
     status,
     headline: status,
     about: "",
-    avatarUrl: avatarUrl || buildAvatarUrl(displayName),
+    avatarUrl: avatarUrl || buildAvatarUrl(avatarSeed),
   };
 }
 
@@ -313,4 +324,42 @@ export async function uploadViewerProfilePhoto(viewerId, file) {
     method: "POST",
     body: formData,
   });
+}
+
+export async function requestAssignAuthorRole(viewerId) {
+  const normalizedViewerId = normalizeText(viewerId);
+
+  if (!isUuid(normalizedViewerId)) {
+    throw new Error("userId должен быть UUID.");
+  }
+
+  return requestUserService(
+    buildUserServiceUrl(`/${normalizedViewerId}/assign_author`),
+    {
+      method: "PATCH",
+      headers: {
+        Accept: "text/plain",
+      },
+    },
+    "назначение роли автора",
+  );
+}
+
+export async function requestAssignAdminRole(viewerId) {
+  const normalizedViewerId = normalizeText(viewerId);
+
+  if (!isUuid(normalizedViewerId)) {
+    throw new Error("userId должен быть UUID.");
+  }
+
+  return requestUserService(
+    buildUserServiceUrl(`/${normalizedViewerId}/assign_admin`),
+    {
+      method: "PATCH",
+      headers: {
+        Accept: "text/plain",
+      },
+    },
+    "назначение роли администратора",
+  );
 }

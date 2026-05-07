@@ -3,6 +3,7 @@ import {
   formatCourseTagLabel,
   sanitizeCourseDisplayLabel,
 } from "../model/courseDisplayLabels";
+import { withGatewayAuth } from "../../../shared/api/gatewayFetch";
 
 const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
@@ -877,7 +878,7 @@ export async function enrichCoursePageDataWithAuthorName(pageData) {
 
 async function requestCourseService(pathname, options = {}) {
   const requestUrl = buildCourseServiceUrl(pathname).toString();
-  const response = await fetch(requestUrl, options);
+  const response = await fetch(requestUrl, withGatewayAuth(options));
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
@@ -898,12 +899,15 @@ async function requestCourseServiceJson(pathname, requestCache) {
     return cachedRequest;
   }
 
-  const requestPromise = fetch(requestUrl, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  })
+  const requestPromise = fetch(
+    requestUrl,
+    withGatewayAuth({
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    }),
+  )
     .then(async (response) => {
       const responseBody = await readResponseBody(response);
 
@@ -1168,7 +1172,6 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
       isBackendCourse: true,
       isReadOnlyCourse: false,
       isEnrolled: false,
-      isFavourite: false,
       isCompleted: false,
     },
     syllabus: {

@@ -1,3 +1,5 @@
+import { withGatewayAuth } from "./gatewayFetch";
+
 const DEFAULT_LEARNING_SERVICE_API_BASE_URL = "/api/learning";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -68,13 +70,16 @@ function extractErrorMessage(response, context = "") {
 }
 
 async function requestLearningService(pathname, options = {}, context = "") {
-  const response = await fetch(buildLearningServiceUrl(pathname).toString(), {
-    ...options,
-    headers: {
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...(options.headers ?? {}),
-    },
-  });
+  const response = await fetch(
+    buildLearningServiceUrl(pathname).toString(),
+    withGatewayAuth({
+      ...options,
+      headers: {
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers ?? {}),
+      },
+    }),
+  );
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
