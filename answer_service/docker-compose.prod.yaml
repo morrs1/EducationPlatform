@@ -1,0 +1,345 @@
+x-default: &default
+  restart: unless-stopped
+  networks:
+    - overlay
+
+x-healthcheck-interval: &hc-interval
+  interval: 30s
+  timeout: 60s
+  retries: 5
+  start_period: 10s
+
+x-db-environment: &x-db-environment
+  POSTGRES_SSL_MODE: 'disable'
+  POSTGRES_HOST: ${POSTGRES_HOST}
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_DRIVER: ${POSTGRES_DRIVER}
+
+x-redis-environment: &x-redis-environment
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+  REDIS_USER: ${REDIS_USER}
+  REDIS_USER_PASSWORD: ${REDIS_USER_PASSWORD}
+  REDIS_PORT: ${REDIS_PORT}
+  REDIS_CACHE_DB: ${REDIS_CACHE_DB}
+  REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+  REDIS_SCHEDULE_SOURCE_DB: ${REDIS_SCHEDULE_SOURCE_DB}
+  REDIS_MAX_CONNECTIONS: ${REDIS_MAX_CONNECTIONS}
+
+x-chroma-environment: &x-chroma-environment
+  IS_PERSISTENT: 'TRUE'
+  PERSIST_DIRECTORY: /chroma/chroma
+  ANONYMIZED_TELEMETRY: 'FALSE'
+  CHROMA_SERVER_HOST: '0.0.0.0'
+  CHROMA_SERVER_HTTP_PORT: ${CHROMA_PORT}
+
+x-chroma-app-environment: &x-chroma-app-environment
+  CHROMA_PORT: ${CHROMA_PORT}
+  CHROMA_COLLECTION_NAME: ${CHROMA_COLLECTION_NAME}
+
+x-rabbit-environment: &x-rabbit-environment
+  RABBITMQ_HOST: ${RABBITMQ_HOST}
+  RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+  RABBITMQ_PORT: ${RABBITMQ_PORT}
+  RABBITMQ_UI_PORT: ${RABBITMQ_UI_PORT}
+
+x-sqlalchemy-environment: &x-sqlalchemy-environment
+  DB_POOL_PRE_PING: ${DB_POOL_PRE_PING}
+  DB_POOL_RECYCLE: ${DB_POOL_RECYCLE}
+  DB_ECHO: ${DB_ECHO}
+  DB_AUTO_FLUSH: ${DB_AUTO_FLUSH}
+  DB_EXPIRE_ON_COMMIT: ${DB_EXPIRE_ON_COMMIT}
+  DB_FUTURE: ${DB_FUTURE}
+  DB_POOL_SIZE: ${DB_POOL_SIZE}
+  DB_POOL_MAX_OVERFLOW: ${DB_POOL_MAX_OVERFLOW}
+
+x-api-environment: &x-api-environment
+  UVICORN_HOST: ${UVICORN_HOST}
+  UVICORN_PORT: ${UVICORN_PORT}
+  FASTAPI_DEBUG: ${FASTAPI_DEBUG}
+  FASTAPI_ALLOW_CREDENTIALS: ${FASTAPI_ALLOW_CREDENTIALS}
+
+x-llm-environment: &x-llm-environment
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+  OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL}
+  OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL}
+  OPENAI_TEMPERATURE: ${OPENAI_TEMPERATURE}
+  OPENAI_EMBEDDING_CHUNK_SIZE: ${OPENAI_EMBEDDING_CHUNK_SIZE}
+
+services:
+  postgres:
+    <<: *default
+    container_name: answer_service.postgres
+    hostname: answer_service.postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      <<: *x-db-environment
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    ports:
+      - 127.0.0.1:${POSTGRES_PORT}:${POSTGRES_PORT}
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U $POSTGRES_USER' ]
+      <<: *hc-interval
+    volumes:
+      - answer_service.postgres.data:/var/lib/postgresql/data
+      - ./deploy/dev/postgres/postgresql.conf:/etc/postgresql.conf
+      - ./deploy/dev/postgres/pg_hba.conf:/etc/pg_hba.conf
+
+  redis:
+    <<: *default
+    image: redis:8.0.2-alpine
+    container_name: answer_service.redis
+    hostname: answer_service.redis
+    environment:
+      <<: *x-redis-environment
+    command: /bin/sh -cx "/usr/local/bin/redis_entrypoint.sh"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
+      <<: *hc-interval
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - answer_service.redis.data:/data
+      - ./deploy/dev/redis/redis_entrypoint.sh:/usr/local/bin/redis_entrypoint.sh
+
+  chromadb:
+    <<: *default
+    image: chromadb/chroma:1.0.9
+    container_name: answer_service.chromadb
+    hostname: answer_service.chromadb
+    environment:
+      <<: *x-chroma-environment
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    ports:
+      - "127.0.0.1:${CHROMA_PORT}:${CHROMA_PORT}"
+    volumes:
+      - answer_service.chroma.data:/chroma/chroma
+
+  rabbitmq:
+    <<: *default
+    image: rabbitmq:4.0-management-alpine
+    container_name: answer_service.rabbitmq
+    hostname: answer_service.rabbitmq
+    expose:
+      # AMQP protocol port
+      - ${RABBITMQ_PORT}
+      # HTTP management UI
+      - ${RABBITMQ_UI_PORT}
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    ports:
+      - "127.0.0.1:${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "127.0.0.1:${RABBITMQ_UI_PORT}:${RABBITMQ_UI_PORT}"
+    environment:
+      <<: *x-rabbit-environment
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      <<: *hc-interval
+    volumes:
+      - answer_service.rabbitmq.data:/var/lib/rabbitmq/:rw
+
+  api:
+    <<: *default
+    container_name: answer_service.api
+    hostname: answer_service.api
+    build:
+      context: .
+      dockerfile: ./deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-db-environment,
+        *x-sqlalchemy-environment,
+        *x-redis-environment,
+        *x-rabbit-environment,
+        *x-chroma-app-environment,
+        *x-api-environment,
+        *x-llm-environment,
+      ]
+      POSTGRES_HOST: answer_service.postgres
+      REDIS_HOST: answer_service.redis
+      RABBITMQ_HOST: answer_service.rabbitmq
+      CHROMA_HOST: answer_service.chromadb
+    command: /bin/sh -cx "./api_entrypoint.sh"
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 2048M
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+    ports:
+      - "127.0.0.1:${UVICORN_PORT}:${UVICORN_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'curl -fsSL http://localhost:${UVICORN_PORT}/healthcheck/',
+        ]
+      <<: *hc-interval
+
+  consumer:
+    <<: *default
+    container_name: answer_service.consumer
+    hostname: answer_service.consumer
+    build:
+      context: .
+      dockerfile: ./deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-db-environment,
+        *x-sqlalchemy-environment,
+        *x-redis-environment,
+        *x-rabbit-environment,
+        *x-chroma-app-environment,
+        *x-llm-environment,
+      ]
+      POSTGRES_HOST: answer_service.postgres
+      REDIS_HOST: answer_service.redis
+      RABBITMQ_HOST: answer_service.rabbitmq
+      CHROMA_HOST: answer_service.chromadb
+    command: /bin/sh -cx "./broker_entrypoint.sh"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+
+  worker:
+    <<: *default
+    container_name: answer_service.worker
+    hostname: answer_service.worker
+    build:
+      context: .
+      dockerfile: ./deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-db-environment,
+        *x-sqlalchemy-environment,
+        *x-redis-environment,
+        *x-rabbit-environment,
+        *x-chroma-app-environment,
+        *x-llm-environment,
+      ]
+      POSTGRES_HOST: answer_service.postgres
+      REDIS_HOST: answer_service.redis
+      RABBITMQ_HOST: answer_service.rabbitmq
+      CHROMA_HOST: answer_service.chromadb
+    command: /bin/sh -cx "./worker_entrypoint.sh"
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4096M
+        reservations:
+          cpus: '1.0'
+          memory: 1024M
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+
+  scheduler:
+    <<: *default
+    container_name: answer_service.scheduler
+    hostname: answer_service.scheduler
+    build:
+      context: .
+      dockerfile: ./deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-db-environment,
+        *x-sqlalchemy-environment,
+        *x-redis-environment,
+        *x-rabbit-environment,
+        *x-chroma-app-environment,
+        *x-llm-environment,
+      ]
+      POSTGRES_HOST: answer_service.postgres
+      REDIS_HOST: answer_service.redis
+      RABBITMQ_HOST: answer_service.rabbitmq
+      CHROMA_HOST: answer_service.chromadb
+    command: /bin/sh -cx "./scheduler_entrypoint.sh"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+volumes:
+  answer_service.postgres.data: {}
+  answer_service.redis.data: {}
+  answer_service.rabbitmq.data: {}
+  answer_service.chroma.data: {}
+
+networks:
+  overlay:
+    driver: bridge

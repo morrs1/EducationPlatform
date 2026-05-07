@@ -135,6 +135,32 @@ scheduler:
 [group("dev")]
 dev: infra-up app
 
+# Prod environment
+[doc("Build prod images")]
+[group("prod")]
+prod-build:
+  docker compose -f docker-compose.prod.yaml --env-file .env build
+
+[doc("Start full prod stack (infra + api + consumer + worker + scheduler)")]
+[group("prod")]
+prod-up:
+  docker compose -f docker-compose.prod.yaml --env-file .env up -d
+
+[doc("Stop prod stack")]
+[group("prod")]
+prod-down:
+  docker compose -f docker-compose.prod.yaml --env-file .env down
+
+[doc("Show prod stack logs")]
+[group("prod")]
+prod-logs:
+  docker compose -f docker-compose.prod.yaml --env-file .env logs -f
+
+[doc("Restart prod app services (api, consumer, worker, scheduler)")]
+[group("prod")]
+prod-restart:
+  docker compose -f docker-compose.prod.yaml --env-file .env restart api consumer worker scheduler
+
 # Migrations
 [doc("Generate a new Alembic migration (usage: just migration 'add users table')")]
 [group("migrations")]
