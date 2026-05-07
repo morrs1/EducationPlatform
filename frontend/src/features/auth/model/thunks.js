@@ -11,52 +11,72 @@ import {
   upsertAccount,
 } from "./persistence";
 import {
-  createViewerProfileFromRegistration,
-  saveViewerProfile,
-} from "../../../entities/viewer";
+  requestGatewayLogin,
+  requestGatewayRegister,
+} from "../../../shared/api/authGatewayApi";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function createUniqueId(prefix) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+function mapGatewayUserToLoginPayload(data) {
+  const user = data?.user ?? {};
+  const id = user.id != null ? String(user.id) : null;
+
+  return {
+    viewerId: id,
+    accountViewerId: id,
+    email: typeof user.email === "string" ? user.email : "",
+    accessToken: typeof data?.accessToken === "string" ? data.accessToken : "",
+    userRole: typeof user.role === "string" ? user.role : "",
+    userStatus: typeof user.userStatus === "string" ? user.userStatus : "",
+  };
 }
 
 export function submitLogin({ email, password }) {
-  return (dispatch) => {
+  return async (dispatch) => {
     dispatch(startLogin());
 
     const normalizedEmail = email?.trim().toLowerCase() ?? "";
     const normalizedPassword = password?.trim() ?? "";
-    const account = findAccountByEmail(normalizedEmail);
 
-    if (!account || account.password !== normalizedPassword) {
-      const result = {
-        ok: false,
-        error: "Неверная почта или пароль",
+    try {
+      const data = await requestGatewayLogin({
+        email: normalizedEmail,
+        password: normalizedPassword,
+      });
+      const payload = mapGatewayUserToLoginPayload(data);
+
+      if (!payload.viewerId || !payload.accessToken) {
+        dispatch(loginFailure("Не удалось выполнить вход. Попробуйте позже."));
+        return {
+          ok: false,
+          error: "Не удалось выполнить вход. Попробуйте позже.",
+        };
+      }
+
+      dispatch(loginSuccess(payload));
+
+      return {
+        ok: true,
+        viewerId: payload.viewerId,
       };
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Неверная почта или пароль";
 
-      dispatch(loginFailure(result.error));
-      return result;
+      dispatch(loginFailure(message));
+
+      return {
+        ok: false,
+        error: message,
+      };
     }
-
-    dispatch(
-      loginSuccess({
-        viewerId: account.viewerId,
-        accountViewerId: account.viewerId,
-        email: account.email,
-        password: account.password,
-      }),
-    );
-
-    return {
-      ok: true,
-      viewerId: account.viewerId,
-    };
   };
 }
 
 export function submitRegister({ fullName, email, password, status, avatarUrl }) {
-  return (dispatch) => {
+  return async (dispatch) => {
     const normalizedFullName = fullName?.trim() ?? "";
     const normalizedEmail = email?.trim().toLowerCase() ?? "";
     const normalizedPassword = password?.trim() ?? "";
@@ -91,45 +111,79 @@ export function submitRegister({ fullName, email, password, status, avatarUrl })
       };
     }
 
-    if (findAccountByEmail(normalizedEmail)) {
-      dispatch(loginFailure("Пользователь с такой почтой уже существует."));
+    if (normalizedFullName.split(/\s+/).filter(Boolean).length < 2) {
+      dispatch(
+        loginFailure(
+          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
+        ),
+      );
       return {
         ok: false,
-        error: "Пользователь с такой почтой уже существует.",
+        error:
+          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
       };
     }
 
-    const viewerId = createUniqueId("viewer");
-    const account = upsertAccount({
-      id: createUniqueId("account"),
-      viewerId,
-      email: normalizedEmail,
-      password: normalizedPassword,
-    });
+    const parts = normalizedFullName.split(/\s+/).filter(Boolean);
+    const surname = parts[0] ?? "";
+    const name = parts[1] ?? "";
+    const patronymic = parts.length > 2 ? parts.slice(2).join(" ") : "";
 
-    saveViewerProfile(
-      createViewerProfileFromRegistration({
-        viewerId,
+    dispatch(startLogin());
+
+    try {
+      await requestGatewayRegister({
+        surname,
+        name,
+        patronymic,
+        userStatus: normalizedStatus || "STUDENT",
         email: normalizedEmail,
-        fullName: normalizedFullName,
-        status: normalizedStatus,
-        avatarUrl,
-      }),
-    );
+        password: normalizedPassword,
+        profilePhotoLink:
+          typeof avatarUrl === "string" &&
+          (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://"))
+            ? avatarUrl
+            : "",
+      });
 
-    dispatch(
-      loginSuccess({
-        viewerId,
-        accountViewerId: viewerId,
-        email: account.email,
-        password: account.password,
-      }),
-    );
+      const data = await requestGatewayLogin({
+        email: normalizedEmail,
+        password: normalizedPassword,
+      });
+      const payload = mapGatewayUserToLoginPayload(data);
 
-    return {
-      ok: true,
-      viewerId,
-    };
+      if (!payload.viewerId || !payload.accessToken) {
+        dispatch(
+          loginFailure(
+            "Аккаунт создан, но не удалось выполнить вход. Войдите вручную.",
+          ),
+        );
+        return {
+          ok: false,
+          error:
+            "Аккаунт создан, но не удалось выполнить вход. Войдите вручную.",
+        };
+      }
+
+      dispatch(loginSuccess(payload));
+
+      return {
+        ok: true,
+        viewerId: payload.viewerId,
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Не удалось зарегистрироваться. Попробуйте позже.";
+
+      dispatch(loginFailure(message));
+
+      return {
+        ok: false,
+        error: message,
+      };
+    }
   };
 }
 

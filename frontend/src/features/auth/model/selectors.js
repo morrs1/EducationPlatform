@@ -7,3 +7,5 @@ export const selectAuthStatus = (state) => state.auth.authStatus;
 export const selectLoginError = (state) => state.auth.loginError;
 export const selectAccountViewerId = (state) => state.auth.accountViewerId;
 export const selectAccountEmail = (state) => state.auth.accountEmail;
+export const selectUserRole = (state) => state.auth.userRole;
+export const selectAccessToken = (state) => state.auth.accessToken;
