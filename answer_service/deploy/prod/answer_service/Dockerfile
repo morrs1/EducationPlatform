@@ -16,6 +16,8 @@ COPY ./pyproject.toml ./uv.lock ./alembic.ini ./README.md ./LICENSE \
      ./deploy/prod/answer_service/scheduler_entrypoint.sh \
      ./
 
+RUN chmod +x ./api_entrypoint.sh ./broker_entrypoint.sh ./worker_entrypoint.sh ./scheduler_entrypoint.sh
+
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-install-project
 
