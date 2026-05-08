@@ -4,7 +4,7 @@ import { getCourseCoverSrc } from "../../model/getCourseCoverSrc";
 
 function CurrentCourseCard({
   course,
-  onToggleFavouriteCourse,
+  isLeaving = false,
   onLeaveCourse,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -72,24 +72,26 @@ function CurrentCourseCard({
               type="button"
               className="current-course-menu-item"
               role="menuitem"
+              disabled={isLeaving}
               onClick={() => {
+                if (isLeaving) {
+                  return;
+                }
+
                 onLeaveCourse(course.id);
                 setIsMenuOpen(false);
               }}
             >
-              Покинуть курс
+              {isLeaving ? "Выходим..." : "Покинуть курс"}
             </button>
 
             <button
               type="button"
               className="current-course-menu-item"
               role="menuitem"
-              onClick={() => {
-                onToggleFavouriteCourse(course.id);
-                setIsMenuOpen(false);
-              }}
+              onClick={() => setIsMenuOpen(false)}
             >
-              {course.isFavourite ? "Убрать из избранного" : "Добавить в избранное"}
+              Закрыть
             </button>
           </div>
         ) : null}

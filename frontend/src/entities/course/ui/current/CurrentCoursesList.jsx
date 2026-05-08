@@ -3,7 +3,7 @@ import CurrentCourseCard from "./CurrentCourseCard";
 function CurrentCoursesList({
   courses,
   emptyMessage,
-  onToggleFavouriteCourse,
+  leavingCourseId,
   onLeaveCourse,
 }) {
   if (courses.length === 0) {
@@ -20,7 +20,7 @@ function CurrentCoursesList({
         <CurrentCourseCard
           key={course.id}
           course={course}
-          onToggleFavouriteCourse={onToggleFavouriteCourse}
+          isLeaving={leavingCourseId === course.id}
           onLeaveCourse={onLeaveCourse}
         />
       ))}

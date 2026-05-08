@@ -4,6 +4,7 @@ export {
   hydrateViewerFromUserService,
   hydrateViewerLearningFromLearningService,
   enrollViewerInCourseWithLearningService,
+  leaveViewerCourseWithLearningService,
   completeViewerCourseWithLearningService,
 } from "./model/thunks";
 export { default as ViewerProfileBootstrap } from "./ui/ViewerProfileBootstrap";
@@ -12,12 +13,13 @@ export {
   updateViewerProfile,
   changeViewerEmail,
   enrollInCourse,
-  toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
   syncLearningEnrollment,
+  syncCourseLessonProgress,
   upsertViewerCourseSnapshot,
   restoreViewer,
+  mergeCertificateCourseIds,
   resetDemoState,
 } from "./model/viewerSlice";
 
@@ -52,17 +54,14 @@ export {
   selectViewerHeadline,
   selectViewerAbout,
   selectEnrolledCourseIds,
-  selectFavouriteCourseIds,
   selectCompletedCourseIds,
   selectCertificateCourseIds,
   selectProgressByCourseId,
   selectIsEnrolledInCourse,
-  selectIsFavouriteCourse,
   selectIsCompletedCourse,
   selectCanViewCourseContent,
   selectViewerCourseProgress,
   selectCurrentCourses,
-  selectFavouriteCourses,
   selectCompletedCourses,
   selectViewerCourseById,
 } from "./model/selectors";

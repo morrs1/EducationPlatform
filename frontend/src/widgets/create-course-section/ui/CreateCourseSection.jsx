@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { selectCurrentViewerId } from "../../../features/auth";
@@ -10,7 +10,10 @@ import {
   upsertViewerCourseSnapshot,
 } from "../../../features/viewer";
 import {
+  enrichCoursePageDataWithAuthorName,
+  isUuid,
   mapReadCourseByIdResponseToCoursePageData,
+  requestAllCourses,
   requestCourseById,
   requestCourseCreation,
 } from "../../../entities/course";
@@ -37,6 +40,8 @@ function CreateCourseSection() {
   const viewer = useSelector(selectViewer);
   const viewerName = useSelector(selectViewerName);
   const [formState, setFormState] = useState(initialFormState);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [submitStatus, setSubmitStatus] = useState("idle");
   const [submitError, setSubmitError] = useState("");
 
@@ -45,11 +50,67 @@ function CreateCourseSection() {
     [currentViewerId, viewer.remoteId],
   );
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTags() {
+      try {
+        const courses = await requestAllCourses();
+        const tagMap = new Map();
+
+        courses.forEach((course) => {
+          const tags = Array.isArray(course?.tags) ? course.tags : [];
+
+          tags.forEach((tag) => {
+            const id = typeof tag?.id === "string" ? tag.id.trim() : "";
+            const name = typeof tag?.name === "string" ? tag.name.trim() : "";
+
+            if (!id || !isUuid(id) || !name) {
+              return;
+            }
+
+            tagMap.set(id, { id, name });
+          });
+        });
+
+        const nextTags = Array.from(tagMap.values()).sort((left, right) =>
+          left.name.localeCompare(right.name, "ru"),
+        );
+
+        if (!cancelled) {
+          setAvailableTags(nextTags);
+        }
+      } catch {
+        if (!cancelled) {
+          setAvailableTags([]);
+        }
+      }
+    }
+
+    loadTags();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function updateField(field, value) {
     setFormState((currentState) => ({
       ...currentState,
       [field]: value,
     }));
+  }
+
+  function toggleSelectedTag(tagId) {
+    if (!tagId || !isUuid(tagId)) {
+      return;
+    }
+
+    setSelectedTagIds((previous) =>
+      previous.includes(tagId)
+        ? previous.filter((id) => id !== tagId)
+        : [...previous, tagId],
+    );
   }
 
   async function handleSubmit(event) {
@@ -89,14 +150,18 @@ function CreateCourseSection() {
           0,
           Number.parseInt(formState.estimatedMinutes, 10) || 0,
         ),
-        tags: [],
+        tags: selectedTagIds
+          .filter((id) => isUuid(id))
+          .map((id) => ({ id })),
       });
 
       try {
         const response = await requestCourseById(courseId);
-        const pageData = mapReadCourseByIdResponseToCoursePageData(
-          response,
-          courseId,
+        const pageData = await enrichCoursePageDataWithAuthorName(
+          mapReadCourseByIdResponseToCoursePageData(
+            response,
+            courseId,
+          ),
         );
         const syllabusLessonIds = collectSyllabusLessonIds(
           pageData.syllabus.modules,
@@ -121,9 +186,12 @@ function CreateCourseSection() {
       navigate(`/course/${courseId}/syllabus`);
     } catch (error) {
       setSubmitStatus("error");
-      setSubmitError(
-        error?.message ?? "Не удалось создать курс.",
-      );
+      const status = error?.status;
+      const message =
+        status === 401 || status === 403
+          ? "Чтобы создать курс, у вас должен быть статус автора."
+          : (error?.message ?? "Не удалось создать курс.");
+      setSubmitError(message);
     }
   }
 
@@ -181,8 +249,7 @@ function CreateCourseSection() {
               className="create-course-section-input"
             >
               <option value="beginner">Начальный уровень</option>
-              <option value="intermediate">Средний уровень</option>
-              <option value="advanced">Продвинутый уровень</option>
+              <option value="intermediate">Продвинутый уровень</option>
             </select>
           </label>
 
@@ -215,6 +282,47 @@ function CreateCourseSection() {
               className="create-course-section-input"
             />
           </label>
+
+        </div>
+
+        <div className="create-course-section-field create-course-section-field-tags">
+          <span className="create-course-section-label">Теги</span>
+          
+          {availableTags.length === 0 ? (
+            <p className="create-course-section-note">
+              Пока нет сохранённых тегов: они подтягиваются из уже созданных
+              курсов. Первый курс можно оставить без тегов.
+            </p>
+          ) : (
+            <ul
+              className="create-course-section-tag-picks"
+              aria-label="Выбор тегов курса"
+            >
+              {availableTags.map((tag) => {
+                const checked = selectedTagIds.includes(tag.id);
+
+                return (
+                  <li key={tag.id}>
+                    <label
+                      className={`create-course-section-tag-pick${
+                        checked ? " is-checked" : ""
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="create-course-section-tag-pick-input"
+                        checked={checked}
+                        onChange={() => toggleSelectedTag(tag.id)}
+                      />
+                      <span className="create-course-section-tag-pick-label">
+                        {tag.name}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
 
         <div className="create-course-section-meta">

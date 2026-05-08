@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { getCourseCoverSrc } from "../../model/getCourseCoverSrc";
 
-function CompletedCourseCard({ course, onToggleFavouriteCourse }) {
+function CompletedCourseCard({ course }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -67,12 +67,9 @@ function CompletedCourseCard({ course, onToggleFavouriteCourse }) {
               type="button"
               className="completed-course-menu-item"
               role="menuitem"
-              onClick={() => {
-                onToggleFavouriteCourse(course.id);
-                setIsMenuOpen(false);
-              }}
+              onClick={() => setIsMenuOpen(false)}
             >
-              {course.isFavourite ? "Убрать из избранного" : "Добавить в избранное"}
+              Закрыть
             </button>
           </div>
         ) : null}

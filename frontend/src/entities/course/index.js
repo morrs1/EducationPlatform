@@ -3,8 +3,14 @@ export { filterCoursesByQuery } from "./model/filterCoursesByQuery";
 export { getCourseCoverSrc } from "./model/getCourseCoverSrc";
 export { getCourseProgressByCourseId } from "./model/progress";
 export { mockCatalogData } from "./model/mockCatalogData";
-export { mockCourses } from "./model/mockCourses";
-export { sanitizeCourseDisplayLabel } from "./model/courseDisplayLabels";
+export {
+  getMockCourses,
+  INCLUDE_MOCK_COURSES_IN_UI,
+} from "./model/mockCourses";
+export {
+  formatCourseTagLabel,
+  sanitizeCourseDisplayLabel,
+} from "./model/courseDisplayLabels";
 export {
   enrichCourse,
   getAllCourses,
@@ -16,6 +22,7 @@ export {
   mapCourseToPreview,
 } from "./model/selectors";
 export {
+  enrichCoursePageDataWithAuthorName,
   extractLessonCoverAssetFromLessonResponse,
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
@@ -27,6 +34,7 @@ export {
   requestCourseById,
   requestCourseCreation,
   requestDraftCoursesByAuthor,
+  requestSearchCourses,
   requestLessonById,
   requestPublishCourse,
   requestPublishedCoursesByAuthor,
@@ -41,7 +49,5 @@ export { default as CourseDisplayCover } from "./ui/CourseDisplayCover";
 export { default as CoursePreviewCard } from "./ui/preview/CoursePreviewCard";
 export { default as CurrentCourseCard } from "./ui/current/CurrentCourseCard";
 export { default as CurrentCoursesList } from "./ui/current/CurrentCoursesList";
-export { default as FavouriteCourseCard } from "./ui/favourite/FavouriteCourseCard";
-export { default as FavouriteCoursesList } from "./ui/favourite/FavouriteCoursesList";
 export { default as LessonStructureCover } from "./ui/LessonStructureCover";
 export { useLessonCoverMap } from "./model/useLessonCoverMap";

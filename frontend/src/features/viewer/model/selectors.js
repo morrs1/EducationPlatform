@@ -19,8 +19,6 @@ export const selectViewerAvatarUrl = (state) => state.viewer.avatarUrl;
 export const selectViewerHeadline = (state) => state.viewer.headline;
 export const selectViewerAbout = (state) => state.viewer.about;
 export const selectEnrolledCourseIds = (state) => state.viewer.enrolledCourseIds;
-export const selectFavouriteCourseIds = (state) =>
-  state.viewer.favouriteCourseIds;
 export const selectCompletedCourseIds = (state) =>
   state.viewer.completedCourseIds;
 export const selectCertificateCourseIds = (state) =>
@@ -65,8 +63,8 @@ function attachViewerState(
     ? getCourseProgressByCourseId({
         courseId: course.id,
         viewerProgress: viewer.progressByCourseId[storageKey] ?? null,
-        viewedLessonIds,
-        completedLessonIds,
+        viewedLessonIds: course.isBackendCourse ? [] : viewedLessonIds,
+        completedLessonIds: course.isBackendCourse ? [] : completedLessonIds,
         courseSnapshot: course,
         isCompletedCourse: isCompleted,
       })
@@ -75,8 +73,6 @@ function attachViewerState(
   return {
     ...enrichedCourse,
     isEnrolled: sessionIsActive && viewer.enrolledCourseIds.includes(course.id),
-    isFavourite:
-      sessionIsActive && viewer.favouriteCourseIds.includes(course.id),
     isCompleted,
     hasCertificate:
       sessionIsActive && viewer.certificateCourseIds.includes(course.id),
@@ -87,10 +83,6 @@ function attachViewerState(
 export const selectIsEnrolledInCourse = (state, courseId) =>
   selectViewerSessionActive(state) &&
   state.viewer.enrolledCourseIds.includes(normalizeViewerCourseId(courseId));
-
-export const selectIsFavouriteCourse = (state, courseId) =>
-  selectViewerSessionActive(state) &&
-  state.viewer.favouriteCourseIds.includes(normalizeViewerCourseId(courseId));
 
 export const selectIsCompletedCourse = (state, courseId) =>
   selectViewerSessionActive(state) &&
@@ -119,14 +111,17 @@ export const selectViewerCourseProgress = createSelector(
       return null;
     }
 
+    const courseSnapshot = getViewerCourseRecord(viewer, normalizedCourseId);
+    const isBackendCourse = Boolean(courseSnapshot?.isBackendCourse);
+
     return getCourseProgressByCourseId({
       courseId: normalizedCourseId,
       viewerProgress:
         viewer.progressByCourseId[getViewerCourseStorageKey(normalizedCourseId)] ??
         null,
-      viewedLessonIds,
-      completedLessonIds,
-      courseSnapshot: getViewerCourseRecord(viewer, normalizedCourseId),
+      viewedLessonIds: isBackendCourse ? [] : viewedLessonIds,
+      completedLessonIds: isBackendCourse ? [] : completedLessonIds,
+      courseSnapshot,
       isCompletedCourse: viewer.completedCourseIds.includes(normalizedCourseId),
     });
   },
@@ -143,30 +138,6 @@ export const selectCurrentCourses = createSelector(
     !sessionIsActive
       ? []
       : viewer.enrolledCourseIds
-          .map((courseId) => getViewerCourseRecord(viewer, courseId))
-          .filter(Boolean)
-          .map((course) =>
-            attachViewerState(
-              course,
-              viewer,
-              sessionIsActive,
-              viewedLessonIds,
-              completedLessonIds,
-            ),
-          ),
-);
-
-export const selectFavouriteCourses = createSelector(
-  [
-    selectViewerSessionActive,
-    selectViewerState,
-    selectViewedLessonIds,
-    selectCompletedLessonIds,
-  ],
-  (sessionIsActive, viewer, viewedLessonIds, completedLessonIds) =>
-    !sessionIsActive
-      ? []
-      : viewer.favouriteCourseIds
           .map((courseId) => getViewerCourseRecord(viewer, courseId))
           .filter(Boolean)
           .map((course) =>

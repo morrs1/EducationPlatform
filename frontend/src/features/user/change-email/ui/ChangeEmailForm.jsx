@@ -38,8 +38,7 @@ function ChangeEmailForm({ currentEmail, onSubmit }) {
   return (
     <form className="settings-form" onSubmit={handleSubmit}>
       <div className="settings-note">
-        После сохранения новый адрес можно использовать для входа и получения
-        уведомлений.
+        После сохранения новый адрес можно использовать для входа.
       </div>
 
       <div className="settings-current-value">

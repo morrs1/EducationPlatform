@@ -41,4 +41,6 @@ export {
   selectLoginError,
   selectAccountViewerId,
   selectAccountEmail,
+  selectUserRole,
+  selectAccessToken,
 } from "./model/selectors";

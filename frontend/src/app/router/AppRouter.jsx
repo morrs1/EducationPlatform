@@ -13,18 +13,17 @@ import { SearchPage } from "../../pages/search";
 import { CoursePage } from "../../pages/course";
 import { AccountPage } from "../../pages/account";
 import { EditProfilePage } from "../../pages/edit-profile";
-import { NotificationsPage } from "../../pages/notifications";
 import { LessonPage } from "../../pages/lesson";
 import { TeachPage } from "../../pages/teach";
 import { CourseBuilderPage } from "../../pages/course-builder";
 import { LessonEditorPage } from "../../pages/lesson-editor";
+import { AdminPage } from "../../pages/admin";
 
 import { ProfileSection } from "../../widgets/profile-section";
 import { CurrentCoursesSection } from "../../widgets/current-courses-section";
 import { CompletedCoursesSection } from "../../widgets/completed-courses-section";
-import { FavouriteCoursesSection } from "../../widgets/favourite-courses-section";
 import { CertificatesSection } from "../../widgets/certificates-section";
-import { selectIsLogged } from "../../features/auth";
+import { selectIsLogged, selectUserRole } from "../../features/auth";
 import { UpdateProfileSection } from "../../widgets/update-profile-section";
 import { ChangePasswordSection } from "../../widgets/change-password-section";
 import { ChangeEmailSection } from "../../widgets/change-email-section";
@@ -46,6 +45,22 @@ function ProtectedRoute() {
   return <Outlet />;
 }
 
+function AdminRoute() {
+  const isLogged = useSelector(selectIsLogged);
+  const role = useSelector(selectUserRole);
+  const location = useLocation();
+
+  if (!isLogged) {
+    return <Navigate to="/" replace state={{ from: location }} />;
+  }
+
+  if (role !== "ADMIN") {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -54,6 +69,10 @@ const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: "search", element: <SearchPage /> },
       { path: "courses/:courseId", element: <CoursePage /> },
+      {
+        element: <AdminRoute />,
+        children: [{ path: "admin", element: <AdminPage /> }],
+      },
       {
         element: <ProtectedRoute />,
         children: [
@@ -67,7 +86,6 @@ const router = createBrowserRouter([
                 path: "completedCourses",
                 element: <CompletedCoursesSection />,
               },
-              { path: "favourites", element: <FavouriteCoursesSection /> },
               { path: "certificates", element: <CertificatesSection /> },
             ],
           },
@@ -79,10 +97,6 @@ const router = createBrowserRouter([
               { path: "password", element: <ChangePasswordSection /> },
               { path: "email", element: <ChangeEmailSection /> },
             ],
-          },
-          {
-            path: "notifications",
-            element: <NotificationsPage />,
           },
           {
             path: "courses/:courseId/lessons/:lessonId",

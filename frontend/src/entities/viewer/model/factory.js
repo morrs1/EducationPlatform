@@ -1,11 +1,13 @@
 import { mockViewer } from "./mockViewer";
 import {
   buildAvatarUrl,
+  buildAvatarInitialsSeed,
   buildViewerDisplayName,
 } from "../../../shared/lib/viewerProfile";
 
 export {
   buildAvatarUrl,
+  buildAvatarInitialsSeed,
   buildViewerDisplayName,
 } from "../../../shared/lib/viewerProfile";
 
@@ -277,6 +279,12 @@ export function normalizeViewerProfile(value) {
     email ||
     normalizeText(value?.id) ||
     "Новый студент";
+  const avatarSeed =
+    buildAvatarInitialsSeed({
+      firstName,
+      lastName,
+      name: structuredName || explicitName || fallbackName,
+    }) || fallbackName;
 
   return {
     id: normalizeText(value?.id) || null,
@@ -289,9 +297,8 @@ export function normalizeViewerProfile(value) {
     status,
     headline: normalizeText(value?.headline) || status,
     about: normalizeText(value?.about),
-    avatarUrl: normalizeText(value?.avatarUrl) || buildAvatarUrl(fallbackName),
+    avatarUrl: normalizeText(value?.avatarUrl) || buildAvatarUrl(avatarSeed),
     enrolledCourseIds: normalizeCourseIdList(value?.enrolledCourseIds),
-    favouriteCourseIds: normalizeCourseIdList(value?.favouriteCourseIds),
     completedCourseIds: normalizeCourseIdList(value?.completedCourseIds),
     certificateCourseIds: normalizeCourseIdList(value?.certificateCourseIds),
     progressByCourseId: normalizeProgressByCourseId(value?.progressByCourseId),
@@ -343,7 +350,6 @@ export function createViewerProfileFromRegistration({
     about: "",
     avatarUrl: normalizeText(avatarUrl),
     enrolledCourseIds: [],
-    favouriteCourseIds: [],
     completedCourseIds: [],
     certificateCourseIds: [],
     progressByCourseId: {},

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import {
   selectCurrentViewerId,
   selectIsLogged,
+  selectUserRole,
   openLoginModal,
 } from "../../../features/auth";
 import {
@@ -18,15 +19,12 @@ import {
   resolveCourseServiceAuthorId,
   upsertViewerCourseSnapshot,
   selectIsCompletedCourse,
-  selectIsFavouriteCourse,
   selectIsEnrolledInCourse,
   selectCanViewCourseContent,
   selectViewerCourseById,
   selectViewerCourseProgress,
   selectViewer,
-  toggleFavouriteCourse,
 } from "../../../features/viewer";
-import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
 import { getLessonProgressMap } from "../../../entities/lesson";
 import { CourseTabs } from "../../../widgets/course-tabs";
 import { CourseSidebar } from "../../../widgets/course-sidebar";
@@ -37,9 +35,11 @@ import { getCoursePageData } from "../lib/getCoursePageData";
 import { getCourseDescriptionMarkdown } from "../lib/getCourseDescriptionMarkdown";
 import { parseCourseDescriptionMarkdown } from "../lib/parseCourseDescriptionMarkdown";
 import {
+  enrichCoursePageDataWithAuthorName,
   isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
+  formatCourseTagLabel,
   sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
 
@@ -58,6 +58,7 @@ function CoursePage() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const isLogged = useSelector(selectIsLogged);
+  const userRole = useSelector(selectUserRole);
   const currentViewerId = useSelector(selectCurrentViewerId);
   const viewer = useSelector(selectViewer);
   const viewerCourse = useSelector((state) =>
@@ -69,11 +70,6 @@ function CoursePage() {
   const isEnrolled = useSelector((state) =>
     resolvedCourseId != null
       ? selectIsEnrolledInCourse(state, resolvedCourseId)
-      : false,
-  );
-  const isFavourite = useSelector((state) =>
-    resolvedCourseId != null
-      ? selectIsFavouriteCourse(state, resolvedCourseId)
       : false,
   );
   const isCompleted = useSelector((state) =>
@@ -107,32 +103,6 @@ function CoursePage() {
   const [backendRequestSeed, setBackendRequestSeed] = useState(0);
   const [learningActionError, setLearningActionError] = useState("");
 
-  const enrichBackendCourseAuthor = useCallback(async (nextPageData) => {
-    const authorId = nextPageData?.course?.authorId;
-
-    if (!authorId) {
-      return nextPageData;
-    }
-
-    try {
-      const authorProfile = await requestViewerDisplayProfileById(authorId);
-
-      if (!authorProfile?.name) {
-        return nextPageData;
-      }
-
-      return {
-        ...nextPageData,
-        course: {
-          ...nextPageData.course,
-          authorName: authorProfile.name,
-        },
-      };
-    } catch {
-      return nextPageData;
-    }
-  }, []);
-
   useEffect(() => {
     if (!isBackendCourseRoute || !courseIdParam) {
       return;
@@ -146,7 +116,7 @@ function CoursePage() {
 
       try {
         const response = await requestCourseById(courseIdParam);
-        const nextPageData = await enrichBackendCourseAuthor(
+        const nextPageData = await enrichCoursePageDataWithAuthorName(
           mapReadCourseByIdResponseToCoursePageData(
             response,
             courseIdParam,
@@ -177,7 +147,6 @@ function CoursePage() {
     courseIdParam,
     isBackendCourseRoute,
     backendRequestSeed,
-    enrichBackendCourseAuthor,
   ]);
 
   const pageData = useMemo(() => {
@@ -210,7 +179,6 @@ function CoursePage() {
       return {
         ...pageData.course,
         isEnrolled,
-        isFavourite,
         isCompleted,
         progress: viewerCourseProgress,
       };
@@ -222,16 +190,32 @@ function CoursePage() {
     pageData,
     isCompleted,
     isEnrolled,
-    isFavourite,
     viewerCourse,
     viewerCourseProgress,
   ]);
+
+  const courseTagLabels = useMemo(() => {
+    if (!Array.isArray(course?.tags)) {
+      return [];
+    }
+
+    return course.tags
+      .map((label) => formatCourseTagLabel(label))
+      .filter(Boolean);
+  }, [course?.tags]);
+
+  const hasCourseTagPills = courseTagLabels.length > 0;
+
   const activeTab = resolveActiveTab(searchParams);
   const isBackendCourse = Boolean(course?.isBackendCourse);
+  const isAdmin = userRole === "ADMIN";
   const isOwnBackendCourse =
     isBackendCourse && course?.authorId === courseServiceAuthorId;
   const canManageDraftCourse = isOwnBackendCourse && !course?.isPublished;
-  const canUseCourseContent = canManageDraftCourse || canViewContent;
+  const canUseCourseContent =
+    canManageDraftCourse ||
+    canViewContent ||
+    (isAdmin && isBackendCourse && course?.isDraft);
   const isContentAccessible = isLogged;
   const descriptionStatus = !course
     ? "error"
@@ -417,7 +401,7 @@ function CoursePage() {
     );
   }
 
-  if (isBackendCourse && course.isDraft && !isOwnBackendCourse) {
+  if (isBackendCourse && course.isDraft && !isOwnBackendCourse && !isAdmin) {
     return (
       <div className="course-page">
         <section className="course-not-found">
@@ -470,20 +454,6 @@ function CoursePage() {
     changeTab("content");
   }
 
-  function handleToggleFavourite() {
-    if (!isLogged) {
-      dispatch(openLoginModal());
-      return;
-    }
-
-    dispatch(
-      toggleFavouriteCourse({
-        courseId: course.id,
-        courseSnapshot: backendCourseSnapshot,
-      }),
-    );
-  }
-
   function handleDescriptionRetry() {
     setDescriptionRequestSeed((value) => value + 1);
   }
@@ -494,6 +464,12 @@ function CoursePage() {
         isReadOnlyCourse: true,
         isEnrolled: true,
       }
+    : isAdmin && isBackendCourse && course.isDraft
+      ? {
+          ...course,
+          isReadOnlyCourse: true,
+          isEnrolled: true,
+        }
     : course;
   const tabs = [
     { id: "description", label: "Описание", isLocked: false },
@@ -510,12 +486,32 @@ function CoursePage() {
       <div className="course-page-main">
         <section className="course-hero">
           <div className="course-hero-copy">
+            {hasCourseTagPills ? (
+              <ul className="course-hero-tags" aria-label="Теги курса">
+                {courseTagLabels.map((label, index) => (
+                  <li key={`${label}-${index}`}>
+                    <span className="course-hero-tag-pill">
+                      {formatCourseTagLabel(label) || "—"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <p className="course-hero-eyebrow">
-              {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
-              {sanitizeCourseDisplayLabel(
-                course.subcategoryName,
-                "Описание структуры",
-              )}
+              {hasCourseTagPills
+                ? sanitizeCourseDisplayLabel(
+                    course.subcategoryName,
+                    "Уровень и метаданные",
+                  )
+                : (
+                    <>
+                      {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
+                      {sanitizeCourseDisplayLabel(
+                        course.subcategoryName,
+                        "Описание структуры",
+                      )}
+                    </>
+                  )}
             </p>
             <h1 className="course-hero-title">{course.title}</h1>
             <p className="course-hero-description">{course.shortDescription}</p>
@@ -576,7 +572,6 @@ function CoursePage() {
           course={sidebarCourse}
           isLogged={isContentAccessible}
           onPrimaryAction={handlePrimaryAction}
-          onToggleFavourite={handleToggleFavourite}
         />
       </aside>
     </div>

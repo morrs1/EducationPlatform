@@ -14,7 +14,6 @@ export const mockViewer = {
     "Собирает персональный образовательный трек, тестирует интерфейсы платформы и параллельно закрывает практические задачи по React, JavaScript и продуктовому мышлению.",
   avatarUrl: buildAvatarUrl("Саркисян Баграт"),
   enrolledCourseIds: [3003, 5003, 21002],
-  favouriteCourseIds: [3003, 2003, 7004, 21004],
   completedCourseIds: [2003, 15003],
   certificateCourseIds: [2003],
   progressByCourseId: {

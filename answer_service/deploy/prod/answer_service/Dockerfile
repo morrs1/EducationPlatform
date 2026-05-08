@@ -2,9 +2,21 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
 WORKDIR /app
 
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ARG APP_VERSION=0.0.0
 
-COPY ./pyproject.toml ./uv.lock ./alembic.ini ./deploy/prod/answer_service/api_entrypoint.sh ./deploy/prod/answer_service/worker_entrypoint.sh ./deploy/prod/answer_service/scheduler_entrypoint.sh ./
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    SETUPTOOLS_SCM_PRETEND_VERSION=${APP_VERSION} \
+    HATCH_BUILD_HOOKS_ENABLE=false
+
+COPY ./pyproject.toml ./uv.lock ./alembic.ini ./README.md ./LICENSE \
+     ./deploy/prod/answer_service/api_entrypoint.sh \
+     ./deploy/prod/answer_service/broker_entrypoint.sh \
+     ./deploy/prod/answer_service/worker_entrypoint.sh \
+     ./deploy/prod/answer_service/scheduler_entrypoint.sh \
+     ./
+
+RUN chmod +x ./api_entrypoint.sh ./broker_entrypoint.sh ./worker_entrypoint.sh ./scheduler_entrypoint.sh
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-install-project

@@ -15,13 +15,15 @@ import {
   selectViewerName,
 } from "../../../features/viewer";
 import { useEffect, useRef, useState } from "react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { ThemeToggleButton } from "../../../features/theme";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const menuRef = useRef(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isCatalogOpen = useSelector(selectIsCatalogOpen);
   const isLogged = useSelector(selectIsLogged);
   const viewerAvatarUrl = useSelector(selectViewerAvatarUrl);
@@ -81,14 +83,30 @@ function Header() {
         </NavLink>
       </div>
 
-      <label className="header-search-wrap">
+      <form
+        className="header-search-wrap"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const query = searchValue.trim();
+          const params = new URLSearchParams();
+
+          if (query) {
+            params.set("query", query);
+          }
+
+          const search = params.toString();
+          navigate(search ? `/search?${search}` : "/search");
+        }}
+      >
         <span className="header-search-kicker">Быстрый поиск</span>
         <input
-          type="text"
-          placeholder="Название курса, автор или направление"
+          type="search"
+          placeholder="Название курса"
           className="header-search"
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.target.value)}
         />
-      </label>
+      </form>
 
       <div className="header-actions">
         <ThemeToggleButton />
@@ -155,18 +173,6 @@ function Header() {
                 }}
               >
                 Настройки
-              </NavLink>
-
-              <NavLink
-                to="/notifications"
-                className="header-profile-menu-item"
-                role="menuitem"
-                onClick={() => {
-                  dispatch(closeCatalog());
-                  setIsMenuOpen(false);
-                }}
-              >
-                Уведомления
               </NavLink>
 
               <button

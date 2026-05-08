@@ -5,6 +5,7 @@ import {
   setSubmissionResult,
   syncCompletedLessonsForCourse,
 } from "./lessonSessionSlice";
+import { syncCourseLessonProgress } from "../../viewer/model/viewerSlice";
 import { selectLessonDraft } from "./selectors";
 import { executeCodeStep } from "./codeExecutionGateway";
 import {
@@ -28,16 +29,38 @@ function resolveLearningViewerId(state) {
 function shouldUseLearningServiceForLesson(state, lesson, explicitCourseId) {
   const courseId = explicitCourseId ?? lesson?.courseId;
   const userId = resolveLearningViewerId(state);
+  const hasActiveEnrollment = state.viewer?.enrolledCourseIds?.includes(courseId);
+  const isCourseCompleted = state.viewer?.completedCourseIds?.includes(courseId);
 
   return {
     userId,
     courseId,
     lessonId: lesson?.id,
-    canUseLearningService:
+    hasValidLearningIds:
       isLearningUuid(userId) &&
       isLearningUuid(courseId) &&
       isLearningUuid(lesson?.id),
+    hasActiveEnrollment,
+    isCourseCompleted,
+    canUseLearningService:
+      isLearningUuid(userId) &&
+      isLearningUuid(courseId) &&
+      isLearningUuid(lesson?.id) &&
+      hasActiveEnrollment &&
+      !isCourseCompleted,
   };
+}
+
+const pendingLessonCompletionKeys = new Set();
+
+function buildLessonCompletionKey({ userId, courseId, lessonId }) {
+  return `${userId}:${courseId}:${lessonId}`;
+}
+
+function isLessonAlreadyCompletedError(error) {
+  const message = error?.responseBody?.msg ?? error?.message ?? "";
+
+  return error?.status === 400 && message.includes("Lesson already completed");
 }
 
 function areOptionIdsEqual(left, right) {
@@ -171,17 +194,30 @@ function createUnsupportedLessonResult(lesson, type) {
   };
 }
 
-export function openLesson({ lesson, courseId = null } = {}) {
-  return async (dispatch) => {
+export function openLesson({
+  lesson,
+  courseId = null,
+  courseLessonIds = [],
+} = {}) {
+  return async (dispatch, getState) => {
     if (!lesson?.id) {
       return;
     }
 
+    const wasCompleted = getState().lessonSession.completedLessonIds.includes(
+      lesson.id,
+    );
+
     dispatch(markLessonViewed(lesson.id));
 
-    if (lesson.type === "theory") {
-      dispatch(markLessonCompleted(lesson.id));
-      await dispatch(completeLessonWithLearningService({ lesson, courseId }));
+    if (lesson.type === "theory" && !wasCompleted) {
+      await dispatch(
+        completeLessonWithLearningService({
+          lesson,
+          courseId,
+          courseLessonIds,
+        }),
+      );
     }
   };
 }
@@ -216,6 +252,12 @@ export function hydrateCompletedLessonsFromLearningService({
           completedLessonIds,
         }),
       );
+      dispatch(
+        syncCourseLessonProgress({
+          courseId,
+          completedLessons: completedLessonIds.length,
+        }),
+      );
 
       return {
         ok: true,
@@ -237,6 +279,7 @@ export function hydrateCompletedLessonsFromLearningService({
 export function completeLessonWithLearningService({
   lesson,
   courseId = null,
+  courseLessonIds = [],
 } = {}) {
   return async (dispatch, getState) => {
     if (!lesson?.id) {
@@ -254,31 +297,100 @@ export function completeLessonWithLearningService({
     );
 
     if (!learningContext.canUseLearningService) {
+      if (
+        !learningContext.hasValidLearningIds ||
+        learningContext.isCourseCompleted
+      ) {
+        dispatch(markLessonCompleted(lesson.id));
+      }
+
       return {
         ok: false,
         skipped: true,
       };
     }
 
+    if (state.lessonSession.completedLessonIds.includes(lesson.id)) {
+      return {
+        ok: true,
+        skipped: true,
+      };
+    }
+
+    const completionKey = buildLessonCompletionKey(learningContext);
+
+    if (pendingLessonCompletionKeys.has(completionKey)) {
+      return {
+        ok: true,
+        skipped: true,
+      };
+    }
+
     try {
+      pendingLessonCompletionKeys.add(completionKey);
+
       await requestCompleteLesson({
         userId: learningContext.userId,
         courseId: learningContext.courseId,
         lessonId: learningContext.lessonId,
       });
 
-      dispatch(markLessonCompleted(lesson.id));
+      const progressResponse = await requestCompletedLessonsForCourse({
+        userId: learningContext.userId,
+        courseId: learningContext.courseId,
+      });
+      const completedLessonIds = progressResponse.completedLessons.map(
+        (completedLesson) => completedLesson.lessonId,
+      );
+
+      dispatch(
+        syncCompletedLessonsForCourse({
+          courseLessonIds,
+          completedLessonIds,
+        }),
+      );
 
       return {
         ok: true,
+        completedLessonIds,
       };
     } catch (error) {
+      if (isLessonAlreadyCompletedError(error)) {
+        const progressResponse = await requestCompletedLessonsForCourse({
+          userId: learningContext.userId,
+          courseId: learningContext.courseId,
+        });
+        const completedLessonIds = progressResponse.completedLessons.map(
+          (completedLesson) => completedLesson.lessonId,
+        );
+
+        dispatch(
+          syncCompletedLessonsForCourse({
+            courseLessonIds,
+            completedLessonIds,
+          }),
+        );
+        dispatch(
+          syncCourseLessonProgress({
+            courseId: learningContext.courseId,
+            completedLessons: completedLessonIds.length,
+          }),
+        );
+
+        return {
+          ok: true,
+          completedLessonIds,
+        };
+      }
+
       return {
         ok: false,
         error:
           error?.message ??
           "Не удалось отметить урок как завершенный.",
       };
+    } finally {
+      pendingLessonCompletionKeys.delete(completionKey);
     }
   };
 }
@@ -318,7 +430,11 @@ export function runCodeLesson({ lesson }) {
   };
 }
 
-export function submitLessonAnswer({ lesson, courseId = null } = {}) {
+export function submitLessonAnswer({
+  lesson,
+  courseId = null,
+  courseLessonIds = [],
+} = {}) {
   return async (dispatch, getState) => {
     if (!lesson) {
       return {
@@ -330,14 +446,21 @@ export function submitLessonAnswer({ lesson, courseId = null } = {}) {
     }
 
     if (lesson.type === "theory") {
-      dispatch(markLessonCompleted(lesson.id));
-      await dispatch(completeLessonWithLearningService({ lesson, courseId }));
+      const completionResult = await dispatch(
+        completeLessonWithLearningService({
+          lesson,
+          courseId,
+          courseLessonIds,
+        }),
+      );
 
       return {
-        status: "correct",
+        status: completionResult?.ok ? "correct" : "incorrect",
         score: 0,
         maxScore: 0,
-        feedback: "Теоретический урок засчитан как просмотренный.",
+        feedback: completionResult?.ok
+          ? "Теоретический урок засчитан как просмотренный."
+          : completionResult?.error ?? "Не удалось сохранить прогресс урока.",
       };
     }
 
@@ -357,6 +480,26 @@ export function submitLessonAnswer({ lesson, courseId = null } = {}) {
       result = createUnsupportedLessonResult(lesson, lesson.type);
     }
 
+    if (result.status === "correct") {
+      const completionResult = await dispatch(
+        completeLessonWithLearningService({
+          lesson,
+          courseId,
+          courseLessonIds,
+        }),
+      );
+
+      if (!completionResult?.ok) {
+        result = {
+          ...result,
+          status: "incorrect",
+          feedback:
+            completionResult?.error ??
+            "Ответ верный, но прогресс урока не удалось сохранить.",
+        };
+      }
+    }
+
     dispatch(
       setSubmissionResult({
         lessonId: lesson.id,
@@ -366,11 +509,6 @@ export function submitLessonAnswer({ lesson, courseId = null } = {}) {
         },
       }),
     );
-
-    if (result.status === "correct") {
-      dispatch(markLessonCompleted(lesson.id));
-      await dispatch(completeLessonWithLearningService({ lesson, courseId }));
-    }
 
     return result;
   };

@@ -7,9 +7,8 @@ import {
 import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
 import {
   hydrateViewerLearningFromLearningService,
-  leaveCourse,
+  leaveViewerCourseWithLearningService,
   selectCurrentCourses,
-  toggleFavouriteCourse,
 } from "../../../features/viewer";
 
 function CurrentCoursesSection() {
@@ -19,6 +18,8 @@ function CurrentCoursesSection() {
   const courses = useSelector(selectCurrentCourses);
   const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [leavingCourseId, setLeavingCourseId] = useState(null);
+  const [leaveError, setLeaveError] = useState("");
   const filteredCourses = useMemo(
     () => filterCoursesByQuery(courses, searchQuery),
     [courses, searchQuery],
@@ -40,6 +41,23 @@ function CurrentCoursesSection() {
   function handleSearchSubmit(e) {
     e.preventDefault();
     setSearchQuery(inputValue.trim());
+  }
+
+  async function handleLeaveCourse(courseId) {
+    setLeavingCourseId(courseId);
+    setLeaveError("");
+
+    const result = await dispatch(
+      leaveViewerCourseWithLearningService({
+        courseId,
+      }),
+    );
+
+    if (!result?.ok) {
+      setLeaveError(result?.error ?? "Не удалось покинуть курс.");
+    }
+
+    setLeavingCourseId(null);
   }
 
   return (
@@ -71,13 +89,15 @@ function CurrentCoursesSection() {
         </form>
       </div>
 
+      {leaveError ? (
+        <p className="settings-feedback-error">{leaveError}</p>
+      ) : null}
+
       <CurrentCoursesList
         courses={filteredCourses}
         emptyMessage={isSearchApplied ? emptyMessage : undefined}
-        onToggleFavouriteCourse={(courseId) =>
-          dispatch(toggleFavouriteCourse(courseId))
-        }
-        onLeaveCourse={(courseId) => dispatch(leaveCourse(courseId))}
+        leavingCourseId={leavingCourseId}
+        onLeaveCourse={handleLeaveCourse}
       />
     </section>
   );
