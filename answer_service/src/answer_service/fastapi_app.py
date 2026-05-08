@@ -94,7 +94,10 @@ def create_fastapi_app() -> FastAPI:  # pragma: no cover
     app.state.rabbit_broker = rabbit_broker
 
     # Expose FastStream AsyncAPI docs at /asyncapi
-    app.mount("/asyncapi", make_asyncapi_asgi(AsyncAPI(rabbit_broker)))
+    app.mount(
+        "/asyncapi",
+        make_asyncapi_asgi(AsyncAPI(rabbit_broker, schema_version="2.6.0")),
+    )
 
     context = {
         ASGIConfig: configs.asgi,

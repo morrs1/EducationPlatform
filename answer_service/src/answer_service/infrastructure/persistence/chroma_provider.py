@@ -13,6 +13,8 @@ def create_embedding_function(config: OpenAIConfig) -> Embeddings:
         "api_key": config.api_key.get_secret_value(),
         "model": config.embedding_model,
         "chunk_size": config.embedding_chunk_size,
+        "check_embedding_ctx_length": False,
+        "model_kwargs": {"encoding_format": "float"},
     }
     if config.base_url is not None:
         kwargs["base_url"] = config.base_url

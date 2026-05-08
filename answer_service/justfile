@@ -161,6 +161,11 @@ prod-logs:
 prod-restart:
   docker compose -f docker-compose.prod.yaml --env-file .env restart api consumer worker scheduler
 
+[doc("Rebuild and recreate prod app services (picks up code changes)")]
+[group("prod")]
+prod-redeploy:
+  docker compose -f docker-compose.prod.yaml --env-file .env up -d --build api consumer worker scheduler
+
 # Migrations
 [doc("Generate a new Alembic migration (usage: just migration 'add users table')")]
 [group("migrations")]

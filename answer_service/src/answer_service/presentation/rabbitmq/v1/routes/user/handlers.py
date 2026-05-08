@@ -28,7 +28,7 @@ user_rabbit_router: Final[RabbitRouter] = RabbitRouter()
 @user_rabbit_router.subscriber(
     "user.registered",
     ack_policy=AckPolicy.MANUAL,
-    title="User Registered",
+    title="UserRegistered",
     description="Register a user projection on auth service user creation.",
 )
 @inject
@@ -50,7 +50,7 @@ async def on_user_registered(
 @user_rabbit_router.subscriber(
     "user.deleted",
     ack_policy=AckPolicy.MANUAL,
-    title="User Deleted",
+    title="UserDeleted",
     description="Remove a user projection when a user is deleted in the auth service.",
 )
 @inject
