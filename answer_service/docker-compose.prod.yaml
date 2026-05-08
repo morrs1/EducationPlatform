@@ -119,7 +119,7 @@ services:
       - "127.0.0.1:${REDIS_PORT}:${REDIS_PORT}"
     volumes:
       - answer_service.redis.data:/data
-      - ./deploy/dev/redis/redis_entrypoint.sh:/usr/local/bin/redis_entrypoint.sh
+      - ./deploy/prod/redis/redis_entrypoint.sh:/usr/local/bin/redis_entrypoint.sh
 
   chromadb:
     <<: *default
