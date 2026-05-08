@@ -9,7 +9,6 @@ import {
   hydrateViewerLearningFromLearningService,
   leaveViewerCourseWithLearningService,
   selectCurrentCourses,
-  toggleFavouriteCourse,
 } from "../../../features/viewer";
 
 function CurrentCoursesSection() {
@@ -98,9 +97,6 @@ function CurrentCoursesSection() {
         courses={filteredCourses}
         emptyMessage={isSearchApplied ? emptyMessage : undefined}
         leavingCourseId={leavingCourseId}
-        onToggleFavouriteCourse={(courseId) =>
-          dispatch(toggleFavouriteCourse(courseId))
-        }
         onLeaveCourse={handleLeaveCourse}
       />
     </section>

@@ -45,6 +45,9 @@ function normalizeSavedAuthSession(savedAuthState, legacySavedIsLogged) {
     accountViewerId: savedAuthState?.accountViewerId ?? null,
     accountEmail: savedAuthState?.accountEmail ?? "",
     accountPassword: savedAuthState?.accountPassword ?? "",
+    accessToken: savedAuthState?.accessToken ?? "",
+    userRole: savedAuthState?.userRole ?? "",
+    userStatus: savedAuthState?.userStatus ?? "",
   };
 }
 
@@ -229,6 +232,9 @@ store.subscribe(() => {
         accountViewerId: state.auth.accountViewerId,
         accountEmail: state.auth.accountEmail,
         accountPassword: state.auth.accountPassword,
+        accessToken: state.auth.accessToken,
+        userRole: state.auth.userRole,
+        userStatus: state.auth.userStatus,
       }),
     );
 

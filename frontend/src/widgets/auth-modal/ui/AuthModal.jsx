@@ -10,6 +10,7 @@ import {
   selectIsLoginModalOpen,
   selectIsRegisterModalOpen,
   selectLoginError,
+  selectAuthStatus,
 } from "../../../features/auth";
 import { closeCatalog } from "../../../features/catalog";
 
@@ -19,6 +20,7 @@ function AuthModal() {
   const isLoginModalOpen = useSelector(selectIsLoginModalOpen);
   const isRegisterModalOpen = useSelector(selectIsRegisterModalOpen);
   const loginError = useSelector(selectLoginError);
+  const authStatus = useSelector(selectAuthStatus);
   const registerAvatarObjectUrlRef = useRef(null);
 
   const [emailInput, setEmailInput] = useState("");
@@ -34,6 +36,7 @@ function AuthModal() {
 
   const isOpen = isLoginModalOpen || isRegisterModalOpen;
   const modalView = isRegisterModalOpen ? "register" : "login";
+  const isAuthBusy = authStatus === "loading";
 
   useEffect(() => {
     return () => {
@@ -60,28 +63,27 @@ function AuthModal() {
     setRegisterAvatarFileName("Фото не выбрано");
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    const result =
-      modalView === "login"
-        ? dispatch(
-            submitLogin({
-              email: emailInput,
-              password: passwordInput,
-            }),
-          )
-        : dispatch(
-            submitRegister({
-              fullName: registerNameInput,
-              email: registerEmailInput,
-              password: registerPasswordInput,
-              status: registerStatusInput,
-              avatarUrl: registerAvatarDataUrl,
-            }),
-          );
+    const result = await (modalView === "login"
+      ? dispatch(
+          submitLogin({
+            email: emailInput,
+            password: passwordInput,
+          }),
+        )
+      : dispatch(
+          submitRegister({
+            fullName: registerNameInput,
+            email: registerEmailInput,
+            password: registerPasswordInput,
+            status: registerStatusInput,
+            avatarUrl: registerAvatarDataUrl,
+          }),
+        ));
 
-    if (result.ok) {
+    if (result?.ok) {
       resetCredentials();
     }
   }
@@ -292,6 +294,7 @@ function AuthModal() {
                     className="auth-modal-input"
                     value={emailInput}
                     onChange={handleEmailChange}
+                    disabled={isAuthBusy}
                     required
                   />
                   <input
@@ -300,6 +303,7 @@ function AuthModal() {
                     className="auth-modal-input"
                     value={passwordInput}
                     onChange={handlePasswordChange}
+                    disabled={isAuthBusy}
                     required
                   />
                   {loginError ? (
@@ -314,6 +318,7 @@ function AuthModal() {
                     className="auth-modal-input"
                     value={registerNameInput}
                     onChange={handleRegisterNameChange}
+                    disabled={isAuthBusy}
                     required
                   />
                   <input
@@ -322,6 +327,7 @@ function AuthModal() {
                     className="auth-modal-input"
                     value={registerEmailInput}
                     onChange={handleRegisterEmailChange}
+                    disabled={isAuthBusy}
                     required
                   />
                   <input
@@ -330,6 +336,7 @@ function AuthModal() {
                     className="auth-modal-input"
                     value={registerPasswordInput}
                     onChange={handleRegisterPasswordChange}
+                    disabled={isAuthBusy}
                     required
                   />
 
@@ -338,6 +345,7 @@ function AuthModal() {
                     className="auth-modal-input auth-modal-textarea"
                     value={registerStatusInput}
                     onChange={handleRegisterStatusChange}
+                    disabled={isAuthBusy}
                     rows={3}
                   />
 
@@ -374,6 +382,7 @@ function AuthModal() {
                           type="file"
                           accept="image/*"
                           className="hidden"
+                          disabled={isAuthBusy}
                           onChange={handleRegisterAvatarChange}
                         />
 
@@ -397,8 +406,13 @@ function AuthModal() {
                 <button
                   type="submit"
                   className="auth-modal-submit"
+                  disabled={isAuthBusy}
                 >
-                  {modalView === "login" ? "Войти" : "Зарегистрироваться"}
+                  {isAuthBusy
+                    ? "Подождите…"
+                    : modalView === "login"
+                      ? "Войти"
+                      : "Зарегистрироваться"}
                 </button>
               </div>
             </form>

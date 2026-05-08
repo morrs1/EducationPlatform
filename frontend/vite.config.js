@@ -10,6 +10,7 @@ const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const COURSE_SERVICE_API_PROXY_PATH = "/api/course";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
 const LEARNING_SERVICE_API_PROXY_PATH = "/api/learning";
+const AUTH_API_PROXY_PATH = "/auth";
 const DEFAULT_COURSE_SERVICE_S3_BUCKET = "course-service-local";
 
 function normalizeBoolean(value, fallback = false) {
@@ -270,9 +271,6 @@ function createS3MediaProxyPlugin(env) {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const userServiceUrl = env.VITE_USER_SERVICE_URL?.trim();
-  const courseServiceUrl = env.VITE_COURSE_SERVICE_URL?.trim();
-  const learningServiceUrl = env.VITE_LEARNING_SERVICE_URL?.trim();
   const proxy = {};
 
   // API идёт в gateway (8090). Media остаётся мимо gateway (плагин).
@@ -286,6 +284,10 @@ export default defineConfig(({ mode }) => {
     changeOrigin: true,
   };
   proxy[LEARNING_SERVICE_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
+  proxy[AUTH_API_PROXY_PATH] = {
     target: gatewayUrl,
     changeOrigin: true,
   };

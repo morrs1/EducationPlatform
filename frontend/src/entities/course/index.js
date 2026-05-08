@@ -49,7 +49,5 @@ export { default as CourseDisplayCover } from "./ui/CourseDisplayCover";
 export { default as CoursePreviewCard } from "./ui/preview/CoursePreviewCard";
 export { default as CurrentCourseCard } from "./ui/current/CurrentCourseCard";
 export { default as CurrentCoursesList } from "./ui/current/CurrentCoursesList";
-export { default as FavouriteCourseCard } from "./ui/favourite/FavouriteCourseCard";
-export { default as FavouriteCoursesList } from "./ui/favourite/FavouriteCoursesList";
 export { default as LessonStructureCover } from "./ui/LessonStructureCover";
 export { useLessonCoverMap } from "./model/useLessonCoverMap";

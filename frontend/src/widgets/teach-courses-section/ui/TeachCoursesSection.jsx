@@ -206,10 +206,14 @@ function TeachCoursesSection({ variant = "drafts" }) {
         if (!isCancelled) {
           setBackendCourses([]);
           setBackendStatus("error");
-          setBackendError(
-            error?.message ??
-              "Не удалось загрузить список курсов.",
-          );
+          const status = error?.status;
+          const message =
+            status === 401 || status === 403
+              ? variant === "drafts"
+                ? "Здесь появятся ваши черновики."
+                : "Для этого действия у вас должен быть статус автора."
+              : (error?.message ?? "Не удалось загрузить список курсов.");
+          setBackendError(message);
         }
       }
     }

@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from "react-router";
 import {
   selectCurrentViewerId,
   selectIsLogged,
+  selectUserRole,
   openLoginModal,
 } from "../../../features/auth";
 import {
@@ -18,13 +19,11 @@ import {
   resolveCourseServiceAuthorId,
   upsertViewerCourseSnapshot,
   selectIsCompletedCourse,
-  selectIsFavouriteCourse,
   selectIsEnrolledInCourse,
   selectCanViewCourseContent,
   selectViewerCourseById,
   selectViewerCourseProgress,
   selectViewer,
-  toggleFavouriteCourse,
 } from "../../../features/viewer";
 import { getLessonProgressMap } from "../../../entities/lesson";
 import { CourseTabs } from "../../../widgets/course-tabs";
@@ -59,6 +58,7 @@ function CoursePage() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const isLogged = useSelector(selectIsLogged);
+  const userRole = useSelector(selectUserRole);
   const currentViewerId = useSelector(selectCurrentViewerId);
   const viewer = useSelector(selectViewer);
   const viewerCourse = useSelector((state) =>
@@ -70,11 +70,6 @@ function CoursePage() {
   const isEnrolled = useSelector((state) =>
     resolvedCourseId != null
       ? selectIsEnrolledInCourse(state, resolvedCourseId)
-      : false,
-  );
-  const isFavourite = useSelector((state) =>
-    resolvedCourseId != null
-      ? selectIsFavouriteCourse(state, resolvedCourseId)
       : false,
   );
   const isCompleted = useSelector((state) =>
@@ -184,7 +179,6 @@ function CoursePage() {
       return {
         ...pageData.course,
         isEnrolled,
-        isFavourite,
         isCompleted,
         progress: viewerCourseProgress,
       };
@@ -196,7 +190,6 @@ function CoursePage() {
     pageData,
     isCompleted,
     isEnrolled,
-    isFavourite,
     viewerCourse,
     viewerCourseProgress,
   ]);
@@ -215,10 +208,14 @@ function CoursePage() {
 
   const activeTab = resolveActiveTab(searchParams);
   const isBackendCourse = Boolean(course?.isBackendCourse);
+  const isAdmin = userRole === "ADMIN";
   const isOwnBackendCourse =
     isBackendCourse && course?.authorId === courseServiceAuthorId;
   const canManageDraftCourse = isOwnBackendCourse && !course?.isPublished;
-  const canUseCourseContent = canManageDraftCourse || canViewContent;
+  const canUseCourseContent =
+    canManageDraftCourse ||
+    canViewContent ||
+    (isAdmin && isBackendCourse && course?.isDraft);
   const isContentAccessible = isLogged;
   const descriptionStatus = !course
     ? "error"
@@ -404,7 +401,7 @@ function CoursePage() {
     );
   }
 
-  if (isBackendCourse && course.isDraft && !isOwnBackendCourse) {
+  if (isBackendCourse && course.isDraft && !isOwnBackendCourse && !isAdmin) {
     return (
       <div className="course-page">
         <section className="course-not-found">
@@ -457,20 +454,6 @@ function CoursePage() {
     changeTab("content");
   }
 
-  function handleToggleFavourite() {
-    if (!isLogged) {
-      dispatch(openLoginModal());
-      return;
-    }
-
-    dispatch(
-      toggleFavouriteCourse({
-        courseId: course.id,
-        courseSnapshot: backendCourseSnapshot,
-      }),
-    );
-  }
-
   function handleDescriptionRetry() {
     setDescriptionRequestSeed((value) => value + 1);
   }
@@ -481,6 +464,12 @@ function CoursePage() {
         isReadOnlyCourse: true,
         isEnrolled: true,
       }
+    : isAdmin && isBackendCourse && course.isDraft
+      ? {
+          ...course,
+          isReadOnlyCourse: true,
+          isEnrolled: true,
+        }
     : course;
   const tabs = [
     { id: "description", label: "Описание", isLocked: false },
@@ -583,7 +572,6 @@ function CoursePage() {
           course={sidebarCourse}
           isLogged={isContentAccessible}
           onPrimaryAction={handlePrimaryAction}
-          onToggleFavourite={handleToggleFavourite}
         />
       </aside>
     </div>

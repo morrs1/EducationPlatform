@@ -186,9 +186,12 @@ function CreateCourseSection() {
       navigate(`/course/${courseId}/syllabus`);
     } catch (error) {
       setSubmitStatus("error");
-      setSubmitError(
-        error?.message ?? "Не удалось создать курс.",
-      );
+      const status = error?.status;
+      const message =
+        status === 401 || status === 403
+          ? "Чтобы создать курс, у вас должен быть статус автора."
+          : (error?.message ?? "Не удалось создать курс.");
+      setSubmitError(message);
     }
   }
 
