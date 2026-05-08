@@ -33,11 +33,17 @@ class FastStreamOutboxPublisher(OutboxPublisher):
         self._exchange: Final[RabbitExchange] = RabbitExchange(
             _EVENTS_EXCHANGE,
             type=ExchangeType.TOPIC,
+            durable=True,
         )
+        self._exchange_declared: bool = False
 
     @override
     async def publish(self, message: OutboxMessage) -> None:
         try:
+            if not self._exchange_declared:
+                await self._broker.declare_exchange(self._exchange)
+                self._exchange_declared = True
+
             body: dict[str, Any] = json.loads(message.payload)
             await self._broker.publish(
                 message=body,

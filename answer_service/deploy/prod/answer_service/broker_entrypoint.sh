@@ -3,4 +3,4 @@ set -e
 
 echo 'Starting FastStream app...'
 
-faststream run answer_service.faststream_app:create_faststream_app
+faststream run --factory answer_service.faststream_app:create_faststream_app
