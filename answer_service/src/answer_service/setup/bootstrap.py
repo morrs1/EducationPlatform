@@ -11,6 +11,7 @@ from taskiq import AsyncBroker, ScheduleSource, TaskiqScheduler, async_shared_br
 from taskiq.middlewares import SmartRetryMiddleware
 from taskiq.schedule_sources.label_based import LabelScheduleSource
 from taskiq_aio_pika import AioPikaBroker
+from taskiq_aio_pika.queue import Queue as AioPikaQueue
 from taskiq_redis import ListRedisScheduleSource, RedisAsyncResultBackend
 
 from answer_service.infrastructure.persistence.models import (
@@ -98,6 +99,10 @@ def setup_task_manager(
         declare_exchange=taskiq_config.declare_exchange,
         declare_queues_kwargs={"durable": taskiq_config.durable_queue},
         declare_exchange_kwargs={"durable": taskiq_config.durable_exchange},
+        delay_queue=AioPikaQueue(
+            name="taskiq.delay",
+            durable=taskiq_config.durable_queue,
+        ),
     ).with_result_backend(
         RedisAsyncResultBackend(
             redis_url=redis_config.worker_uri,
