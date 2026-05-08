@@ -28,7 +28,7 @@ lesson_index_rabbit_router: Final[RabbitRouter] = RabbitRouter()
 @lesson_index_rabbit_router.subscriber(
     "lesson.created",
     ack_policy=AckPolicy.MANUAL,
-    title="Lesson Created",
+    title="LessonCreated",
     description="Schedule RAG indexing for a newly created lesson.",
 )
 @inject
@@ -56,7 +56,7 @@ async def on_lesson_created(
 @lesson_index_rabbit_router.subscriber(
     "lesson.updated",
     ack_policy=AckPolicy.MANUAL,
-    title="Lesson Updated",
+    title="LessonUpdated",
     description="Schedule RAG reindexing for an updated lesson.",
 )
 @inject

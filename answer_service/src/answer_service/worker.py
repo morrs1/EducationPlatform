@@ -9,6 +9,7 @@ from typing import Final
 
 from dishka import AsyncContainer, make_async_container
 from dishka.integrations.taskiq import setup_dishka
+from faststream.rabbit import RabbitBroker
 from sqlalchemy.orm import clear_mappers
 from taskiq import AsyncBroker, TaskiqEvents, TaskiqState
 
@@ -16,7 +17,7 @@ from answer_service.setup.bootstrap import (
     setup_map_tables,
     setup_task_manager,
     setup_task_manager_middlewares,
-    setup_task_manager_tasks,
+    setup_task_manager_tasks, setup_rabbit_broker, setup_rabbit_routes,
 )
 from answer_service.setup.configs.app_config import AppConfig
 from answer_service.setup.configs.broker_config import RabbitConfig
@@ -27,16 +28,6 @@ from answer_service.setup.configs.redis_config import RedisConfig
 from answer_service.setup.ioc import setup_providers
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
-
-
-async def startup(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
-    setup_map_tables()
-    logger.info("Taskiq worker started")
-
-
-async def shutdown(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
-    clear_mappers()
-    logger.info("Taskiq worker stopped")
 
 
 def create_worker_taskiq_app() -> AsyncBroker:
@@ -53,6 +44,19 @@ def create_worker_taskiq_app() -> AsyncBroker:
     )
     setup_task_manager_tasks(broker=worker_broker)
 
+    rabbit_broker: RabbitBroker = setup_rabbit_broker(configs.rabbit)
+    setup_rabbit_routes(rabbit_broker)
+
+    async def startup(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
+        setup_map_tables()
+        await rabbit_broker.start()
+        logger.info("Taskiq worker started")
+
+    async def shutdown(state: TaskiqState) -> None:  # noqa: ARG001, RUF029
+        clear_mappers()
+        await rabbit_broker.stop()
+        logger.info("Taskiq worker stopped")
+
     worker_broker.on_event(TaskiqEvents.WORKER_STARTUP)(startup)
     worker_broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)(shutdown)
 
@@ -64,6 +68,7 @@ def create_worker_taskiq_app() -> AsyncBroker:
         OpenAIConfig: configs.openai,
         RedisConfig: configs.redis,
         AsyncBroker: worker_broker,
+        RabbitBroker: rabbit_broker,
     }
 
     container: AsyncContainer = make_async_container(*setup_providers(), context=context)
