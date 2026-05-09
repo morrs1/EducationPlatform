@@ -15,14 +15,18 @@ public class TransactionalBeansConfig {
 
     // Build TransactionTemplate on top of JPA TM so one application-level transaction
     // can safely drive JPA/Hibernate work and plain JdbcTemplate calls on the same DataSource.
+    /**
+     * Bean name must be {@code transactionManager}: Spring Data JPA and
+     * {@code PersistenceExceptionTranslationInterceptor} resolve the TM by that name.
+     */
     @Bean
-    public PlatformTransactionManager platformTransactionManager(EntityManagerFactory entityManagerFactory) {
+    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 
     @Bean
-    public TransactionTemplate transactionTemplate(PlatformTransactionManager platformTransactionManager) {
-        return new TransactionTemplate(platformTransactionManager);
+    public TransactionTemplate transactionTemplate(PlatformTransactionManager transactionManager) {
+        return new TransactionTemplate(transactionManager);
     }
 
     @Bean
