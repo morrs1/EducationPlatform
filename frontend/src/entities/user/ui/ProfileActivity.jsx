@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   isUuid,
   requestLearningActivityYear,
-} from "../../../shared/api/learningServiceApi";
+} from "../../../shared/api";
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 const WEEKDAY_LABELS = [

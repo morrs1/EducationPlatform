@@ -1,6 +1,6 @@
 import { getMockCourses } from "./mockCourses";
 import { getCourseCoverSrc } from "./getCourseCoverSrc";
-import { mockUsersById } from "../../user/model/mockUsers";
+import { mockUsersById } from "../../user/@x/course";
 
 function sortByPopularity(courseA, courseB) {
   if (courseB.studentsCount !== courseA.studentsCount) {
