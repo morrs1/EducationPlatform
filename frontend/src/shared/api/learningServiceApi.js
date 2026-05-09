@@ -1,16 +1,9 @@
+import { isUuid, normalizeText } from "../lib/gatewayValues";
 import { withGatewayAuth } from "./gatewayFetch";
 
 const DEFAULT_LEARNING_SERVICE_API_BASE_URL = "/api/learning";
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function normalizeText(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-export function isUuid(value) {
-  return UUID_PATTERN.test(normalizeText(value));
-}
+export { isUuid };
 
 function normalizeUuid(value, fieldName) {
   const normalizedValue = normalizeText(value);

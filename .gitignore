@@ -234,6 +234,9 @@ downloads/
 eggs/
 .eggs/
 lib/
+# FSD-слой фронта: не путать с lib/ из Python-шаблона выше
+!frontend/src/shared/lib/
+!frontend/src/shared/lib/**
 lib64/
 parts/
 sdist/
