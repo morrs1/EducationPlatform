@@ -5421,6 +5421,7 @@
 
 .lesson-assistant-rail {
   @apply w-full min-h-0 self-start overflow-hidden xl:min-w-[420px] xl:flex-[1_1_0%];
+  overscroll-behavior: contain;
   height: min(78dvh, calc(100dvh - 7rem));
   max-height: min(78dvh, calc(100dvh - 7rem));
   animation: assistant-panel-enter 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -6182,6 +6183,7 @@
 
 .assistant-panel {
   @apply flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.35)];
+  overscroll-behavior: contain;
   max-height: inherit;
 }
 
@@ -6223,6 +6225,7 @@
 
 .assistant-panel-scroll {
   @apply flex flex-col flex-1 min-h-0 gap-4 px-5 py-5 overflow-y-auto sm:px-6;
+  overscroll-behavior-y: contain;
   opacity: 0;
   scrollbar-gutter: stable;
   transition: opacity 0.16s ease;
@@ -6338,6 +6341,7 @@
 
 .assistant-panel-input {
   @apply w-full px-2 py-2 text-sm leading-7 text-gray-900 bg-transparent outline-none resize-none placeholder:text-gray-400;
+  overscroll-behavior: contain;
   min-height: 44px;
   max-height: none;
 }

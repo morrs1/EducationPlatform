@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Outlet, useParams } from "react-router";
 import {
   enrichCoursePageDataWithAuthorName,
-  isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
 } from "../../../entities/course";
+import { isUuid } from "../../../shared/lib";
 import { LessonEditorSidebar } from "../../../widgets/lesson-editor-sidebar";
 
 function findLessonLocation(modules, lessonId) {

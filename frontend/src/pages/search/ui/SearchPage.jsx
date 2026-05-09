@@ -137,11 +137,7 @@ function SearchPage() {
       results.filter((course) =>
         matchesLevelFilters(course, appliedLevelFilters),
       ),
-    [
-      results,
-      appliedLevelFilters.beginner,
-      appliedLevelFilters.intermediate,
-    ],
+    [results, appliedLevelFilters],
   );
 
   useEffect(() => {

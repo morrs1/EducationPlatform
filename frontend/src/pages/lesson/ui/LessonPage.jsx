@@ -4,33 +4,16 @@ import { Link, useNavigate, useParams } from "react-router";
 import { createPortal } from "react-dom";
 
 import { getLessonPageData } from "../lib/getLessonPageData";
-import {
-  getCachedLessonContentMarkdown,
-  getLessonContentMarkdown,
-} from "../lib/getLessonContentMarkdown";
-import {
-  getLessonProgressMap,
-  parseLessonMarkdown,
-} from "../../../entities/lesson";
+import { getLessonProgressMap } from "../../../entities/lesson";
 import { getCourseSyllabus } from "../../../entities/course";
-import {
-  enrichCoursePageDataWithAuthorName,
-  isUuid,
-  mapReadLessonByIdResponseToLessonPageData,
-  requestCourseById,
-  requestLessonById,
-} from "../../../entities/course";
+import { isUuid } from "../../../shared/lib";
+import { useBackendLessonPageData } from "../model/useBackendLessonPageData";
+import { useLessonAssistant } from "../model/useLessonAssistant";
+import { useLessonCertificate } from "../model/useLessonCertificate";
+import { useLessonContent } from "../model/useLessonContent";
 import { CourseOutline } from "../../../widgets/course-outline";
 import { LessonContentSection } from "../../../widgets/lesson-content-section";
 import { AssistantPanel } from "../../../widgets/assistant-panel";
-import {
-  closeAssistant,
-  openAssistant,
-  selectAssistantIsOpen,
-  selectAssistantThreadByContextKey,
-  setActiveAssistantContext,
-  submitAssistantMessage,
-} from "../../../features/assistant";
 
 import {
   hydrateCompletedLessonsFromLearningService,
@@ -46,14 +29,15 @@ import {
   selectLessonSubmission,
   submitLessonAnswer,
 } from "../../../features/lesson-session";
-import { normalizeViewerCourseId } from "../../../entities/viewer";
+import { selectCurrentViewerId } from "../../../features/auth";
 import {
-  completeViewerCourseWithLearningService,
+  resolveCourseServiceAuthorId,
   selectCanViewCourseContent,
-  selectCertificateCourseIds,
   selectIsCompletedCourse,
   selectIsEnrolledInCourse,
+  selectViewer,
 } from "../../../features/viewer";
+import CertificateDialog from "./CertificateDialog";
 
 function getNavigableLessons(syllabus) {
   return (syllabus?.modules ?? []).flatMap((module) =>
@@ -76,63 +60,17 @@ function LessonPage() {
   const dispatch = useDispatch();
   const [isLessonNavigationPending, startLessonNavigationTransition] =
     useTransition();
-  const [backendPageStatus, setBackendPageStatus] = useState(() =>
-    isBackendLessonRoute ? "loading" : "idle",
-  );
-  const [backendPageData, setBackendPageData] = useState(null);
-  const [backendResolvedLessonId, setBackendResolvedLessonId] = useState(null);
-  const [backendPageError, setBackendPageError] = useState("");
-  const [backendRequestSeed, setBackendRequestSeed] = useState(0);
-  const [certificateFlowBusy, setCertificateFlowBusy] = useState(false);
-  const [certificateDialog, setCertificateDialog] = useState(null);
-
-  useEffect(() => {
-    if (!isBackendLessonRoute || !courseId || !lessonId) {
-      return;
-    }
-
-    let isCancelled = false;
-
-    async function loadBackendLesson() {
-      setBackendPageStatus("loading");
-      setBackendPageError("");
-
-      try {
-        const [courseResponse, lessonResponse] = await Promise.all([
-          requestCourseById(courseId),
-          requestLessonById(lessonId),
-        ]);
-        const nextPageData = mapReadLessonByIdResponseToLessonPageData({
-          courseId,
-          lessonId,
-          courseResponse,
-          lessonResponse,
-        });
-        const enrichedPageData =
-          await enrichCoursePageDataWithAuthorName(nextPageData);
-
-        if (!isCancelled) {
-          setBackendPageData(enrichedPageData);
-          setBackendResolvedLessonId(lessonId);
-          setBackendPageStatus("success");
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setBackendResolvedLessonId(null);
-          setBackendPageStatus("error");
-          setBackendPageError(
-            error?.message ?? "Не удалось загрузить урок.",
-          );
-        }
-      }
-    }
-
-    loadBackendLesson();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [courseId, lessonId, isBackendLessonRoute, backendRequestSeed]);
+  const {
+    status: backendPageStatus,
+    pageData: backendPageData,
+    resolvedLessonId: backendResolvedLessonId,
+    error: backendPageError,
+    retry: retryBackendPageRequest,
+  } = useBackendLessonPageData({
+    courseId,
+    lessonId,
+    enabled: isBackendLessonRoute,
+  });
 
   const pageData = useMemo(() => {
     if (isBackendLessonRoute) {
@@ -150,6 +88,12 @@ function LessonPage() {
   const lesson = pageData?.lesson ?? null;
   const viewedLessonIds = useSelector(selectViewedLessonIds);
   const completedLessonIds = useSelector(selectCompletedLessonIds);
+  const currentViewerId = useSelector(selectCurrentViewerId);
+  const viewer = useSelector(selectViewer);
+  const courseServiceAuthorId = useMemo(
+    () => resolveCourseServiceAuthorId(currentViewerId, viewer.remoteId),
+    [currentViewerId, viewer.remoteId],
+  );
   const canViewContent = useSelector((state) =>
     course ? selectCanViewCourseContent(state, course.id) : false,
   );
@@ -159,7 +103,6 @@ function LessonPage() {
   const isCompletedCourse = useSelector((state) =>
     course ? selectIsCompletedCourse(state, course.id) : false,
   );
-  const certificateCourseIds = useSelector(selectCertificateCourseIds);
   const lessonDraft = useSelector((state) =>
     lesson ? selectLessonDraft(state, lesson.id) : null,
   );
@@ -170,9 +113,6 @@ function LessonPage() {
     lesson ? selectLessonRunResult(state, lesson.id) : null,
   );
 
-  const [contentStatus, setContentStatus] = useState("idle");
-  const [contentMarkdown, setContentMarkdown] = useState("");
-  const [contentError, setContentError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const isLessonViewed = lesson ? viewedLessonIds.includes(lesson.id) : false;
@@ -180,8 +120,12 @@ function LessonPage() {
     ? completedLessonIds.includes(lesson.id)
     : false;
   const isBackendCourse = Boolean(course?.isBackendCourse);
+  const isOwnBackendCourse =
+    isBackendCourse &&
+    Boolean(course?.authorId) &&
+    course.authorId === courseServiceAuthorId;
   const canUseCourseContent = isBackendCourse
-    ? isEnrolled || isCompletedCourse
+    ? isEnrolled || isCompletedCourse || isOwnBackendCourse
     : canViewContent;
 
   const syllabus = useMemo(
@@ -222,19 +166,9 @@ function LessonPage() {
   const courseProgressPercent = course?.lessonsCount
     ? Math.round((completedLessonsCount / course.lessonsCount) * 100)
     : 0;
-  const contentBlocks = useMemo(
-    () => parseLessonMarkdown(contentMarkdown),
-    [contentMarkdown],
-  );
-  const assistantContextKey = lesson ? lesson.id : null;
-  const isAssistantOpen = useSelector(selectAssistantIsOpen);
-  const assistantThread = useSelector((state) =>
-    selectAssistantThreadByContextKey(state, assistantContextKey),
-  );
-  const assistantMessages = assistantThread.messages;
-  const assistantStatus = assistantThread.status;
-  const assistantError = assistantThread.error;
-  const assistantThreadId = assistantThread.threadId;
+  const { contentStatus, contentBlocks, contentError } =
+    useLessonContent(lesson);
+  const assistant = useLessonAssistant({ course, lesson });
   const navigableLessons = useMemo(
     () => getNavigableLessons(syllabus),
     [syllabus],
@@ -249,35 +183,18 @@ function LessonPage() {
     currentLessonIndex >= 0 && currentLessonIndex < navigableLessons.length - 1
       ? navigableLessons[currentLessonIndex + 1]
       : null;
-  const hasCertificateForCourse = useMemo(() => {
-    if (!course?.id) {
-      return false;
-    }
-
-    const normalizedId = normalizeViewerCourseId(course.id);
-
-    if (normalizedId == null) {
-      return false;
-    }
-
-    const key = String(normalizedId);
-
-    return certificateCourseIds.some(
-      (entry) => String(normalizeViewerCourseId(entry)) === key,
-    );
-  }, [certificateCourseIds, course?.id]);
   const isLastLesson = Boolean(navigableLessons.length) && nextLesson == null;
-  const allSyllabusLessonsCompleted =
-    syllabusLessonIds.length > 0 &&
-    completedSyllabusLessonIds.length >= syllabusLessonIds.length;
-  const showCertificateCallout =
-    isBackendCourse &&
-    isBackendLessonRoute &&
-    canUseCourseContent &&
-    isLastLesson &&
-    allSyllabusLessonsCompleted;
-  const assistantTitle = "Ассистент";
-  const assistantSubtitle = lesson?.title ?? "";
+  const certificate = useLessonCertificate({
+    course,
+    isBackendCourse,
+    isBackendLessonRoute,
+    canUseCourseContent,
+    isCompletedCourse,
+    isEnrolled,
+    isLastLesson,
+    syllabusLessonIds,
+    completedSyllabusLessonIds,
+  });
 
   useEffect(() => {
     if (!lesson || !canUseCourseContent) {
@@ -327,91 +244,6 @@ function LessonPage() {
 
   useEffect(() => {
     if (
-      !isBackendLessonRoute ||
-      !isEnrolled ||
-      isCompletedCourse ||
-      !course ||
-      !syllabusLessonIds.length ||
-      completedSyllabusLessonIds.length < syllabusLessonIds.length
-    ) {
-      return;
-    }
-
-    dispatch(
-      completeViewerCourseWithLearningService({
-        courseId: course.id,
-        courseSnapshot: course,
-      }),
-    );
-  }, [
-    completedSyllabusLessonIds.length,
-    course,
-    dispatch,
-    isBackendLessonRoute,
-    isCompletedCourse,
-    isEnrolled,
-    syllabusLessonIds.length,
-  ]);
-
-  useEffect(() => {
-    if (!assistantContextKey) {
-      return;
-    }
-
-    dispatch(setActiveAssistantContext(assistantContextKey));
-  }, [dispatch, assistantContextKey, lesson]);
-
-  useEffect(() => {
-    if (!lesson) {
-      setContentStatus("idle");
-      setContentMarkdown("");
-      setContentError("");
-      return;
-    }
-
-    const cachedMarkdown = getCachedLessonContentMarkdown(lesson);
-
-    if (cachedMarkdown) {
-      setContentMarkdown(cachedMarkdown);
-      setContentStatus("success");
-      setContentError("");
-      return;
-    }
-
-    let isCancelled = false;
-
-    async function loadLessonContent() {
-      setContentStatus("loading");
-      setContentMarkdown("");
-      setContentError("");
-
-      try {
-        const markdown = await getLessonContentMarkdown(lesson);
-
-        if (!isCancelled) {
-          setContentMarkdown(markdown);
-          setContentStatus("success");
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setContentMarkdown("");
-          setContentStatus("error");
-          setContentError(
-            error?.message ?? "Не удалось загрузить содержимое урока.",
-          );
-        }
-      }
-    }
-
-    loadLessonContent();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [backendPageError, backendPageStatus, lesson]);
-
-  useEffect(() => {
-    if (
       !lesson ||
       lesson.type !== "code" ||
       lessonDraft ||
@@ -427,78 +259,6 @@ function LessonPage() {
       }),
     );
   }, [dispatch, lesson, lessonDraft]);
-
-  function handleOpenAssistant() {
-    if (!assistantContextKey) {
-      return;
-    }
-
-    dispatch(setActiveAssistantContext(assistantContextKey));
-    dispatch(openAssistant());
-  }
-
-  function handleCloseAssistant() {
-    dispatch(closeAssistant());
-  }
-
-  useEffect(() => {
-    if (!certificateDialog) {
-      return;
-    }
-
-    function handleEscape(event) {
-      if (event.key === "Escape") {
-        setCertificateDialog(null);
-      }
-    }
-
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [certificateDialog]);
-
-  async function handleCertificateRequest() {
-    if (!course) {
-      return;
-    }
-
-    if (isCompletedCourse && hasCertificateForCourse) {
-      setCertificateDialog({ variant: "success" });
-
-      return;
-    }
-
-    setCertificateFlowBusy(true);
-
-    try {
-      const result = await dispatch(
-        completeViewerCourseWithLearningService({
-          courseId: course.id,
-          courseSnapshot: course,
-        }),
-      );
-
-      if (result?.ok) {
-        setCertificateDialog({ variant: "success" });
-      } else {
-        setCertificateDialog({
-          variant: "error",
-          message:
-            result?.error ??
-            "Не удалось оформить сертификат. Попробуйте позже.",
-        });
-      }
-    } catch {
-      setCertificateDialog({
-        variant: "error",
-        message: "Не удалось оформить сертификат. Попробуйте позже.",
-      });
-    } finally {
-      setCertificateFlowBusy(false);
-    }
-  }
 
   function handleChoiceChange(questionId, optionId) {
     if (!lesson || lesson.type !== "quiz") {
@@ -613,29 +373,8 @@ function LessonPage() {
     }
   }
 
-  async function handleSubmitAssistantMessage(messageText) {
-    if (!course || !lesson || !assistantContextKey) {
-      return;
-    }
-
-    await dispatch(
-      submitAssistantMessage({
-        contextKey: assistantContextKey,
-        threadId: assistantThreadId,
-        courseId: course.id,
-        lessonId: lesson.id,
-        stepId: lesson.id,
-        userMessage: messageText,
-        lessonTitle: course.title,
-        stepTitle: lesson.title,
-        stepType: lesson.type,
-        stepMarkdown: contentMarkdown,
-      }),
-    );
-  }
-
   function handlePageRetry() {
-    setBackendRequestSeed((value) => value + 1);
+    retryBackendPageRequest();
   }
 
   if (
@@ -743,13 +482,13 @@ function LessonPage() {
       backendPageStatus === "loading" &&
       backendResolvedLessonId !== lessonId);
   const canRenderAssistantLauncher =
-    typeof document !== "undefined" && !isAssistantOpen && lesson;
+    typeof document !== "undefined" && !assistant.isOpen && lesson;
 
   return (
     <>
       <div
         className={`lesson-layout ${
-          isAssistantOpen ? "lesson-layout-assistant-open" : ""
+          assistant.isOpen ? "lesson-layout-assistant-open" : ""
         }`}
       >
         <CourseOutline
@@ -786,25 +525,23 @@ function LessonPage() {
             isSubmitting={isSubmitting}
             isRunning={isRunning}
             isTransitioning={isLessonTransitioning}
-            showCertificateCallout={showCertificateCallout}
-            isIssuingCertificate={certificateFlowBusy}
-            hasCertificateAlready={
-              isCompletedCourse && hasCertificateForCourse
-            }
-            onRequestCertificate={handleCertificateRequest}
+            showCertificateCallout={certificate.showCertificateCallout}
+            isIssuingCertificate={certificate.isIssuingCertificate}
+            hasCertificateAlready={certificate.hasCertificateAlready}
+            onRequestCertificate={certificate.requestCertificate}
           />
         </div>
 
-        {isAssistantOpen ? (
+        {assistant.isOpen ? (
           <div className="lesson-assistant-rail">
             <AssistantPanel
-              title={assistantTitle}
-              subtitle={assistantSubtitle}
-              messages={assistantMessages}
-              status={assistantStatus}
-              error={assistantError}
-              onSubmitMessage={handleSubmitAssistantMessage}
-              onClose={handleCloseAssistant}
+              title={assistant.title}
+              subtitle={assistant.subtitle}
+              messages={assistant.messages}
+              status={assistant.status}
+              error={assistant.error}
+              onSubmitMessage={assistant.submitMessage}
+              onClose={assistant.close}
             />
           </div>
         ) : null}
@@ -815,7 +552,7 @@ function LessonPage() {
             <button
               type="button"
               className="assistant-launcher-btn"
-              onClick={handleOpenAssistant}
+              onClick={assistant.open}
               aria-label="Открыть чат с ассистентом"
             >
               <span className="assistant-launcher-icon">AI</span>
@@ -827,80 +564,10 @@ function LessonPage() {
           )
         : null}
 
-      {certificateDialog && typeof document !== "undefined"
-        ? createPortal(
-            <div
-              className="certificate-success-dialog-root"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="certificate-dialog-title"
-            >
-              <button
-                type="button"
-                className="certificate-success-dialog-backdrop"
-                aria-label="Закрыть окно"
-                onClick={() => setCertificateDialog(null)}
-              />
-              <div className="certificate-success-dialog-panel">
-                <div
-                  className={`certificate-success-dialog-card ${
-                    certificateDialog.variant === "error" ? "is-error" : ""
-                  }`}
-                >
-                  <button
-                    type="button"
-                    className="certificate-success-dialog-x"
-                    onClick={() => setCertificateDialog(null)}
-                    aria-label="Закрыть"
-                  >
-                    ×
-                  </button>
-                  <div className="certificate-success-dialog-icon" aria-hidden>
-                    {certificateDialog.variant === "success" ? "🏅" : "⚠️"}
-                  </div>
-                  <h2
-                    id="certificate-dialog-title"
-                    className="certificate-success-dialog-title"
-                  >
-                    {certificateDialog.variant === "success"
-                      ? "Сертификат готов"
-                      : "Не получилось оформить"}
-                  </h2>
-                  {certificateDialog.variant === "success" ? (
-                    <p className="certificate-success-dialog-body">
-                      PDF со сведениями о курсе можно скачать в аккаунте: раздел{" "}
-                      <strong>Сертификаты</strong> — кнопка «Скачать PDF»
-                      напротив этого курса.
-                    </p>
-                  ) : (
-                    <p className="certificate-success-dialog-body">
-                      {certificateDialog.message}
-                    </p>
-                  )}
-                  <div className="certificate-success-dialog-actions">
-                    {certificateDialog.variant === "success" ? (
-                      <Link
-                        to="/account/certificates"
-                        className="course-primary-btn certificate-success-dialog-primary"
-                        onClick={() => setCertificateDialog(null)}
-                      >
-                        Перейти к сертификатам
-                      </Link>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="course-inline-btn"
-                      onClick={() => setCertificateDialog(null)}
-                    >
-                      Закрыть
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
+      <CertificateDialog
+        dialog={certificate.dialog}
+        onClose={certificate.closeDialog}
+      />
     </>
   );
 }

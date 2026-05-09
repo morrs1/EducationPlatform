@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router";
 import {
@@ -8,16 +8,12 @@ import {
   openLoginModal,
 } from "../../../features/auth";
 import {
-  hydrateCompletedLessonsFromLearningService,
   selectCompletedLessonIds,
   selectViewedLessonIds,
 } from "../../../features/lesson-session";
 import {
-  completeViewerCourseWithLearningService,
-  createViewerCourseSnapshot,
   enrollViewerInCourseWithLearningService,
   resolveCourseServiceAuthorId,
-  upsertViewerCourseSnapshot,
   selectIsCompletedCourse,
   selectIsEnrolledInCourse,
   selectCanViewCourseContent,
@@ -32,16 +28,14 @@ import { CourseDescriptionTab } from "../../../widgets/course-description";
 import { CourseContentTab } from "../../../widgets/course-content";
 import { CourseReviewsTab } from "../../../widgets/course-reviews";
 import { getCoursePageData } from "../lib/getCoursePageData";
-import { getCourseDescriptionMarkdown } from "../lib/getCourseDescriptionMarkdown";
-import { parseCourseDescriptionMarkdown } from "../lib/parseCourseDescriptionMarkdown";
-import {
-  enrichCoursePageDataWithAuthorName,
-  isUuid,
-  mapReadCourseByIdResponseToCoursePageData,
-  requestCourseById,
-  formatCourseTagLabel,
-  sanitizeCourseDisplayLabel,
-} from "../../../entities/course";
+import { useBackendCoursePageData } from "../model/useBackendCoursePageData";
+import { useCourseDescription } from "../model/useCourseDescription";
+import { useCourseLearningSync } from "../model/useCourseLearningSync";
+import { formatCourseTagLabel } from "../../../entities/course";
+import { isUuid } from "../../../shared/lib";
+import { createViewerCourseSnapshot } from "../../../entities/viewer";
+import CourseHero from "./CourseHero";
+import CoursePageState from "./CoursePageState";
 
 const tabIds = ["description", "content", "reviews"];
 
@@ -94,60 +88,16 @@ function CoursePage() {
     [currentViewerId, viewer.remoteId],
   );
 
-  const [mockDescriptionStatus, setMockDescriptionStatus] = useState("loading");
-  const [mockDescriptionMarkdown, setMockDescriptionMarkdown] = useState("");
-  const [descriptionRequestSeed, setDescriptionRequestSeed] = useState(0);
-  const [backendPageStatus, setBackendPageStatus] = useState("idle");
-  const [backendPageData, setBackendPageData] = useState(null);
-  const [backendPageError, setBackendPageError] = useState("");
-  const [backendRequestSeed, setBackendRequestSeed] = useState(0);
+  const {
+    status: backendPageStatus,
+    pageData: backendPageData,
+    error: backendPageError,
+    retry: retryBackendPageRequest,
+  } = useBackendCoursePageData({
+    courseId: courseIdParam,
+    enabled: isBackendCourseRoute,
+  });
   const [learningActionError, setLearningActionError] = useState("");
-
-  useEffect(() => {
-    if (!isBackendCourseRoute || !courseIdParam) {
-      return;
-    }
-
-    let isCancelled = false;
-
-    async function loadBackendCourse() {
-      setBackendPageStatus("loading");
-      setBackendPageError("");
-
-      try {
-        const response = await requestCourseById(courseIdParam);
-        const nextPageData = await enrichCoursePageDataWithAuthorName(
-          mapReadCourseByIdResponseToCoursePageData(
-            response,
-            courseIdParam,
-          ),
-        );
-
-        if (!isCancelled) {
-          setBackendPageData(nextPageData);
-          setBackendPageStatus("success");
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setBackendPageData(null);
-          setBackendPageStatus("error");
-          setBackendPageError(
-            error?.message ?? "Не удалось загрузить курс.",
-          );
-        }
-      }
-    }
-
-    loadBackendCourse();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [
-    courseIdParam,
-    isBackendCourseRoute,
-    backendRequestSeed,
-  ]);
 
   const pageData = useMemo(() => {
     if (isBackendCourseRoute) {
@@ -202,9 +152,7 @@ function CoursePage() {
     return course.tags
       .map((label) => formatCourseTagLabel(label))
       .filter(Boolean);
-  }, [course?.tags]);
-
-  const hasCourseTagPills = courseTagLabels.length > 0;
+  }, [course]);
 
   const activeTab = resolveActiveTab(searchParams);
   const isBackendCourse = Boolean(course?.isBackendCourse);
@@ -215,63 +163,14 @@ function CoursePage() {
   const canUseCourseContent =
     canManageDraftCourse ||
     canViewContent ||
+    isOwnBackendCourse ||
     (isAdmin && isBackendCourse && course?.isDraft);
   const isContentAccessible = isLogged;
-  const descriptionStatus = !course
-    ? "error"
-    : isBackendCourse
-      ? "success"
-      : mockDescriptionStatus;
-  const descriptionMarkdown = !course
-    ? ""
-    : isBackendCourse
-      ? course.description || ""
-      : mockDescriptionMarkdown;
-
-  useEffect(() => {
-    if (!course || course.isBackendCourse) {
-      return;
-    }
-
-    let isCancelled = false;
-
-    async function loadDescription() {
-      setMockDescriptionStatus("loading");
-
-      try {
-        const markdown = await getCourseDescriptionMarkdown(course.id);
-
-        if (!isCancelled) {
-          setMockDescriptionMarkdown(markdown);
-          setMockDescriptionStatus("success");
-        }
-      } catch {
-        if (!isCancelled) {
-          setMockDescriptionMarkdown("");
-          setMockDescriptionStatus("error");
-        }
-      }
-    }
-
-    loadDescription();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [course, descriptionRequestSeed]);
-
-  useEffect(() => {
-    if (!backendCourseSnapshot) {
-      return;
-    }
-
-    dispatch(upsertViewerCourseSnapshot(backendCourseSnapshot));
-  }, [backendCourseSnapshot, dispatch]);
-
-  const descriptionBlocks = useMemo(
-    () => parseCourseDescriptionMarkdown(descriptionMarkdown),
-    [descriptionMarkdown],
-  );
+  const {
+    blocks: descriptionBlocks,
+    status: descriptionStatus,
+    retry: retryDescriptionRequest,
+  } = useCourseDescription(course);
   const lessonProgressByLessonId = useMemo(
     () =>
       getLessonProgressMap(
@@ -291,127 +190,62 @@ function CoursePage() {
     [lessonProgressByLessonId, syllabusLessonIds],
   );
 
-  useEffect(() => {
-    if (
-      !isBackendCourseRoute ||
-      !isLogged ||
-      !canUseCourseContent ||
-      !resolvedCourseId ||
-      !syllabusLessonIds.length
-    ) {
-      return;
-    }
-
-    dispatch(
-      hydrateCompletedLessonsFromLearningService({
-        courseId: resolvedCourseId,
-        courseLessonIds: syllabusLessonIds,
-      }),
-    );
-  }, [
-    canUseCourseContent,
-    dispatch,
-    isBackendCourseRoute,
-    isLogged,
-    resolvedCourseId,
-    syllabusLessonIds,
-  ]);
-
-  useEffect(() => {
-    if (
-      !isBackendCourseRoute ||
-      !isLogged ||
-      !isEnrolled ||
-      isCompleted ||
-      !course ||
-      !syllabusLessonIds.length ||
-      completedSyllabusLessonIds.length < syllabusLessonIds.length
-    ) {
-      return;
-    }
-
-    dispatch(
-      completeViewerCourseWithLearningService({
-        courseId: course.id,
-        courseSnapshot: backendCourseSnapshot,
-      }),
-    );
-  }, [
+  useCourseLearningSync({
     backendCourseSnapshot,
-    completedSyllabusLessonIds.length,
+    canUseCourseContent,
+    completedSyllabusLessonIds,
     course,
-    dispatch,
     isBackendCourseRoute,
     isCompleted,
     isEnrolled,
     isLogged,
-    syllabusLessonIds.length,
-  ]);
+    resolvedCourseId,
+    syllabusLessonIds,
+  });
 
   function handlePageRetry() {
-    setBackendRequestSeed((value) => value + 1);
+    retryBackendPageRequest();
   }
 
   if (isBackendCourseRoute && backendPageStatus === "loading") {
     return (
-      <div className="course-page">
-        <section className="course-not-found">
-          <p className="course-not-found-label">Загрузка курса</p>
-          <h1 className="course-not-found-title">Загружаем курс</h1>
-          <p className="course-not-found-text">
-            Подготавливаем описание, программу и материалы курса.
-          </p>
-        </section>
-      </div>
+      <CoursePageState
+        label="Загрузка курса"
+        title="Загружаем курс"
+        text="Подготавливаем описание, программу и материалы курса."
+      />
     );
   }
 
   if (isBackendCourseRoute && backendPageStatus === "error") {
     return (
-      <div className="course-page">
-        <section className="course-not-found">
-          <p className="course-not-found-label">Ошибка загрузки</p>
-          <h1 className="course-not-found-title">Не удалось получить курс</h1>
-          <p className="course-not-found-text">
-            {backendPageError || "Не удалось получить данные курса."}
-          </p>
-          <button
-            type="button"
-            className="course-inline-btn"
-            onClick={handlePageRetry}
-          >
-            Повторить
-          </button>
-        </section>
-      </div>
+      <CoursePageState
+        label="Ошибка загрузки"
+        title="Не удалось получить курс"
+        text={backendPageError || "Не удалось получить данные курса."}
+        action="Повторить"
+        onAction={handlePageRetry}
+      />
     );
   }
 
   if (!pageData || !course) {
     return (
-      <div className="course-page">
-        <section className="course-not-found">
-          <p className="course-not-found-label">Ошибка навигации</p>
-          <h1 className="course-not-found-title">Курс не найден</h1>
-          <p className="course-not-found-text">
-            Возможно, ссылка устарела или курс был удален из демо-данных.
-          </p>
-        </section>
-      </div>
+      <CoursePageState
+        label="Ошибка навигации"
+        title="Курс не найден"
+        text="Возможно, ссылка устарела или курс был удален из демо-данных."
+      />
     );
   }
 
   if (isBackendCourse && course.isDraft && !isOwnBackendCourse && !isAdmin) {
     return (
-      <div className="course-page">
-        <section className="course-not-found">
-          <p className="course-not-found-label">Курс недоступен</p>
-          <h1 className="course-not-found-title">Курс не найден</h1>
-          <p className="course-not-found-text">
-            Возможно, ссылка устарела или курс пока не опубликован.
-          </p>
-        </section>
-      </div>
+      <CoursePageState
+        label="Курс недоступен"
+        title="Курс не найден"
+        text="Возможно, ссылка устарела или курс пока не опубликован."
+      />
     );
   }
 
@@ -455,7 +289,7 @@ function CoursePage() {
   }
 
   function handleDescriptionRetry() {
-    setDescriptionRequestSeed((value) => value + 1);
+    retryDescriptionRequest();
   }
 
   const sidebarCourse = canManageDraftCourse
@@ -484,61 +318,11 @@ function CoursePage() {
       </aside>
 
       <div className="course-page-main">
-        <section className="course-hero">
-          <div className="course-hero-copy">
-            {hasCourseTagPills ? (
-              <ul className="course-hero-tags" aria-label="Теги курса">
-                {courseTagLabels.map((label, index) => (
-                  <li key={`${label}-${index}`}>
-                    <span className="course-hero-tag-pill">
-                      {formatCourseTagLabel(label) || "—"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <p className="course-hero-eyebrow">
-              {hasCourseTagPills
-                ? sanitizeCourseDisplayLabel(
-                    course.subcategoryName,
-                    "Уровень и метаданные",
-                  )
-                : (
-                    <>
-                      {sanitizeCourseDisplayLabel(course.categoryName)} /{" "}
-                      {sanitizeCourseDisplayLabel(
-                        course.subcategoryName,
-                        "Описание структуры",
-                      )}
-                    </>
-                  )}
-            </p>
-            <h1 className="course-hero-title">{course.title}</h1>
-            <p className="course-hero-description">{course.shortDescription}</p>
-          </div>
-
-          <div className="course-hero-meta">
-            <span>
-              {course.authorName
-                ? `Автор: ${course.authorName}`
-                : "Автор пока недоступен"}
-            </span>
-            <span>
-              {course.rating == null
-                ? "Рейтинг пока недоступен"
-                : `Рейтинг ${course.rating}`}
-            </span>
-            <span>
-              {course.studentsCount == null
-                ? "Статистика студентов пока недоступна"
-                : `${course.studentsCount} студентов`}
-            </span>
-          </div>
-
-          {learningActionError ? (
-            <p className="course-not-found-text">{learningActionError}</p>
-          ) : null}
-        </section>
+        <CourseHero
+          course={course}
+          error={learningActionError}
+          tagLabels={courseTagLabels}
+        />
 
         {activeTab === "description" ? (
           <CourseDescriptionTab

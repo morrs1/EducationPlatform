@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { isUuid, requestDraftCoursesByAuthor } from "../../../entities/course";
+import { requestDraftCoursesByAuthor } from "../../../entities/course";
+import { isUuid } from "../../../shared/lib";
 import {
   requestAssignAdminRole,
   requestAssignAuthorRole,
-} from "../../../shared/api/userServiceApi";
+} from "../../../shared/api";
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -212,4 +213,3 @@ function AdminPage() {
 }
 
 export default AdminPage;
-

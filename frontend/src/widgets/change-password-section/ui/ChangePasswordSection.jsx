@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import { submitPasswordChange } from "../../../features/auth";
-import { ChangePasswordForm } from "../../../features/user/change-password";
+import { ChangePasswordForm } from "../../../features/change-password";
 
 function ChangePasswordSection() {
   const dispatch = useDispatch();
