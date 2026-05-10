@@ -1,6 +1,7 @@
 package com.example.course_service.application.interactors.lesson.add_lesson;
 
 import com.example.course_service.application.ports.CourseRepo;
+import com.example.course_service.application.ports.EventBus;
 import com.example.course_service.application.ports.LessonRepo;
 import com.example.course_service.application.ports.TransactionManager;
 import com.example.course_service.domain.course.services.CourseDomainService;
@@ -17,6 +18,7 @@ public class AddLessonInteractor {
     private final TransactionManager transactionManager;
     private final LessonDomainService lessonDomainService;
     private final CourseDomainService courseDomainService;
+    private final EventBus eventBus;
 
     public UUID add(AddLessonCommand command) {
         return transactionManager.inTransaction(() -> {
@@ -35,6 +37,7 @@ public class AddLessonInteractor {
                     command.isPreview()
             );
             courseRepo.addLessonPreview(command.courseId(), command.moduleId(), lessonPreview);
+            eventBus.publish(lessonDomainService.pullEvents());
             return lessonId;
         });
     }

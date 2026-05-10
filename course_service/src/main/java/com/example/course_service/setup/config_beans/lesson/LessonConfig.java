@@ -16,14 +16,16 @@ public class LessonConfig {
     public AddLessonInteractor addLessonInteractor(
             LessonRepo lessonRepo,
             CourseRepo courseRepo,
-            TransactionManager transactionManager
+            TransactionManager transactionManager,
+            EventBus eventBus
     ) {
         return new AddLessonInteractor(
                 lessonRepo,
                 courseRepo,
                 transactionManager,
                 new LessonDomainService(),
-                new CourseDomainService()
+                new CourseDomainService(),
+                eventBus
         );
     }
 

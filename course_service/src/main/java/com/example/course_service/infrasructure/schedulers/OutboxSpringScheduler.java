@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -22,9 +23,10 @@ public class OutboxSpringScheduler {
         var messages = outboxRepo.readNotProcessed();
         messages.forEach(
                 msg -> {
+                    var routingKey = Objects.equals(msg.getEventType(), "lesson.created") ? "lesson.created" : "lesson.updated";
                     rabbitTemplate.convertAndSend(
                             "",
-                            "lesson.created",
+                            routingKey,
                             MessageBuilder
                                     .withBody(msg.getPayload().getBytes(StandardCharsets.UTF_8))
                                     .setContentType(MessageProperties.CONTENT_TYPE_JSON)

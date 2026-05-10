@@ -101,6 +101,7 @@ CREATE TABLE course_tag
 CREATE TABLE outbox_messages
 (
     id           UUID NOT NULL,
+    event_type   VARCHAR,
     payload      JSONB,
     processed_at TIMESTAMPTZ
 );

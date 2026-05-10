@@ -3,12 +3,10 @@ package com.example.course_service.domain.lesson.payload;
 import com.example.course_service.domain.base.BaseValueObject;
 import com.example.course_service.domain.base.exceptions.ValidateException;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.util.Objects;
 
 @Getter
-@ToString
 public class TheoryLessonPayload extends BaseValueObject implements LessonPayload {
 
     private final String markdown;
@@ -26,5 +24,10 @@ public class TheoryLessonPayload extends BaseValueObject implements LessonPayloa
         if (markdown.isBlank()) {
             throw new ValidateException("Theory lesson markdown must not be blank");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "markdown=" + markdown;
     }
 }
