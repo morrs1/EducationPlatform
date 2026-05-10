@@ -1,9 +1,13 @@
 databaseChangeLog:
   - include:
-      file: migrations/v.1.0.0/init.sql
+      file: v.1.0.0/init.sql
+      relativeToChangelogFile: true
   - include:
-      file: migrations/v.1.0.1/seed-demo-users.sql
+      file: v.1.0.1/seed-demo-users.sql
+      relativeToChangelogFile: true
   - include:
-      file: migrations/v.1.0.2/fix-demo-users-required-fields.sql
+      file: v.1.0.2/fix-demo-users-required-fields.sql
+      relativeToChangelogFile: true
   - include:
-      file: migrations/v.1.0.3/delete-spring-demo-user.sql
+      file: v.1.0.3/delete-spring-demo-user.sql
+      relativeToChangelogFile: true

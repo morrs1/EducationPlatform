@@ -1,0 +1,64 @@
+# .dockerignore for user_service.
+#
+# Keeps the Docker build context small (faster + smaller layers) and avoids
+# leaking local state, secrets, or build artefacts into the image.
+
+# ─── Build output ────────────────────────────────────────────────────────────
+build/
+.gradle/
+out/
+**/build/
+**/out/
+
+# ─── IDE / editor ────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# ─── OS metadata ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Secrets & local env ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.keystore
+*.jks
+
+# ─── Git ─────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ─── Tests output / coverage ─────────────────────────────────────────────────
+**/*.log
+.jacoco/
+coverage/
+
+# ─── Docker / compose ────────────────────────────────────────────────────────
+docker-compose*.yaml
+docker-compose*.yml
+**/.dockerignore
+**/Dockerfile
+
+# ─── Deploy state ────────────────────────────────────────────────────────────
+# Local SeaweedFS data accumulated by past runs of the previous compose files.
+deploy/s3/data/
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
+README.md
+AGENTS.md
+CLAUDE.md
+.windsurfrules
+.cursor/
+.github/
+.pre-commit-config.yaml
+docs/
