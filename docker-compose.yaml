@@ -10,9 +10,6 @@
 # api-gateway-app, answer-service-postgres, …) — those stay unique so
 # code that already resolves to them needs no changes.
 #
-# course_service has no docker setup yet; the gateway will return 5xx for
-# /api/course/* until that lands.
-#
 # Usage:
 #   cp .env.example .env
 #   just up-build   # or: docker compose --env-file .env up -d --build
@@ -278,6 +275,118 @@ services:
       test: ["CMD-SHELL", "curl -fsSL http://localhost:${LEARNING_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
       <<: *hc-fast
 
+  # ═══ course_service ═════════════════════════════════════════════════════
+  course-postgres:
+    <<: *default
+    container_name: course-service-postgres
+    hostname: course-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      POSTGRES_DB: ${COURSE_SERVICE_POSTGRES_DB}
+      POSTGRES_USER: ${COURSE_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${COURSE_SERVICE_POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${COURSE_SERVICE_POSTGRES_EXTERNAL_PORT}:${COURSE_SERVICE_POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${COURSE_SERVICE_POSTGRES_USER} -d ${COURSE_SERVICE_POSTGRES_DB}"]
+      <<: *hc-fast
+    volumes:
+      - course-service-postgres.data:/var/lib/postgresql/data
+
+  course-liquibase:
+    <<: *default
+    container_name: course-service-liquibase
+    image: liquibase/liquibase:4.31-alpine
+    restart: "no"
+    depends_on:
+      course-postgres:
+        condition: service_healthy
+    volumes:
+      - ./course_service/deploy/liquibase/changelog:/liquibase/migrations
+    command: >
+      --search-path=/liquibase
+      --changelog-file=migrations/${COURSE_SERVICE_LIQUIBASE_CHANGELOG}
+      --url=jdbc:postgresql://course-service-postgres:${COURSE_SERVICE_POSTGRES_PORT}/${COURSE_SERVICE_POSTGRES_DB}
+      --username=${COURSE_SERVICE_POSTGRES_USER}
+      --password=${COURSE_SERVICE_POSTGRES_PASSWORD}
+      update
+
+  # Provisions the `course-service-local` bucket on the shared SeaweedFS.
+  course-seaweedfs-init:
+    <<: *default
+    container_name: course-service-seaweedfs-init
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+    restart: "no"
+    depends_on:
+      user-seaweedfs:
+        condition: service_healthy
+    environment:
+      MC_HOST_seaweed: http://${COURSE_SERVICE_S3_ACCESS_KEY}:${COURSE_SERVICE_S3_SECRET_KEY}@user-service-seaweedfs:8333
+      BUCKET: ${COURSE_SERVICE_S3_BUCKET}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        attempts=0
+        until mc ls seaweed >/dev/null 2>&1; do
+          attempts=$$((attempts + 1))
+          if [ $$attempts -ge 30 ]; then
+            echo "SeaweedFS S3 still not reachable after 30 tries; giving up." >&2
+            exit 1
+          fi
+          echo "Waiting for SeaweedFS S3 ($$attempts/30) ..."
+          sleep 1
+        done
+
+        if mc ls "seaweed/$$BUCKET" >/dev/null 2>&1; then
+          echo "Bucket '$$BUCKET' already exists"
+        else
+          mc mb "seaweed/$$BUCKET"
+        fi
+
+  course-app:
+    <<: *default
+    container_name: course-service-app
+    hostname: course-service-app
+    build:
+      context: ./course_service
+      dockerfile: deploy/course_service/Dockerfile
+    environment:
+      COURSE_SERVICE_SERVER_PORT: ${COURSE_SERVICE_SERVER_PORT}
+      COURSE_SERVICE_MULTIPART_MAX_FILE_SIZE: ${COURSE_SERVICE_MULTIPART_MAX_FILE_SIZE}
+      COURSE_SERVICE_MULTIPART_MAX_REQUEST_SIZE: ${COURSE_SERVICE_MULTIPART_MAX_REQUEST_SIZE}
+      COURSE_SERVICE_POSTGRES_HOST: ${COURSE_SERVICE_POSTGRES_HOST}
+      COURSE_SERVICE_POSTGRES_PORT: ${COURSE_SERVICE_POSTGRES_PORT}
+      COURSE_SERVICE_POSTGRES_DB: ${COURSE_SERVICE_POSTGRES_DB}
+      COURSE_SERVICE_POSTGRES_USER: ${COURSE_SERVICE_POSTGRES_USER}
+      COURSE_SERVICE_POSTGRES_PASSWORD: ${COURSE_SERVICE_POSTGRES_PASSWORD}
+      COURSE_SERVICE_S3_ENABLED: ${COURSE_SERVICE_S3_ENABLED}
+      COURSE_SERVICE_S3_BUCKET: ${COURSE_SERVICE_S3_BUCKET}
+      COURSE_SERVICE_S3_REGION: ${COURSE_SERVICE_S3_REGION}
+      COURSE_SERVICE_S3_ACCESS_KEY: ${COURSE_SERVICE_S3_ACCESS_KEY}
+      COURSE_SERVICE_S3_SECRET_KEY: ${COURSE_SERVICE_S3_SECRET_KEY}
+      COURSE_SERVICE_S3_ENDPOINT: ${COURSE_SERVICE_S3_ENDPOINT}
+      COURSE_SERVICE_S3_PATH_STYLE_ACCESS: ${COURSE_SERVICE_S3_PATH_STYLE_ACCESS}
+      COURSE_SERVICE_S3_PUBLIC_BASE_URL: ${COURSE_SERVICE_S3_PUBLIC_BASE_URL}
+      COURSE_SERVICE_RABBITMQ_HOST: ${COURSE_SERVICE_RABBITMQ_HOST}
+      COURSE_SERVICE_RABBITMQ_PORT: ${COURSE_SERVICE_RABBITMQ_PORT}
+      COURSE_SERVICE_RABBITMQ_USER: ${COURSE_SERVICE_RABBITMQ_USER}
+      COURSE_SERVICE_RABBITMQ_PASSWORD: ${COURSE_SERVICE_RABBITMQ_PASSWORD}
+      JAVA_TOOL_OPTIONS: ${COURSE_SERVICE_JVM_OPTS}
+    ports:
+      - "127.0.0.1:${COURSE_SERVICE_SERVER_PORT}:${COURSE_SERVICE_SERVER_PORT}"
+    depends_on:
+      course-postgres:
+        condition: service_healthy
+      course-liquibase:
+        condition: service_completed_successfully
+      course-seaweedfs-init:
+        condition: service_completed_successfully
+      answer-rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:${COURSE_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-fast
+
   # ═══ answer_service ═════════════════════════════════════════════════════
   answer-postgres:
     <<: *default
@@ -497,6 +606,8 @@ services:
         condition: service_started
       learning-app:
         condition: service_started
+      course-app:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -fsSL http://localhost:${API_GATEWAY_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
       <<: *hc-fast
@@ -536,6 +647,7 @@ volumes:
   user-service-postgres.data: {}
   user-service-seaweedfs.data: {}
   learning-service-postgres.data: {}
+  course-service-postgres.data: {}
   answer-service-postgres.data: {}
   answer-service-redis.data: {}
   answer-service-rabbitmq.data: {}
