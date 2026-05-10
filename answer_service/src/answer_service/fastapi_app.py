@@ -53,12 +53,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     logger.info("Starting FastStream RabbitMQ broker")
     setup_faststream_dishka(container, broker=rabbit_broker)
-    await rabbit_broker.start()
 
     yield
 
     logger.info("Stopping FastStream RabbitMQ broker")
-    await rabbit_broker.stop()
 
     if not task_manager.is_worker_process:
         logger.info("Shutting down taskiq")
