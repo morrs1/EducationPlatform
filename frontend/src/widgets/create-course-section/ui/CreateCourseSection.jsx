@@ -3,20 +3,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
-  createViewerCourseSnapshot,
   resolveCourseServiceAuthorId,
   selectViewer,
   selectViewerName,
   upsertViewerCourseSnapshot,
 } from "../../../features/viewer";
+import { createViewerCourseSnapshot } from "../../../entities/viewer";
 import {
   enrichCoursePageDataWithAuthorName,
-  isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestAllCourses,
   requestCourseById,
   requestCourseCreation,
 } from "../../../entities/course";
+import { isUuid } from "../../../shared/lib";
 
 const initialFormState = {
   title: "",
@@ -186,9 +186,12 @@ function CreateCourseSection() {
       navigate(`/course/${courseId}/syllabus`);
     } catch (error) {
       setSubmitStatus("error");
-      setSubmitError(
-        error?.message ?? "Не удалось создать курс.",
-      );
+      const status = error?.status;
+      const message =
+        status === 401 || status === 403
+          ? "Чтобы создать курс, у вас должен быть статус автора."
+          : (error?.message ?? "Не удалось создать курс.");
+      setSubmitError(message);
     }
   }
 

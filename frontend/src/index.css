@@ -941,7 +941,7 @@
   }
 
   .course-syllabus-empty-state {
-    @apply mx-auto flex w-full max-w-3xl flex-col gap-3 rounded-[1.6rem] border px-5 py-5 text-center;
+    @apply mx-auto flex w-full max-w-3xl flex-col items-center gap-3 rounded-[1.6rem] border px-5 py-5 text-center;
     border-color: rgba(37, 99, 235, 0.1);
     background:
       radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 28%),
@@ -1958,7 +1958,7 @@
 
   .lesson-editor-empty-panel,
   .lesson-editor-empty-state {
-    @apply flex flex-col gap-3 rounded-[1.4rem] border px-5 py-5 text-center;
+    @apply flex flex-col items-center gap-3 rounded-[1.4rem] border px-5 py-5 text-center;
     border-color: rgba(37, 99, 235, 0.1);
     background:
       radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 28%),
@@ -3297,90 +3297,7 @@
     @apply w-full px-3 py-2 text-sm text-left text-gray-700 transition rounded-lg hover:bg-gray-100 hover:text-gray-900;
   }
 
-  /*Favourite section*/
-
-  .favourite-courses-section {
-    @apply flex flex-col gap-6;
-  }
-
-  .favourite-courses-header {
-    @apply flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between;
-  }
-
-  .favourite-courses-title {
-    @apply text-2xl font-bold text-center text-gray-900 sm:text-3xl md:text-left;
-  }
-
-  .favourite-courses-search {
-    @apply flex flex-col gap-3 sm:flex-row xl:w-full xl:max-w-xl;
-  }
-
-  .favourite-courses-search-input {
-    @apply w-full px-4 py-3 text-sm text-gray-900 outline-none rounded-2xl placeholder:text-gray-400 sm:text-base;
-    border-color: rgba(16, 33, 61, 0.1);
-    background: rgba(255, 255, 255, 0.84);
-  }
-
-  .favourite-courses-search-btn {
-    @apply px-5 py-3 text-sm font-medium transition border cursor-pointer rounded-2xl sm:text-base xl:shrink-0;
-    color: var(--app-accent-strong);
-    border-color: var(--app-border-strong);
-    background: rgba(255, 255, 255, 0.72);
-  }
-
-  .favourite-courses-list {
-    @apply flex flex-col gap-4 rounded-[2rem] p-4 md:p-6;
-  }
-
-  .favourite-course-card {
-    @apply relative rounded-[1.75rem] border p-4 transition duration-300 hover:-translate-y-1 md:p-6;
-  }
-
-  .favourite-course-card-content {
-    @apply flex flex-col gap-5 sm:flex-row sm:items-start lg:gap-6;
-  }
-
-  .favourite-course-card-img {
-    @apply self-center object-cover w-24 h-24 shadow-md rounded-2xl shadow-black/20 sm:h-24 sm:w-24 sm:self-start md:h-26 md:w-26 lg:h-28 lg:w-40 lg:shrink-0;
-  }
-
-  .favourite-course-card-body {
-    @apply flex flex-col flex-1 min-w-0 gap-5;
-  }
-
-  .favourite-course-card-meta {
-    @apply flex flex-col gap-5;
-  }
-
-  .favourite-course-card-title {
-    @apply w-fit text-2xl font-bold text-slate-900 transition hover:underline;
-  }
-
-  .favourite-course-card-author {
-    @apply text-sm font-medium text-gray-500 transition hover:text-gray-900 hover:underline sm:text-base w-fit md:text-xl;
-  }
-
-  .favourite-course-menu-wrap {
-    @apply absolute top-4 right-4 md:top-6 md:right-6;
-  }
-
-  .favourite-course-menu-btn {
-    @apply flex h-11 w-11 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border transition;
-    border-color: var(--app-border-strong);
-    background: rgba(255, 255, 255, 0.82);
-  }
-
-  .favourite-course-menu-btn span {
-    @apply w-1 h-1 bg-gray-900 rounded-full;
-  }
-
-  .favourite-course-menu {
-    @apply absolute right-0 z-20 p-2 bg-white border border-gray-200 shadow-lg top-13 min-w-52 rounded-xl;
-  }
-
-  .favourite-course-menu-item {
-    @apply w-full px-3 py-2 text-sm text-left text-gray-700 transition rounded-lg hover:bg-gray-100 hover:text-gray-900;
-  }
+  /* Favourite courses section removed (feature not implemented). */
 
   /*EditProfileSidebar*/
 
@@ -3411,6 +3328,74 @@
   .search-page {
     @apply mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 md:gap-10;
     animation: page-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .admin-page {
+    @apply mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 md:gap-8;
+    animation: page-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .admin-card {
+    @apply p-5 md:p-6;
+  }
+
+  .admin-form {
+    @apply flex flex-col gap-4;
+  }
+
+  .admin-actions {
+    @apply flex flex-col gap-3 sm:flex-row sm:flex-wrap;
+  }
+
+  .admin-secondary-btn {
+    @apply opacity-90;
+  }
+
+  .admin-drafts-head {
+    @apply flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between;
+  }
+
+  .admin-subtitle {
+    @apply text-lg md:text-xl;
+  }
+
+  .admin-muted {
+    @apply m-0 text-sm leading-6;
+    color: var(--app-muted);
+  }
+
+  .admin-drafts-list {
+    @apply mt-4 flex flex-col gap-3;
+  }
+
+  .admin-draft-row {
+    @apply flex flex-col gap-3 rounded-[1.4rem] border p-4 sm:flex-row sm:items-center sm:justify-between;
+    border-color: rgba(37, 99, 235, 0.1);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .admin-draft-copy {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+
+  .admin-draft-title {
+    @apply text-base font-semibold;
+    color: var(--app-ink);
+  }
+
+  .admin-draft-meta {
+    @apply text-xs font-medium uppercase tracking-[0.16em];
+    color: var(--app-muted);
+  }
+
+  .admin-draft-actions {
+    @apply flex flex-wrap gap-2;
+  }
+
+  :root[data-theme="dark"] .admin-draft-row {
+    border-color: var(--app-border);
+    background: rgba(8, 13, 22, 0.64);
+    box-shadow: 0 18px 40px -34px rgba(0, 0, 0, 0.6);
   }
 
   .home-discovery-panel {
@@ -4061,7 +4046,6 @@
   .profile-activity,
   .current-courses-list,
   .completed-courses-list,
-  .favourite-courses-list,
   .search-results-empty-state,
   .course-hero,
   .course-tabs,
@@ -4079,7 +4063,6 @@
 
   .current-course-card,
   .completed-course-card,
-  .favourite-course-card,
   .certificate-card,
   .course-module-card,
   .course-review-card,
@@ -4090,16 +4073,14 @@
   }
 
   .current-course-menu-btn,
-  .completed-course-menu-btn,
-  .favourite-course-menu-btn {
+  .completed-course-menu-btn {
     border-color: var(--app-border);
     background: var(--app-surface);
     box-shadow: 0 16px 28px -26px rgba(15, 23, 42, 0.28);
   }
 
   .current-course-menu,
-  .completed-course-menu,
-  .favourite-course-menu {
+  .completed-course-menu {
     border-color: var(--app-border);
     background: var(--app-surface-strong);
     box-shadow: 0 24px 48px -30px rgba(15, 23, 42, 0.32);
@@ -4212,29 +4193,25 @@
   }
 
   .current-courses-search-input:focus,
-  .completed-courses-search-input:focus,
-  .favourite-courses-search-input:focus {
+  .completed-courses-search-input:focus {
     border-color: var(--app-border-strong);
     box-shadow: 0 0 0 4px var(--app-accent-soft);
   }
 
   .current-courses-search-btn:hover,
-  .completed-courses-search-btn:hover,
-  .favourite-courses-search-btn:hover {
+  .completed-courses-search-btn:hover {
     color: #ffffff;
     border-color: transparent;
     background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
   }
 
   .current-course-card-title:hover,
-  .completed-course-card-title:hover,
-  .favourite-course-card-title:hover {
+  .completed-course-card-title:hover {
     color: var(--app-accent-strong);
   }
 
   .current-course-menu-btn:hover,
-  .completed-course-menu-btn:hover,
-  .favourite-course-menu-btn:hover {
+  .completed-course-menu-btn:hover {
     border-color: var(--app-border-strong);
     background: rgba(37, 99, 235, 0.08);
   }
@@ -4559,7 +4536,6 @@
   :root[data-theme="dark"] .home-discovery-filter,
   :root[data-theme="dark"] .current-courses-search-input,
   :root[data-theme="dark"] .completed-courses-search-input,
-  :root[data-theme="dark"] .favourite-courses-search-input,
   :root[data-theme="dark"] .auth-modal-input {
     border-color: var(--app-border);
     background: var(--app-input-surface);
@@ -4572,7 +4548,6 @@
   :root[data-theme="dark"] .home-discovery-input::placeholder,
   :root[data-theme="dark"] .current-courses-search-input::placeholder,
   :root[data-theme="dark"] .completed-courses-search-input::placeholder,
-  :root[data-theme="dark"] .favourite-courses-search-input::placeholder,
   :root[data-theme="dark"] .auth-modal-input::placeholder {
     color: rgba(150, 161, 183, 0.82);
   }
@@ -4591,7 +4566,6 @@
 
   :root[data-theme="dark"] .current-courses-search-btn,
   :root[data-theme="dark"] .completed-courses-search-btn,
-  :root[data-theme="dark"] .favourite-courses-search-btn,
   :root[data-theme="dark"] .certificate-download-btn {
     color: var(--app-accent-strong);
     border-color: var(--app-border-strong);
@@ -4600,7 +4574,6 @@
 
   :root[data-theme="dark"] .current-courses-search-btn:hover,
   :root[data-theme="dark"] .completed-courses-search-btn:hover,
-  :root[data-theme="dark"] .favourite-courses-search-btn:hover,
   :root[data-theme="dark"] .certificate-download-btn:hover:not(:disabled) {
     color: #ffffff;
     border-color: transparent;
@@ -4609,10 +4582,9 @@
 
   :root[data-theme="dark"] .current-course-menu-btn,
   :root[data-theme="dark"] .completed-course-menu-btn,
-  :root[data-theme="dark"] .favourite-course-menu-btn,
   :root[data-theme="dark"] .current-course-menu,
   :root[data-theme="dark"] .completed-course-menu,
-  :root[data-theme="dark"] .favourite-course-menu {
+  :root[data-theme="dark"] .completed-course-menu {
     border-color: var(--app-border);
     background: var(--app-surface-ghost);
     box-shadow: 0 26px 52px -34px rgba(0, 0, 0, 0.68);
@@ -4620,26 +4592,24 @@
 
   :root[data-theme="dark"] .current-course-menu-btn:hover,
   :root[data-theme="dark"] .completed-course-menu-btn:hover,
-  :root[data-theme="dark"] .favourite-course-menu-btn:hover {
+  :root[data-theme="dark"] .completed-course-menu-btn:hover {
     border-color: var(--app-border-strong);
     background: rgba(91, 124, 240, 0.08);
   }
 
   :root[data-theme="dark"] .current-course-menu-btn span,
   :root[data-theme="dark"] .completed-course-menu-btn span,
-  :root[data-theme="dark"] .favourite-course-menu-btn span {
+  :root[data-theme="dark"] .completed-course-menu-btn span {
     background: var(--app-muted);
   }
 
   :root[data-theme="dark"] .current-course-menu-item,
-  :root[data-theme="dark"] .completed-course-menu-item,
-  :root[data-theme="dark"] .favourite-course-menu-item {
+  :root[data-theme="dark"] .completed-course-menu-item {
     color: var(--app-muted);
   }
 
   :root[data-theme="dark"] .current-course-menu-item:hover,
-  :root[data-theme="dark"] .completed-course-menu-item:hover,
-  :root[data-theme="dark"] .favourite-course-menu-item:hover {
+  :root[data-theme="dark"] .completed-course-menu-item:hover {
     color: var(--app-ink);
     background: rgba(91, 124, 240, 0.12);
   }
@@ -4691,7 +4661,6 @@
   :root[data-theme="dark"] .current-courses-title,
   :root[data-theme="dark"] .completed-courses-title,
   :root[data-theme="dark"] .certificates-title,
-  :root[data-theme="dark"] .favourite-courses-title,
   :root[data-theme="dark"] .search-results-empty-title,
   :root[data-theme="dark"] .course-hero-title,
   :root[data-theme="dark"] .course-tabs-title,
@@ -4709,7 +4678,6 @@
   :root[data-theme="dark"] .current-course-card-title,
   :root[data-theme="dark"] .completed-course-card-title,
   :root[data-theme="dark"] .certificate-course-title,
-  :root[data-theme="dark"] .favourite-course-card-title,
   :root[data-theme="dark"] .current-course-review-btn,
   :root[data-theme="dark"] .completed-course-review-btn,
   :root[data-theme="dark"] .course-lesson-title,
@@ -4736,7 +4704,6 @@
   :root[data-theme="dark"] .profile-activity-metric span,
   :root[data-theme="dark"] .current-course-card-author,
   :root[data-theme="dark"] .completed-course-card-author,
-  :root[data-theme="dark"] .favourite-course-card-author,
   :root[data-theme="dark"] .current-course-progress-head,
   :root[data-theme="dark"] .completed-course-progress-head,
   :root[data-theme="dark"] .search-results-empty-text,
@@ -5279,10 +5246,9 @@
 
   :root[data-theme="dark"] .current-course-card-title:hover,
   :root[data-theme="dark"] .completed-course-card-title:hover,
-  :root[data-theme="dark"] .favourite-course-card-title:hover,
   :root[data-theme="dark"] .current-course-card-author:hover,
   :root[data-theme="dark"] .completed-course-card-author:hover,
-  :root[data-theme="dark"] .favourite-course-card-author:hover {
+  :root[data-theme="dark"] .completed-course-card-author:hover {
     color: #dbe8ff;
   }
 
@@ -5455,6 +5421,7 @@
 
 .lesson-assistant-rail {
   @apply w-full min-h-0 self-start overflow-hidden xl:min-w-[420px] xl:flex-[1_1_0%];
+  overscroll-behavior: contain;
   height: min(78dvh, calc(100dvh - 7rem));
   max-height: min(78dvh, calc(100dvh - 7rem));
   animation: assistant-panel-enter 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -6216,6 +6183,7 @@
 
 .assistant-panel {
   @apply flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.35)];
+  overscroll-behavior: contain;
   max-height: inherit;
 }
 
@@ -6257,6 +6225,7 @@
 
 .assistant-panel-scroll {
   @apply flex flex-col flex-1 min-h-0 gap-4 px-5 py-5 overflow-y-auto sm:px-6;
+  overscroll-behavior-y: contain;
   opacity: 0;
   scrollbar-gutter: stable;
   transition: opacity 0.16s ease;
@@ -6372,6 +6341,7 @@
 
 .assistant-panel-input {
   @apply w-full px-2 py-2 text-sm leading-7 text-gray-900 bg-transparent outline-none resize-none placeholder:text-gray-400;
+  overscroll-behavior: contain;
   min-height: 44px;
   max-height: none;
 }

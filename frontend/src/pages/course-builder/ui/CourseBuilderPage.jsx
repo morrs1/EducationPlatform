@@ -3,21 +3,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, Outlet, useParams } from "react-router";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
-  createViewerCourseSnapshot,
   resolveCourseServiceAuthorId,
   selectViewer,
   selectViewerName,
   upsertViewerCourseSnapshot,
 } from "../../../features/viewer";
+import { createViewerCourseSnapshot } from "../../../entities/viewer";
 import {
   enrichCoursePageDataWithAuthorName,
-  isUuid,
   mapReadCourseByIdResponseToCoursePageData,
   requestAddLessonToCourse,
   requestAddModuleToCourse,
   requestCourseById,
   requestPublishCourse,
 } from "../../../entities/course";
+import { isUuid } from "../../../shared/lib";
 import { CourseBuilderSidebar } from "../../../widgets/course-builder-sidebar";
 
 function collectSyllabusLessonIds(modules) {

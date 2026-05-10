@@ -8,7 +8,6 @@ import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
 import {
   hydrateViewerLearningFromLearningService,
   selectCompletedCourses,
-  toggleFavouriteCourse,
 } from "../../../features/viewer";
 
 function CompletedCoursesSection() {
@@ -73,9 +72,6 @@ function CompletedCoursesSection() {
       <CompletedCoursesList
         courses={filteredCourses}
         emptyMessage={isSearchApplied ? emptyMessage : undefined}
-        onToggleFavouriteCourse={(courseId) =>
-          dispatch(toggleFavouriteCourse(courseId))
-        }
       />
     </section>
   );

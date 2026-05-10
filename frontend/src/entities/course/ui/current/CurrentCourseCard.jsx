@@ -5,7 +5,6 @@ import { getCourseCoverSrc } from "../../model/getCourseCoverSrc";
 function CurrentCourseCard({
   course,
   isLeaving = false,
-  onToggleFavouriteCourse,
   onLeaveCourse,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -90,12 +89,9 @@ function CurrentCourseCard({
               type="button"
               className="current-course-menu-item"
               role="menuitem"
-              onClick={() => {
-                onToggleFavouriteCourse(course.id);
-                setIsMenuOpen(false);
-              }}
+              onClick={() => setIsMenuOpen(false)}
             >
-              {course.isFavourite ? "Убрать из избранного" : "Добавить в избранное"}
+              Закрыть
             </button>
           </div>
         ) : null}

@@ -14,9 +14,6 @@ function AccountSidebar() {
       >
         Завершенные курсы
       </NavLink>
-      <NavLink to="/account/favourites" className="account-sidebar-navlink">
-        Избранное
-      </NavLink>
       <NavLink to="/account/certificates" className="account-sidebar-navlink">
         Сертификаты
       </NavLink>

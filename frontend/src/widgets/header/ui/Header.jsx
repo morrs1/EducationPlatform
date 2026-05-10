@@ -175,18 +175,6 @@ function Header() {
                 Настройки
               </NavLink>
 
-              <NavLink
-                to="/notifications"
-                className="header-profile-menu-item"
-                role="menuitem"
-                onClick={() => {
-                  dispatch(closeCatalog());
-                  setIsMenuOpen(false);
-                }}
-              >
-                Уведомления
-              </NavLink>
-
               <button
                 type="button"
                 className="header-profile-menu-item danger"

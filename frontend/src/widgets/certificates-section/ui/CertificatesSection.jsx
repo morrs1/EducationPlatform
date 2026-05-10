@@ -10,7 +10,7 @@ import {
   selectViewer,
   selectViewerName,
 } from "../../../features/viewer";
-import { downloadLearningCertificatePdf } from "../../../shared/lib/downloadLearningCertificatePdf";
+import { downloadLearningCertificatePdf } from "../../../shared/lib";
 
 function getCourseTitleFromViewer(viewer, courseId) {
   const normalizedCourseId = normalizeViewerCourseId(courseId);

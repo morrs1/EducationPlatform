@@ -9,8 +9,8 @@ public class BaseException extends RuntimeException {
     private int httpCode;
 
     public BaseException(String message, int httpCode) {
-        this.httpCode = httpCode;
         super(message);
+        this.httpCode = httpCode;
     }
 
 }

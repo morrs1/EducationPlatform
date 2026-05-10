@@ -23,7 +23,7 @@ public class BaseDomainService {
         return events;
     }
 
-    public List<BaseDomainEvent> pull_events() {
+    public List<BaseDomainEvent> pullEvents() {
         var events = List.copyOf(this.events);
         this.events.clear();
         return events;

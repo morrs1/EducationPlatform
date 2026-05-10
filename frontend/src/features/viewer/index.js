@@ -13,7 +13,6 @@ export {
   updateViewerProfile,
   changeViewerEmail,
   enrollInCourse,
-  toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
   syncLearningEnrollment,
@@ -24,25 +23,7 @@ export {
   resetDemoState,
 } from "./model/viewerSlice";
 
-export {
-  buildAvatarUrl,
-  createViewerCourseSnapshot,
-  createInitialViewerState,
-  createViewerProfileFromRegistration,
-} from "../../entities/viewer";
 export { resolveCourseServiceAuthorId } from "./model/courseServiceAuthorId";
-
-export {
-  loadViewerProfilesMap,
-  saveViewerProfilesMap,
-  loadViewerProfileByViewerId,
-  saveViewerProfile,
-} from "../../entities/viewer";
-
-export {
-  requestViewerDisplayProfileById,
-  resolveRemoteViewerId,
-} from "../../shared/api/userServiceApi";
 
 export {
   selectViewer,
@@ -55,17 +36,14 @@ export {
   selectViewerHeadline,
   selectViewerAbout,
   selectEnrolledCourseIds,
-  selectFavouriteCourseIds,
   selectCompletedCourseIds,
   selectCertificateCourseIds,
   selectProgressByCourseId,
   selectIsEnrolledInCourse,
-  selectIsFavouriteCourse,
   selectIsCompletedCourse,
   selectCanViewCourseContent,
   selectViewerCourseProgress,
   selectCurrentCourses,
-  selectFavouriteCourses,
   selectCompletedCourses,
   selectViewerCourseById,
 } from "./model/selectors";

@@ -1,31 +1,223 @@
 import {
-  addAssistantMessage,
   assistantReplyFailed,
-  setAssistantThreadId,
+  assistantThreadLoaded,
+  startAssistantThreadLoading,
   startAssistantReply,
 } from "./assistantSlice";
-import { requestAssistantReply } from "./requestAssistantReply";
+import {
+  isAnswerServiceUuid,
+  requestAskAssistantQuestion,
+  requestAssistantConversation,
+  requestAssistantConversations,
+  requestCreateAssistantConversation,
+} from "../api/answerServiceApi";
 
-function createUserMessage(text) {
+function mapConversationToMessages(conversation) {
+  return (conversation?.messages ?? []).flatMap((message) => {
+    const createdAt = message.createdAt || new Date().toISOString();
+    const messages = [];
+
+    if (message.question) {
+      messages.push({
+        id: `${message.messageId}:question`,
+        role: "user",
+        text: message.question,
+        createdAt,
+      });
+    }
+
+    if (message.answer) {
+      messages.push({
+        id: `${message.messageId}:answer`,
+        role: "assistant",
+        text: message.answer,
+        createdAt,
+      });
+    }
+
+    return messages;
+  });
+}
+
+function getLatestConversationForLesson(conversations, lessonId) {
+  return (
+    conversations.find((conversation) => conversation.lessonId === lessonId) ??
+    null
+  );
+}
+
+async function loadConversationById(conversationId) {
+  const conversation = await requestAssistantConversation(conversationId);
+
   return {
-    id: `user-message-${Date.now()}`,
-    role: "user",
-    text,
-    createdAt: new Date().toISOString(),
+    conversation,
+    threadId: conversation.conversationId,
+    messages: mapConversationToMessages(conversation),
+  };
+}
+
+async function resolveConversationId({ threadId, userId, lessonId }) {
+  if (isAnswerServiceUuid(threadId)) {
+    return threadId;
+  }
+
+  const conversation = await requestCreateAssistantConversation({
+    userId,
+    lessonId,
+  });
+
+  return conversation.conversationId;
+}
+
+export function hydrateAssistantConversation({
+  contextKey,
+  threadId,
+}) {
+  return async (dispatch) => {
+    if (!contextKey || !isAnswerServiceUuid(threadId)) {
+      return {
+        ok: false,
+        skipped: true,
+      };
+    }
+
+    dispatch(startAssistantThreadLoading({ contextKey }));
+
+    try {
+      const loadedConversation = await loadConversationById(threadId);
+
+      dispatch(
+        assistantThreadLoaded({
+          contextKey,
+          threadId: loadedConversation.threadId,
+          messages: loadedConversation.messages,
+        }),
+      );
+
+      return {
+        ok: true,
+        conversation: loadedConversation.conversation,
+      };
+    } catch (error) {
+      const errorMessage =
+        error?.message ?? "Не удалось загрузить историю чата.";
+
+      dispatch(
+        assistantReplyFailed({
+          contextKey,
+          error: errorMessage,
+        }),
+      );
+
+      return {
+        ok: false,
+        error: errorMessage,
+      };
+    }
+  };
+}
+
+export function hydrateAssistantConversationForLesson({
+  contextKey,
+  threadId,
+  userId,
+  lessonId,
+}) {
+  return async (dispatch) => {
+    if (!contextKey) {
+      return {
+        ok: false,
+        skipped: true,
+      };
+    }
+
+    if (!isAnswerServiceUuid(userId) || !isAnswerServiceUuid(lessonId)) {
+      dispatch(
+        assistantThreadLoaded({
+          contextKey,
+          threadId: null,
+          messages: [],
+        }),
+      );
+
+      return {
+        ok: false,
+        skipped: true,
+      };
+    }
+
+    dispatch(startAssistantThreadLoading({ contextKey }));
+
+    try {
+      let conversationId = isAnswerServiceUuid(threadId) ? threadId : null;
+
+      if (!conversationId) {
+        const conversations = await requestAssistantConversations({
+          userId,
+          limit: 200,
+        });
+        const existingConversation = getLatestConversationForLesson(
+          conversations,
+          lessonId,
+        );
+
+        conversationId = existingConversation?.conversationId ?? null;
+      }
+
+      if (!conversationId) {
+        dispatch(
+          assistantThreadLoaded({
+            contextKey,
+            threadId: null,
+            messages: [],
+          }),
+        );
+
+        return {
+          ok: true,
+          skipped: true,
+        };
+      }
+
+      const loadedConversation = await loadConversationById(conversationId);
+
+      dispatch(
+        assistantThreadLoaded({
+          contextKey,
+          threadId: loadedConversation.threadId,
+          messages: loadedConversation.messages,
+        }),
+      );
+
+      return {
+        ok: true,
+        conversation: loadedConversation.conversation,
+      };
+    } catch (error) {
+      const errorMessage =
+        error?.message ?? "Не удалось загрузить историю чата.";
+
+      dispatch(
+        assistantReplyFailed({
+          contextKey,
+          error: errorMessage,
+        }),
+      );
+
+      return {
+        ok: false,
+        error: errorMessage,
+      };
+    }
   };
 }
 
 export function submitAssistantMessage({
   contextKey,
   threadId,
-  courseId,
+  userId,
   lessonId,
-  stepId,
   userMessage,
-  lessonTitle,
-  stepTitle,
-  stepType,
-  stepMarkdown,
 }) {
   return async (dispatch) => {
     const normalizedMessage = userMessage?.trim() ?? "";
@@ -37,45 +229,49 @@ export function submitAssistantMessage({
       };
     }
 
-    dispatch(
-      addAssistantMessage({
-        contextKey,
-        message: createUserMessage(normalizedMessage),
-      }),
-    );
+    if (!isAnswerServiceUuid(userId) || !isAnswerServiceUuid(lessonId)) {
+      const error = "Ассистент доступен только для уроков из answer_service.";
+
+      dispatch(
+        assistantReplyFailed({
+          contextKey,
+          error,
+        }),
+      );
+
+      return {
+        ok: false,
+        error,
+      };
+    }
 
     dispatch(startAssistantReply({ contextKey }));
 
     try {
-      const result = await requestAssistantReply({
+      const conversationId = await resolveConversationId({
         threadId,
-        courseId,
+        userId,
         lessonId,
-        stepId,
-        userMessage: normalizedMessage,
-        lessonTitle,
-        stepTitle,
-        stepType,
-        stepMarkdown,
       });
-
-      dispatch(
-        setAssistantThreadId({
-          contextKey,
-          threadId: result.threadId,
-        }),
+      const answer = await requestAskAssistantQuestion({
+        conversationId,
+        question: normalizedMessage,
+      });
+      const loadedConversation = await loadConversationById(
+        answer.conversationId,
       );
 
       dispatch(
-        addAssistantMessage({
+        assistantThreadLoaded({
           contextKey,
-          message: result.message,
+          threadId: loadedConversation.threadId,
+          messages: loadedConversation.messages,
         }),
       );
 
       return {
         ok: true,
-        threadId: result.threadId,
+        threadId: loadedConversation.threadId,
       };
     } catch (error) {
       const errorMessage =

@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { getMockCourses } from "../../../entities/course";
 import {
   buildAvatarUrl,
+  buildAvatarInitialsSeed,
   buildViewerDisplayName,
   createViewerCourseSnapshot,
   createInitialViewerState,
@@ -106,7 +107,13 @@ const viewerSlice = createSlice({
       if (avatarUrl) {
         state.avatarUrl = avatarUrl;
       } else if (isGeneratedViewerAvatar(state.avatarUrl)) {
-        state.avatarUrl = buildAvatarUrl(nextFullName);
+        state.avatarUrl = buildAvatarUrl(
+          buildAvatarInitialsSeed({
+            firstName: nextFirstName,
+            lastName: nextLastName,
+            name: nextFullName,
+          }) || nextFullName,
+        );
       }
     },
 
@@ -150,27 +157,6 @@ const viewerSlice = createSlice({
           lastVisitedAt: new Date().toISOString(),
         };
       }
-    },
-
-    toggleFavouriteCourse: (state, action) => {
-      const { courseId, courseSnapshot } = resolveViewerCourseActionPayload(
-        action.payload,
-      );
-
-      if (courseId == null) {
-        return;
-      }
-
-      upsertCourseSnapshot(state, courseSnapshot);
-
-      const favouriteIndex = state.favouriteCourseIds.indexOf(courseId);
-
-      if (favouriteIndex >= 0) {
-        state.favouriteCourseIds.splice(favouriteIndex, 1);
-        return;
-      }
-
-      state.favouriteCourseIds.push(courseId);
     },
 
     leaveCourse: (state, action) => {
@@ -338,7 +324,6 @@ export const {
   updateViewerProfile,
   changeViewerEmail,
   enrollInCourse,
-  toggleFavouriteCourse,
   leaveCourse,
   markCourseCompleted,
   syncLearningEnrollment,

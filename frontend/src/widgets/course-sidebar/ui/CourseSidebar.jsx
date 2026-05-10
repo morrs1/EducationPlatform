@@ -1,11 +1,10 @@
-import { CourseActionsPanel } from "../../course-actions-panel";
-import { CourseStatsPanel } from "../../course-stats-panel";
+import CourseActionsPanel from "./CourseActionsPanel";
+import CourseStatsPanel from "./CourseStatsPanel";
 
 function CourseSidebar({
   course,
   isLogged,
   onPrimaryAction,
-  onToggleFavourite,
 }) {
   return (
     <div className="course-sidebar">
@@ -13,7 +12,6 @@ function CourseSidebar({
         course={course}
         isLogged={isLogged}
         onPrimaryAction={onPrimaryAction}
-        onToggleFavourite={onToggleFavourite}
       />
 
       <CourseStatsPanel course={course} />

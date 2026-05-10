@@ -7,10 +7,7 @@ import org.example.user_service.domain.user.events.CreateUserDomainEvent;
 import org.example.user_service.domain.user.ports.PasswordHasher;
 import org.example.user_service.domain.user.vo.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class UserDomainService extends BaseDomainService {
@@ -24,28 +21,23 @@ public class UserDomainService extends BaseDomainService {
             String userStatus,
             String email,
             String password,
-            String profilePhotoLink,
-            List<UUID> currentCourses,
-            List<UUID> finishedCourses,
-            List<UUID> certificates
+            String profilePhotoLink
     ) {
-        var user = new User(
-                UUID.randomUUID(),
-                new UserSurname(surname),
-                new UserName(name),
-                new UserPatronymic(patronymic),
-                new UserStatus(userStatus),
-                new UserEmail(email),
-                new UserPassword(passwordHasher.hash(password)),
-                new UserProfilePhotoLink(profilePhotoLink),
-                currentCourses.stream().map(UserCurrentCourse::new).collect(Collectors.toCollection(ArrayList::new)),
-                finishedCourses.stream().map(UserFinishedCourse::new).collect(Collectors.toCollection(ArrayList::new)),
-                certificates.stream().map(UserCertificate::new).collect(Collectors.toCollection(ArrayList::new))
-        );
+        var user =
+                new User(
+                        UUID.randomUUID(),
+                        new UserSurname(surname),
+                        new UserName(name),
+                        new UserPatronymic(patronymic),
+                        new UserStatus(userStatus),
+                        new UserEmail(email),
+                        new UserPassword(passwordHasher.hash(password)),
+                        new UserProfilePhotoLink(profilePhotoLink),
+                        new UserRole(UserRole.DEFAULT)
+                );
         this.recordEvent(new CreateUserDomainEvent(user.getId(), user.getEmail().getEmail()));
         return user;
     }
-
 
     public void updateName(User user, String newName) {
         user.setName(new UserName(newName));
@@ -67,11 +59,11 @@ public class UserDomainService extends BaseDomainService {
         user.setProfilePhotoLink(new UserProfilePhotoLink(newProfilePhotoLink));
     }
 
-    public void addCurrentCourse(User user, UUID currentCourseId) {
-        user.getCurrentCourses().add(new UserCurrentCourse(currentCourseId));
+    public void assignAuthorRole(User user) {
+        user.setRole(new UserRole(UserRole.AUTHOR));
     }
 
-    public void addFinishedCourse(User user, UUID finishedCourseId) {
-        user.getFinishedCourses().add(new UserFinishedCourse(finishedCourseId));
+    public void assignAdminRole(User user) {
+        user.setRole(new UserRole(UserRole.ADMIN));
     }
 }

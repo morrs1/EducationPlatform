@@ -1,4 +1,5 @@
 export {
+  buildAvatarInitialsSeed,
   buildAvatarUrl,
   buildViewerDisplayName,
   createEmptyViewerProfile,

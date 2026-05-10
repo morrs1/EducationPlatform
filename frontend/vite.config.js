@@ -1,15 +1,18 @@
 import process from "node:process";
+import http from "node:http";
 import { Buffer } from "node:buffer";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-const USER_SERVICE_API_PROXY_PATH = "/api/user-service";
+const USER_SERVICE_API_PROXY_PATH = "/api/user";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
-const COURSE_SERVICE_API_PROXY_PATH = "/api/course-service";
+const COURSE_SERVICE_API_PROXY_PATH = "/api/course";
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
-const LEARNING_SERVICE_API_PROXY_PATH = "/api/learning-service";
+const LEARNING_SERVICE_API_PROXY_PATH = "/api/learning";
+const ANSWER_SERVICE_API_PROXY_PATH = "/api/answer";
+const AUTH_API_PROXY_PATH = "/auth";
 const DEFAULT_COURSE_SERVICE_S3_BUCKET = "course-service-local";
 
 function normalizeBoolean(value, fallback = false) {
@@ -267,43 +270,124 @@ function createS3MediaProxyPlugin(env) {
   };
 }
 
+const HOP_BY_HOP_REQUEST_HEADERS = new Set([
+  "connection",
+  "keep-alive",
+  "proxy-authenticate",
+  "proxy-authorization",
+  "te",
+  "trailers",
+  "transfer-encoding",
+  "upgrade",
+]);
+
+/**
+ * В dev multipart через API gateway (Spring RestClient + body byte[]) часто даёт 400 на course-service.
+ * Обход без правок Java: только POST загрузки ассета урока уходит напрямую на course-service.
+ * Задаётся VITE_COURSE_SERVICE_DIRECT_URL (по умолчанию http://localhost:8081).
+ */
+function createCourseLessonAssetDevProxyPlugin(env) {
+  const targetBase =
+    env.VITE_COURSE_SERVICE_DIRECT_URL?.trim() || "http://localhost:8081";
+  const assetPathPattern =
+    /^\/api\/course\/lesson\/[^/]+\/asset\/?(?:\?.*)?$/;
+
+  return {
+    name: "course-lesson-asset-direct-dev",
+    enforce: "pre",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.method !== "POST" || typeof req.url !== "string") {
+          next();
+          return;
+        }
+        if (!assetPathPattern.test(req.url)) {
+          next();
+          return;
+        }
+
+        let upstream;
+        try {
+          upstream = new URL(req.url.replace(/^\/api/, ""), targetBase);
+        } catch {
+          next();
+          return;
+        }
+
+        const outgoingHeaders = { ...req.headers };
+        for (const name of Object.keys(outgoingHeaders)) {
+          if (name && HOP_BY_HOP_REQUEST_HEADERS.has(name.toLowerCase())) {
+            delete outgoingHeaders[name];
+          }
+        }
+        outgoingHeaders.host = upstream.host;
+
+        const proxyReq = http.request(
+          {
+            hostname: upstream.hostname,
+            port:
+              upstream.port ||
+              (upstream.protocol === "https:" ? 443 : 80),
+            path: `${upstream.pathname}${upstream.search}`,
+            method: "POST",
+            headers: outgoingHeaders,
+          },
+          (proxyRes) => {
+            res.writeHead(
+              proxyRes.statusCode ?? 502,
+              proxyRes.headers,
+            );
+            proxyRes.pipe(res);
+          },
+        );
+
+        proxyReq.on("error", () => {
+          if (!res.headersSent) {
+            res.statusCode = 502;
+            res.end("Bad gateway (course-service asset proxy)");
+          }
+        });
+
+        req.pipe(proxyReq);
+      });
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const userServiceUrl = env.VITE_USER_SERVICE_URL?.trim();
-  const courseServiceUrl = env.VITE_COURSE_SERVICE_URL?.trim();
-  const learningServiceUrl = env.VITE_LEARNING_SERVICE_URL?.trim();
   const proxy = {};
 
-  if (userServiceUrl) {
-    proxy[USER_SERVICE_API_PROXY_PATH] = {
-      target: userServiceUrl,
-      changeOrigin: true,
-      rewrite: (path) =>
-        path.replace(/^\/api\/user-service/, ""),
-    };
-  }
-
-  if (courseServiceUrl) {
-    proxy[COURSE_SERVICE_API_PROXY_PATH] = {
-      target: courseServiceUrl,
-      changeOrigin: true,
-      rewrite: (path) =>
-        path.replace(/^\/api\/course-service/, ""),
-    };
-  }
-
-  if (learningServiceUrl) {
-    proxy[LEARNING_SERVICE_API_PROXY_PATH] = {
-      target: learningServiceUrl,
-      changeOrigin: true,
-      rewrite: (path) =>
-        path.replace(/^\/api\/learning-service/, ""),
-    };
-  }
+  // API идёт в gateway (8090). Media остаётся мимо gateway (плагин).
+  const gatewayUrl = env.VITE_API_GATEWAY_URL?.trim() || "http://localhost:8090";
+  proxy[USER_SERVICE_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
+  proxy[COURSE_SERVICE_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
+  proxy[LEARNING_SERVICE_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
+  proxy[ANSWER_SERVICE_API_PROXY_PATH] = {
+    target:
+      env.VITE_ANSWER_SERVICE_PROXY_TARGET?.trim() ||
+      "http://localhost:8085",
+    changeOrigin: true,
+    rewrite: (path) => path.replace(ANSWER_SERVICE_API_PROXY_PATH, ""),
+  };
+  proxy[AUTH_API_PROXY_PATH] = {
+    target: gatewayUrl,
+    changeOrigin: true,
+  };
 
   return {
     plugins: [
+      createCourseLessonAssetDevProxyPlugin(env),
       react(),
       tailwindcss(),
       createS3MediaProxyPlugin(env),

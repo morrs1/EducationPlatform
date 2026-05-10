@@ -7,15 +7,28 @@ const primaryMockAccount = mockAccounts[0] ?? {
   password: "",
 };
 
+function normalizeText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export function createInitialAuthState({
   savedSession = null,
   fallbackAccount = primaryMockAccount,
   account = fallbackAccount,
 } = {}) {
   const nextAccount = account ?? fallbackAccount ?? primaryMockAccount;
+  const savedToken = normalizeText(savedSession?.accessToken);
+  const savedPassword =
+    normalizeText(savedSession?.accountPassword) ||
+    normalizeText(nextAccount?.password);
+  const sessionViewerId =
+    normalizeText(savedSession?.currentViewerId) ||
+    normalizeText(savedSession?.accountViewerId);
   const nextViewerId =
-    savedSession?.currentViewerId ?? nextAccount?.viewerId ?? null;
-  const isLogged = Boolean(savedSession?.isLogged && nextViewerId);
+    sessionViewerId || normalizeText(nextAccount?.viewerId) || null;
+  const isLogged = Boolean(
+    savedSession?.isLogged && nextViewerId && savedToken,
+  );
 
   return {
     isRegisterModalOpen: false,
@@ -24,9 +37,14 @@ export function createInitialAuthState({
     currentViewerId: isLogged ? nextViewerId : null,
     authStatus: isLogged ? "authenticated" : "idle",
     loginError: null,
-    accountViewerId: nextAccount?.viewerId ?? null,
-    accountEmail: nextAccount?.email ?? "",
-    accountPassword: nextAccount?.password ?? "",
+    accountViewerId: nextViewerId,
+    accountEmail:
+      normalizeText(savedSession?.accountEmail) ||
+      normalizeText(nextAccount?.email),
+    accountPassword: savedPassword,
+    accessToken: savedToken,
+    userRole: normalizeText(savedSession?.userRole),
+    userStatus: normalizeText(savedSession?.userStatus),
   };
 }
 
@@ -79,6 +97,10 @@ const authSlice = createSlice({
       state.authStatus = "idle";
       state.loginError = null;
       state.currentViewerId = null;
+      state.accessToken = "";
+      state.userRole = "";
+      state.userStatus = "";
+      state.accountPassword = "";
     },
 
     startLogin: (state) => {
@@ -98,8 +120,22 @@ const authSlice = createSlice({
         state.accountEmail = action.payload.email.trim().toLowerCase();
       }
 
+      if (typeof action.payload?.accessToken === "string") {
+        state.accessToken = action.payload.accessToken.trim();
+      }
+
+      if (typeof action.payload?.userRole === "string") {
+        state.userRole = action.payload.userRole.trim();
+      }
+
+      if (typeof action.payload?.userStatus === "string") {
+        state.userStatus = action.payload.userStatus.trim();
+      }
+
       if (typeof action.payload?.password === "string") {
         state.accountPassword = action.payload.password.trim();
+      } else if (action.payload?.accessToken) {
+        state.accountPassword = "";
       }
 
       state.authStatus = "authenticated";
@@ -111,6 +147,9 @@ const authSlice = createSlice({
     loginFailure: (state, action) => {
       state.isLogged = false;
       state.currentViewerId = null;
+      state.accessToken = "";
+      state.userRole = "";
+      state.userStatus = "";
       state.authStatus = "error";
       state.loginError = action.payload;
     },

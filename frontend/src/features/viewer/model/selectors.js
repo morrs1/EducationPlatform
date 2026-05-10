@@ -8,6 +8,7 @@ import {
   getViewerCourseStorageKey,
   normalizeViewerCourseId,
 } from "../../../entities/viewer";
+import { resolveCourseServiceAuthorId } from "./courseServiceAuthorId";
 
 export const selectViewer = (state) => state.viewer;
 export const selectViewerId = (state) => state.viewer.id;
@@ -19,8 +20,6 @@ export const selectViewerAvatarUrl = (state) => state.viewer.avatarUrl;
 export const selectViewerHeadline = (state) => state.viewer.headline;
 export const selectViewerAbout = (state) => state.viewer.about;
 export const selectEnrolledCourseIds = (state) => state.viewer.enrolledCourseIds;
-export const selectFavouriteCourseIds = (state) =>
-  state.viewer.favouriteCourseIds;
 export const selectCompletedCourseIds = (state) =>
   state.viewer.completedCourseIds;
 export const selectCertificateCourseIds = (state) =>
@@ -75,8 +74,6 @@ function attachViewerState(
   return {
     ...enrichedCourse,
     isEnrolled: sessionIsActive && viewer.enrolledCourseIds.includes(course.id),
-    isFavourite:
-      sessionIsActive && viewer.favouriteCourseIds.includes(course.id),
     isCompleted,
     hasCertificate:
       sessionIsActive && viewer.certificateCourseIds.includes(course.id),
@@ -88,17 +85,48 @@ export const selectIsEnrolledInCourse = (state, courseId) =>
   selectViewerSessionActive(state) &&
   state.viewer.enrolledCourseIds.includes(normalizeViewerCourseId(courseId));
 
-export const selectIsFavouriteCourse = (state, courseId) =>
-  selectViewerSessionActive(state) &&
-  state.viewer.favouriteCourseIds.includes(normalizeViewerCourseId(courseId));
-
 export const selectIsCompletedCourse = (state, courseId) =>
   selectViewerSessionActive(state) &&
   state.viewer.completedCourseIds.includes(normalizeViewerCourseId(courseId));
 
+function courseAuthorMatchesViewer(state, courseId) {
+  if (!selectViewerSessionActive(state)) {
+    return false;
+  }
+
+  const course = getViewerCourseRecord(state.viewer, courseId);
+
+  if (!course?.authorId) {
+    return false;
+  }
+
+  const authorId = String(course.authorId).trim();
+
+  if (!authorId) {
+    return false;
+  }
+
+  if (course.isBackendCourse) {
+    const serviceAuthorId = resolveCourseServiceAuthorId(
+      state.auth?.currentViewerId ?? null,
+      state.viewer.remoteId,
+    );
+
+    return String(serviceAuthorId).trim() === authorId;
+  }
+
+  const currentViewerId = state.auth?.currentViewerId;
+
+  return (
+    String(currentViewerId ?? "").trim() === authorId ||
+    String(state.viewer.id ?? "").trim() === authorId
+  );
+}
+
 export const selectCanViewCourseContent = (state, courseId) =>
   selectIsEnrolledInCourse(state, courseId) ||
-  selectIsCompletedCourse(state, courseId);
+  selectIsCompletedCourse(state, courseId) ||
+  courseAuthorMatchesViewer(state, courseId);
 
 export const selectViewerCourseProgress = createSelector(
   [
@@ -146,30 +174,6 @@ export const selectCurrentCourses = createSelector(
     !sessionIsActive
       ? []
       : viewer.enrolledCourseIds
-          .map((courseId) => getViewerCourseRecord(viewer, courseId))
-          .filter(Boolean)
-          .map((course) =>
-            attachViewerState(
-              course,
-              viewer,
-              sessionIsActive,
-              viewedLessonIds,
-              completedLessonIds,
-            ),
-          ),
-);
-
-export const selectFavouriteCourses = createSelector(
-  [
-    selectViewerSessionActive,
-    selectViewerState,
-    selectViewedLessonIds,
-    selectCompletedLessonIds,
-  ],
-  (sessionIsActive, viewer, viewedLessonIds, completedLessonIds) =>
-    !sessionIsActive
-      ? []
-      : viewer.favouriteCourseIds
           .map((courseId) => getViewerCourseRecord(viewer, courseId))
           .filter(Boolean)
           .map((course) =>

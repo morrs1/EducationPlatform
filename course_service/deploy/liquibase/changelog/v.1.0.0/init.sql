@@ -98,6 +98,14 @@ CREATE TABLE course_tag
 );
 
 
+CREATE TABLE outbox_messages
+(
+    id           UUID NOT NULL,
+    payload      JSONB,
+    processed_at TIMESTAMPTZ
+);
+
+
 CREATE INDEX idx_course_author_id
     ON course (author_id);
 

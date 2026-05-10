@@ -1,4 +1,4 @@
-import { isUuid } from "../../../entities/course";
+import { isUuid } from "../../../shared/lib";
 
 const COURSE_SERVICE_AUTHOR_IDS_STORAGE_KEY = "courseServiceAuthorIdsByViewer";
 const DEFAULT_VIEWER_STORAGE_KEY = "__default__";

@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { ChangeEmailForm } from "../../../features/user/change-email";
+import { ChangeEmailForm } from "../../../features/change-email";
 import { submitEmailChange } from "../../../features/auth";
 import { changeViewerEmail, selectViewerEmail } from "../../../features/viewer";
 
@@ -24,8 +24,8 @@ function ChangeEmailSection() {
         <h1 className="settings-section-title">Изменение почты</h1>
 
         <p className="settings-section-description">
-          Укажите новый адрес электронной почты для входа и уведомлений. Для
-          подтверждения мы попросим ввести текущий пароль.
+          Укажите новый адрес электронной почты для входа. Для подтверждения мы
+          попросим ввести текущий пароль.
         </p>
       </header>
 

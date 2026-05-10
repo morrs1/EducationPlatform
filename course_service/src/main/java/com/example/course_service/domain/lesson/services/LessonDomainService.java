@@ -2,6 +2,7 @@ package com.example.course_service.domain.lesson.services;
 
 import com.example.course_service.domain.base.BaseDomainService;
 import com.example.course_service.domain.lesson.Lesson;
+import com.example.course_service.domain.lesson.events.UploadLessonContentEvent;
 import com.example.course_service.domain.lesson.payload.LessonPayload;
 import com.example.course_service.domain.lesson.vo.LessonTitle;
 import com.example.course_service.domain.lesson.vo.LessonType;
@@ -29,5 +30,6 @@ public class LessonDomainService extends BaseDomainService {
 
     public void uploadContent(Lesson lesson, LessonPayload content) {
         lesson.setContent(content);
+        this.recordEvent(new UploadLessonContentEvent(lesson.getId(), lesson.getTitle().getTitle(), content.toString()));
     }
 }
