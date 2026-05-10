@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 import { LessonStructureCover } from "../../../entities/course";
 import { getLessonTypeLabel } from "../model/courseContentEditorModel";
 
@@ -8,6 +10,7 @@ function CourseModuleCard({
   lessonDraft,
   lessonError,
   module,
+  canEditStructure = true,
   onCreateLesson,
   onLessonDraftChange,
   viewerName,
@@ -89,111 +92,120 @@ function CourseModuleCard({
                     {lesson.isPreview ? "Превью-доступ" : "Обычный урок"}
                   </span>
                 </div>
+
+                <Link
+                  to={`../edit-lesson/${lesson.id}`}
+                  className="course-editor-existing-lesson-btn"
+                >
+                  Редактировать
+                </Link>
               </article>
             ))}
           </div>
         </div>
       ) : null}
 
-      <div className="course-editor-lesson-composer-wrap">
-        <div className="course-editor-lesson-composer-head">
-          <strong className="course-editor-lesson-composer-title">
-            Добавить новый урок
-          </strong>
-          <span className="course-editor-lesson-composer-note">
-            Новый урок сразу появится в структуре этого модуля
-          </span>
-        </div>
-
-        <div className="course-editor-lesson-composer">
-          <input
-            type="text"
-            value={lessonDraft.title}
-            onChange={(event) =>
-              onLessonDraftChange(module.id, {
-                title: event.target.value,
-              })
-            }
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                onCreateLesson(module);
-              }
-            }}
-            placeholder="Введите название нового урока и нажмите Enter."
-            className="course-editor-lesson-input"
-          />
-
-          <div className="course-editor-lesson-composer-bottom">
-            <div className="course-editor-lesson-form">
-              <div className="course-editor-lesson-config">
-                <label className="course-editor-field-stack">
-                  <span className="course-editor-field-label">Тип</span>
-                  <select
-                    value={lessonDraft.type}
-                    onChange={(event) =>
-                      onLessonDraftChange(module.id, {
-                        type: event.target.value,
-                      })
-                    }
-                    className="course-editor-compact-input"
-                  >
-                    <option value="theory">Теория</option>
-                    <option value="quiz">Тест</option>
-                    <option value="coding">Код</option>
-                  </select>
-                </label>
-
-                <label className="course-editor-field-stack">
-                  <span className="course-editor-field-label">Минуты</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={lessonDraft.estimatedMinutes}
-                    onChange={(event) =>
-                      onLessonDraftChange(module.id, {
-                        estimatedMinutes: event.target.value,
-                      })
-                    }
-                    className="course-editor-compact-input"
-                  />
-                </label>
-
-                <label className="course-editor-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={lessonDraft.isPreview}
-                    onChange={(event) =>
-                      onLessonDraftChange(module.id, {
-                        isPreview: event.target.checked,
-                      })
-                    }
-                  />
-                  <span>Превью-урок</span>
-                </label>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="course-editor-lesson-submit"
-              disabled={isCreatingLesson}
-              onClick={() => onCreateLesson(module)}
-            >
-              {isCreatingLesson ? "Создаём урок..." : "Создать урок"}
-            </button>
+      {canEditStructure ? (
+        <div className="course-editor-lesson-composer-wrap">
+          <div className="course-editor-lesson-composer-head">
+            <strong className="course-editor-lesson-composer-title">
+              Добавить новый урок
+            </strong>
+            <span className="course-editor-lesson-composer-note">
+              Новый урок сразу появится в структуре этого модуля
+            </span>
           </div>
 
-          <span className="course-editor-lesson-author">
-            Автор: {viewerName || "текущий преподаватель"}
-          </span>
-        </div>
+          <div className="course-editor-lesson-composer">
+            <input
+              type="text"
+              value={lessonDraft.title}
+              onChange={(event) =>
+                onLessonDraftChange(module.id, {
+                  title: event.target.value,
+                })
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  onCreateLesson(module);
+                }
+              }}
+              placeholder="Введите название нового урока и нажмите Enter."
+              className="course-editor-lesson-input"
+            />
 
-        {lessonError ? (
-          <p className="course-inline-feedback error">{lessonError}</p>
-        ) : null}
-      </div>
+            <div className="course-editor-lesson-composer-bottom">
+              <div className="course-editor-lesson-form">
+                <div className="course-editor-lesson-config">
+                  <label className="course-editor-field-stack">
+                    <span className="course-editor-field-label">Тип</span>
+                    <select
+                      value={lessonDraft.type}
+                      onChange={(event) =>
+                        onLessonDraftChange(module.id, {
+                          type: event.target.value,
+                        })
+                      }
+                      className="course-editor-compact-input"
+                    >
+                      <option value="theory">Теория</option>
+                      <option value="quiz">Тест</option>
+                      <option value="coding">Код</option>
+                    </select>
+                  </label>
+
+                  <label className="course-editor-field-stack">
+                    <span className="course-editor-field-label">Минуты</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={lessonDraft.estimatedMinutes}
+                      onChange={(event) =>
+                        onLessonDraftChange(module.id, {
+                          estimatedMinutes: event.target.value,
+                        })
+                      }
+                      className="course-editor-compact-input"
+                    />
+                  </label>
+
+                  <label className="course-editor-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={lessonDraft.isPreview}
+                      onChange={(event) =>
+                        onLessonDraftChange(module.id, {
+                          isPreview: event.target.checked,
+                        })
+                      }
+                    />
+                    <span>Превью-урок</span>
+                  </label>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="course-editor-lesson-submit"
+                disabled={isCreatingLesson}
+                onClick={() => onCreateLesson(module)}
+              >
+                {isCreatingLesson ? "Создаём урок..." : "Создать урок"}
+              </button>
+            </div>
+
+            <span className="course-editor-lesson-author">
+              Автор: {viewerName || "текущий преподаватель"}
+            </span>
+          </div>
+
+          {lessonError ? (
+            <p className="course-inline-feedback error">{lessonError}</p>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }

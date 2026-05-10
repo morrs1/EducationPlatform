@@ -21,6 +21,7 @@ function CourseSyllabusSection() {
   const { course, modules, pageStatus, pageError, reloadCourse } =
     useOutletContext();
   const hasModules = modules.length > 0;
+  const canEditStructure = !course?.isPublished;
   const lessonsCount = modules.reduce(
     (total, module) => total + module.lessons.length,
     0,
@@ -86,9 +87,11 @@ function CourseSyllabusSection() {
             <span className="course-syllabus-stat">Уроков: {lessonsCount}</span>
           </div>
 
-          <Link to="../edit" className="course-syllabus-edit-link">
-            Редактировать содержание
-          </Link>
+          {canEditStructure ? (
+            <Link to="../edit" className="course-syllabus-edit-link">
+              Редактировать содержание
+            </Link>
+          ) : null}
         </div>
       </header>
 

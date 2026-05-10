@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { Outlet, useParams } from "react-router";
 import {
   enrichCoursePageDataWithAuthorName,
   mapReadCourseByIdResponseToCoursePageData,
   requestCourseById,
 } from "../../../entities/course";
+import { selectCurrentViewerId } from "../../../features/auth";
+import {
+  resolveCourseServiceAuthorId,
+  selectViewer,
+} from "../../../features/viewer";
 import { isUuid } from "../../../shared/lib";
 import { LessonEditorSidebar } from "../../../widgets/lesson-editor-sidebar";
 
@@ -28,6 +34,8 @@ function findLessonLocation(modules, lessonId) {
 
 function LessonEditorPage() {
   const { courseId, lessonId } = useParams();
+  const currentViewerId = useSelector(selectCurrentViewerId);
+  const viewer = useSelector(selectViewer);
   const [pageStatus, setPageStatus] = useState(() =>
     courseId && isUuid(courseId) ? "loading" : "error",
   );
@@ -36,6 +44,10 @@ function LessonEditorPage() {
   const [modules, setModules] = useState([]);
   const [requestSeed, setRequestSeed] = useState(0);
   const hasValidCourseId = Boolean(courseId && isUuid(courseId));
+  const courseServiceAuthorId = useMemo(
+    () => resolveCourseServiceAuthorId(currentViewerId, viewer.remoteId),
+    [currentViewerId, viewer.remoteId],
+  );
 
   useEffect(() => {
     let isCancelled = false;
@@ -64,11 +76,16 @@ function LessonEditorPage() {
         );
 
         if (!isCancelled) {
-          if (nextPageData.course?.isPublished) {
+          if (
+            nextPageData.course?.isPublished &&
+            nextPageData.course?.authorId !== courseServiceAuthorId
+          ) {
             setCourse(nextPageData.course);
             setModules(nextPageData.syllabus.modules);
             setPageStatus("error");
-            setPageError("Опубликованный курс недоступен для редактирования.");
+            setPageError(
+              "Редактировать уроки опубликованного курса может только автор.",
+            );
           } else {
             setCourse(nextPageData.course);
             setModules(nextPageData.syllabus.modules);
@@ -93,7 +110,7 @@ function LessonEditorPage() {
     return () => {
       isCancelled = true;
     };
-  }, [courseId, hasValidCourseId, requestSeed]);
+  }, [courseId, courseServiceAuthorId, hasValidCourseId, requestSeed]);
 
   function reloadCourse() {
     setRequestSeed((value) => value + 1);

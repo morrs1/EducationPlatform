@@ -109,18 +109,16 @@ function TeachCourseCard({ course, variant }) {
         </p>
 
         <div className="teach-course-card-actions">
-          {!isPublished ? (
-            <Link
-              to={`/course/${course.id}/syllabus`}
-              className="teach-course-card-link primary"
-            >
-              Открыть конструктор
-            </Link>
-          ) : null}
+          <Link
+            to={`/course/${course.id}/syllabus`}
+            className="teach-course-card-link primary"
+          >
+            {isPublished ? "Редактировать уроки" : "Открыть конструктор"}
+          </Link>
 
           <Link
             to={`/courses/${course.id}`}
-            className={`teach-course-card-link${isPublished ? " primary" : ""}`}
+            className="teach-course-card-link"
           >
             Посмотреть курс
           </Link>

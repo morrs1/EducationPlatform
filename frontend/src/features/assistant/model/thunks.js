@@ -46,6 +46,18 @@ function getLatestConversationForLesson(conversations, lessonId) {
   );
 }
 
+function createOptimisticUserMessage(text) {
+  const createdAt = new Date().toISOString();
+
+  return {
+    id: `optimistic:${createdAt}:${crypto.randomUUID()}`,
+    role: "user",
+    text,
+    createdAt,
+    isOptimistic: true,
+  };
+}
+
 async function loadConversationById(conversationId) {
   const conversation = await requestAssistantConversation(conversationId);
 
@@ -245,7 +257,12 @@ export function submitAssistantMessage({
       };
     }
 
-    dispatch(startAssistantReply({ contextKey }));
+    dispatch(
+      startAssistantReply({
+        contextKey,
+        message: createOptimisticUserMessage(normalizedMessage),
+      }),
+    );
 
     try {
       const conversationId = await resolveConversationId({

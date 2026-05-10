@@ -1,0 +1,140 @@
+# Cross-platform shell configuration
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+set shell := ["sh", "-c"]
+
+compose_file := "docker-compose.yaml"
+env_file := ".env"
+
+[doc("List all targets")]
+default:
+  @just --list --unsorted --list-heading $'user_service commands…\n'
+
+# ─── Docker Compose ──────────────────────────────────────────────────────────
+
+[doc("Build images for every service in the compose file")]
+[group("docker")]
+build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} build
+
+[doc("Start the full stack in the background (postgres + liquibase + seaweedfs + app)")]
+[group("docker")]
+up:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d
+
+[doc("Build images then start the full stack")]
+[group("docker")]
+up-build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build
+
+[doc("Stop the stack but keep volumes")]
+[group("docker")]
+down:
+  docker compose -f {{compose_file}} --env-file {{env_file}} down
+
+[doc("Stop the stack and drop volumes (DESTROYS database + S3 data)")]
+[group("docker")]
+down-volumes:
+  docker compose -f {{compose_file}} --env-file {{env_file}} down -v
+
+[doc("List running services")]
+[group("docker")]
+ps:
+  docker compose -f {{compose_file}} --env-file {{env_file}} ps
+
+[doc("Tail logs from every service (Ctrl+C to stop)")]
+[group("docker")]
+logs:
+  docker compose -f {{compose_file}} --env-file {{env_file}} logs -f
+
+[doc("Tail logs from the app service only")]
+[group("docker")]
+logs-app:
+  docker compose -f {{compose_file}} --env-file {{env_file}} logs -f app
+
+[doc("Restart the app service only (does NOT rebuild)")]
+[group("docker")]
+restart:
+  docker compose -f {{compose_file}} --env-file {{env_file}} restart app
+
+[doc("Rebuild and recreate the app service (picks up code changes)")]
+[group("docker")]
+redeploy:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build app
+
+[doc("Run a one-shot bash shell inside a fresh app container")]
+[group("docker")]
+shell:
+  docker compose -f {{compose_file}} --env-file {{env_file}} run --rm app sh
+
+[doc("Re-run liquibase migrations (one-shot)")]
+[group("docker")]
+migrate:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up --no-deps liquibase
+
+# ─── Gradle ──────────────────────────────────────────────────────────────────
+
+[doc("Compile + run unit tests")]
+[group("gradle")]
+gradle-build:
+  ./gradlew --no-daemon build
+
+[doc("Run unit tests only")]
+[group("gradle")]
+test:
+  ./gradlew --no-daemon test
+
+[doc("Run Testcontainers integration tests (requires Docker)")]
+[group("gradle")]
+integration-test:
+  ./gradlew --no-daemon integrationTest
+
+[doc("Full verification: spotless + checkstyle + unit + integration tests")]
+[group("gradle")]
+check:
+  ./gradlew --no-daemon check
+
+[doc("Run the service locally on port 8080 (loads .env via Spring)")]
+[group("gradle")]
+run:
+  ./gradlew --no-daemon bootRun
+
+# ─── Linters ─────────────────────────────────────────────────────────────────
+
+[doc("Spotless check (CI-style verify)")]
+[group("linter")]
+spotless-check:
+  ./gradlew --no-daemon spotlessCheck
+
+[doc("Spotless apply (auto-fix what is fixable)")]
+[group("linter")]
+spotless-fix:
+  ./gradlew --no-daemon spotlessApply
+
+[doc("Checkstyle (main + test + integrationTest)")]
+[group("linter")]
+checkstyle:
+  ./gradlew --no-daemon checkstyleMain checkstyleTest checkstyleIntegrationTest
+
+alias lint := linter
+
+[doc("Run every linter (Spotless verify + Checkstyle)")]
+[group("linter")]
+linter: spotless-check checkstyle
+
+# ─── Pre-commit ──────────────────────────────────────────────────────────────
+
+[doc("Install commit + push hooks")]
+[group("pre-commit")]
+pre-commit-install:
+  pre-commit install
+  pre-commit install --hook-type pre-push
+
+[doc("Run hooks on staged files")]
+[group("pre-commit")]
+pre-commit:
+  pre-commit run
+
+[doc("Run hooks on the whole tree")]
+[group("pre-commit")]
+pre-commit-all:
+  pre-commit run --all-files

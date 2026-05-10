@@ -73,6 +73,10 @@ function CourseBuilderSidebar({
       </div>
 
       <div className="course-builder-sidebar-actions">
+        <Link to="/teach" className="course-builder-sidebar-publish">
+          Вернуться к преподаванию
+        </Link>
+
         <button
           type="button"
           className="course-builder-sidebar-publish"

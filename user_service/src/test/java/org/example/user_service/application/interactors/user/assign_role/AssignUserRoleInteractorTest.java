@@ -1,123 +1,94 @@
 package org.example.user_service.application.interactors.user.assign_role;
 
-import org.example.user_service.application.ports.TransactionManager;
-import org.example.user_service.application.ports.UserRepo;
-import org.example.user_service.domain.user.User;
-import org.example.user_service.domain.user.ports.PasswordHasher;
-import org.example.user_service.domain.user.services.UserDomainService;
-import org.example.user_service.domain.user.vo.UserEmail;
-import org.example.user_service.domain.user.vo.UserName;
-import org.example.user_service.domain.user.vo.UserPassword;
-import org.example.user_service.domain.user.vo.UserPatronymic;
-import org.example.user_service.domain.user.vo.UserProfilePhotoLink;
-import org.example.user_service.domain.user.vo.UserRole;
-import org.example.user_service.domain.user.vo.UserStatus;
-import org.example.user_service.domain.user.vo.UserSurname;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Supplier;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.example.user_service.application.exceptions.UserNotFoundException;
+import org.example.user_service.domain.user.User;
+import org.example.user_service.domain.user.services.UserDomainService;
+import org.example.user_service.domain.user.vo.UserRole;
+import org.example.user_service.support.factories.UserFactory;
+import org.example.user_service.support.fakes.FakePasswordHasher;
+import org.example.user_service.support.fakes.FakeUserRepo;
+import org.example.user_service.support.fakes.ImmediateTransactionManager;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class AssignUserRoleInteractorTest {
 
     @Test
-    void assignAuthorSetsUserRoleToAuthor() {
-        InMemoryUserRepo userRepo = new InMemoryUserRepo(user(UUID.randomUUID()));
+    @DisplayName("assignAuthor promotes the user to AUTHOR and persists the change")
+    void shouldPromoteUserToAuthor() {
+        // Arrange
+        User user = UserFactory.aUser();
+        FakeUserRepo userRepo = FakeUserRepo.withUser(user);
         AssignUserRoleInteractor interactor = new AssignUserRoleInteractor(
                 new ImmediateTransactionManager(),
                 userRepo,
-                new UserDomainService(new PlainPasswordHasher())
+                new UserDomainService(new FakePasswordHasher())
         );
 
-        interactor.assignAuthor(new AssignUserRoleCommand(userRepo.user.getId()));
+        // Act
+        interactor.assignAuthor(new AssignUserRoleCommand(user.getId()));
 
-        assertEquals(UserRole.AUTHOR, userRepo.updatedUser.getRole().getRole());
+        // Assert
+        assertThat(userRepo.updateCalls()).isEqualTo(1);
+        assertThat(userRepo.lastUpdated().getRole().getRole()).isEqualTo(UserRole.AUTHOR);
     }
 
     @Test
-    void assignAdminSetsUserRoleToAdmin() {
-        InMemoryUserRepo userRepo = new InMemoryUserRepo(user(UUID.randomUUID()));
+    @DisplayName("assignAdmin promotes the user to ADMIN and persists the change")
+    void shouldPromoteUserToAdmin() {
+        // Arrange
+        User user = UserFactory.aUser();
+        FakeUserRepo userRepo = FakeUserRepo.withUser(user);
         AssignUserRoleInteractor interactor = new AssignUserRoleInteractor(
                 new ImmediateTransactionManager(),
                 userRepo,
-                new UserDomainService(new PlainPasswordHasher())
+                new UserDomainService(new FakePasswordHasher())
         );
 
-        interactor.assignAdmin(new AssignUserRoleCommand(userRepo.user.getId()));
+        // Act
+        interactor.assignAdmin(new AssignUserRoleCommand(user.getId()));
 
-        assertEquals(UserRole.ADMIN, userRepo.updatedUser.getRole().getRole());
+        // Assert
+        assertThat(userRepo.updateCalls()).isEqualTo(1);
+        assertThat(userRepo.lastUpdated().getRole().getRole()).isEqualTo(UserRole.ADMIN);
     }
 
-    private static User user(UUID userId) {
-        return new User(
-                userId,
-                new UserSurname("Иванов"),
-                new UserName("Иван"),
-                new UserPatronymic("Иванович"),
-                new UserStatus("STUDENT"),
-                new UserEmail("user@example.com"),
-                new UserPassword("Password1"),
-                new UserProfilePhotoLink("https://example.com/photo.png"),
-                new UserRole(UserRole.DEFAULT)
+    @Test
+    @DisplayName("assignAuthor throws UserNotFoundException when the user does not exist")
+    void shouldThrowWhenUserNotFoundForAuthor() {
+        // Arrange
+        FakeUserRepo userRepo = FakeUserRepo.empty();
+        AssignUserRoleInteractor interactor = new AssignUserRoleInteractor(
+                new ImmediateTransactionManager(),
+                userRepo,
+                new UserDomainService(new FakePasswordHasher())
         );
+
+        // Act + Assert
+        assertThatThrownBy(() -> interactor.assignAuthor(new AssignUserRoleCommand(UUID.randomUUID())))
+                .isInstanceOf(UserNotFoundException.class);
+        assertThat(userRepo.updateCalls()).isZero();
     }
 
-    private static final class PlainPasswordHasher implements PasswordHasher {
+    @Test
+    @DisplayName("assignAdmin throws UserNotFoundException when the user does not exist")
+    void shouldThrowWhenUserNotFoundForAdmin() {
+        // Arrange
+        FakeUserRepo userRepo = FakeUserRepo.empty();
+        AssignUserRoleInteractor interactor = new AssignUserRoleInteractor(
+                new ImmediateTransactionManager(),
+                userRepo,
+                new UserDomainService(new FakePasswordHasher())
+        );
 
-        @Override
-        public String hash(String rawPassword) {
-            return rawPassword;
-        }
-
-        @Override
-        public Boolean verify(String rawPassword, String hashedPassword) {
-            return rawPassword.equals(hashedPassword);
-        }
-    }
-
-    private static final class InMemoryUserRepo implements UserRepo {
-
-        private final User user;
-        private User updatedUser;
-
-        private InMemoryUserRepo(User user) {
-            this.user = user;
-        }
-
-        @Override
-        public UUID add(User user) {
-            return user.getId();
-        }
-
-        @Override
-        public Optional<User> readByEmail(String userEmail) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<User> readById(UUID id) {
-            return Optional.of(user).filter(u -> u.getId().equals(id));
-        }
-
-        @Override
-        public void update(User user) {
-            updatedUser = user;
-        }
-    }
-
-    private static final class ImmediateTransactionManager implements TransactionManager {
-
-        @Override
-        public void inTransaction(Runnable action) {
-            action.run();
-        }
-
-        @Override
-        public <T> T inTransaction(Supplier<T> action) {
-            return action.get();
-        }
+        // Act + Assert
+        assertThatThrownBy(() -> interactor.assignAdmin(new AssignUserRoleCommand(UUID.randomUUID())))
+                .isInstanceOf(UserNotFoundException.class);
+        assertThat(userRepo.updateCalls()).isZero();
     }
 }
