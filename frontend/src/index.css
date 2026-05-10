@@ -1402,13 +1402,6 @@
     color: var(--app-muted);
   }
 
-  .course-editor-save-btn {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-[1.1rem] border px-5 py-3 text-sm font-semibold text-white transition duration-300 sm:text-base;
-    border-color: rgba(37, 99, 235, 0.18);
-    background: linear-gradient(135deg, #2563eb 0%, #2f6ee8 54%, #14b8a6 120%);
-    box-shadow: 0 20px 36px -28px rgba(37, 99, 235, 0.68);
-  }
-
   .course-editor-return-link {
     @apply inline-flex items-center justify-center rounded-[1.1rem] border px-5 py-3 text-sm font-semibold no-underline transition duration-300 sm:text-base;
     color: var(--app-ink);
@@ -4990,8 +4983,7 @@
 
   :root[data-theme="dark"] .course-syllabus-edit-link,
   :root[data-theme="dark"] .course-editor-primary-action,
-  :root[data-theme="dark"] .course-editor-lesson-submit,
-  :root[data-theme="dark"] .course-editor-save-btn {
+  :root[data-theme="dark"] .course-editor-lesson-submit {
     border-color: rgba(142, 165, 255, 0.24);
     background: linear-gradient(135deg, rgba(61, 94, 234, 0.9), rgba(16, 133, 122, 0.84));
     box-shadow: 0 24px 40px -28px rgba(61, 94, 234, 0.56);
@@ -5096,6 +5088,12 @@
     color: #c8d6ff;
     border-color: rgba(91, 124, 240, 0.16);
     background: rgba(20, 28, 44, 0.88);
+  }
+
+  :root[data-theme="dark"] .course-editor-existing-lesson-btn {
+    color: #c8d6ff;
+    border-color: rgba(91, 124, 240, 0.18);
+    background: rgba(20, 28, 44, 0.9);
   }
 
   :root[data-theme="dark"] .lesson-editor-layout-sidebar-rail {
