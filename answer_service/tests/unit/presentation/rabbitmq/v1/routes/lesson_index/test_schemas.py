@@ -23,8 +23,8 @@ _LESSON_ID: UUID = UUID("11111111-1111-1111-1111-111111111111")
     "lesson_id_key",
     (
         "lesson_id",  # snake_case (canonical)
-        "lessonId",   # camelCase
-        "lessonID",   # pascalID
+        "lessonId",  # camelCase
+        "lessonID",  # pascalID
     ),
 )
 def test_lesson_created_accepts_lesson_id_alias_variants(lesson_id_key: str) -> None:
@@ -56,7 +56,7 @@ def test_lesson_created_accepts_lesson_id_alias_variants(lesson_id_key: str) -> 
     ("new_title_key", "new_content_key"),
     (
         ("new_title", "new_content"),  # snake_case
-        ("newTitle", "newContent"),    # camelCase
+        ("newTitle", "newContent"),  # camelCase
     ),
 )
 def test_lesson_updated_accepts_alias_variants(
@@ -98,9 +98,9 @@ def test_lesson_updated_new_title_is_optional() -> None:
 @pytest.mark.parametrize(
     "bad_value",
     (
-        "",       # empty string
-        "   ",    # whitespace-only (stripped to empty by strip_whitespace)
-        "\t\n",   # tabs and newlines only
+        "",  # empty string
+        "   ",  # whitespace-only (stripped to empty by strip_whitespace)
+        "\t\n",  # tabs and newlines only
     ),
 )
 def test_lesson_created_rejects_empty_title(bad_value: str) -> None:
@@ -214,8 +214,6 @@ def test_lesson_created_rejects_invalid_lesson_id() -> None:
     with pytest.raises(ValidationError) as exc_info:
         LessonCreatedMessage.model_validate(payload)
     assert any(
-        "lesson_id" in err["loc"]
-        or "lessonId" in err["loc"]
-        or "lessonID" in err["loc"]
+        "lesson_id" in err["loc"] or "lessonId" in err["loc"] or "lessonID" in err["loc"]
         for err in exc_info.value.errors()
     )

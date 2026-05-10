@@ -25,8 +25,8 @@ _USER_ID: UUID = UUID("22222222-2222-2222-2222-222222222222")
     "user_id_key",
     (
         "user_id",  # snake_case (canonical)
-        "userId",   # camelCase
-        "userID",   # pascalID
+        "userId",  # camelCase
+        "userID",  # pascalID
     ),
 )
 def test_user_message_accepts_user_id_alias_variants(
@@ -55,9 +55,7 @@ def test_user_message_rejects_invalid_uuid(schema: type[BaseModel]) -> None:
     with pytest.raises(ValidationError) as exc_info:
         schema.model_validate(payload)
     assert any(
-        "user_id" in err["loc"]
-        or "userId" in err["loc"]
-        or "userID" in err["loc"]
+        "user_id" in err["loc"] or "userId" in err["loc"] or "userID" in err["loc"]
         for err in exc_info.value.errors()
     )
 
@@ -74,8 +72,6 @@ def test_user_message_rejects_missing_user_id(schema: type[BaseModel]) -> None:
     with pytest.raises(ValidationError) as exc_info:
         schema.model_validate(payload)
     assert any(
-        "user_id" in err["loc"]
-        or "userId" in err["loc"]
-        or "userID" in err["loc"]
+        "user_id" in err["loc"] or "userId" in err["loc"] or "userID" in err["loc"]
         for err in exc_info.value.errors()
     )
