@@ -1,0 +1,64 @@
+# learning_service — Windsurf rules
+
+Spring Boot 4 / Java 25 microservice that tracks user learning progress:
+course enrollments, lesson completions, daily study activity, and earned
+certificates. Three bounded contexts (`enrollment`, `certificate`,
+`activity`) live side by side under `org.example.learning_service` and
+must stay separated.
+
+Always read `learning_service/AGENTS.md`, `learning_service/CLAUDE.md`,
+and `learning_service/README.md` before editing.
+
+## Rules
+
+- Layering: `presentation -> application -> domain`. `infrastructure`
+  implements ports defined in `application/ports/`. `domain/` has zero
+  framework imports (no Spring, no `jakarta.persistence.*`, no Jackson).
+- Aggregates own their state. `Enrollment` is the root for course
+  progress; `LessonCompletion` is an entity inside it — mutate it through
+  `Enrollment` (the `complete_lesson` interactor calls
+  `Enrollment.addLessonCompletion(...)`), never via a standalone setter.
+  `Certificate` is its own aggregate, 1:1 with a completed `Enrollment`.
+  `UserStudyDay` is updated transactionally from the enrollment use
+  cases, not from controllers.
+- Ports for all I/O. Interactors depend only on
+  `EnrollmentRepo`, `CertificateRepo`, `StudyActivityRepo`,
+  `TransactionManager`, and domain services. Never inject Spring Data
+  repositories or `EntityManager` into an interactor.
+- Transactions go through `TransactionManager.inTransaction(...)`. Do
+  not annotate interactors with `@Transactional`.
+- Cross-context references are UUIDs only. No shared JPA entity, no
+  shared schema, no synchronous lookup back to `course_service` or
+  `user_service`.
+- `application/certificate/CertificateStubS3Url` is a stub. To wire real
+  S3, add a `CertificateStorage` port in `application/ports/` and an
+  adapter in `infrastructure/adapters/`. Do not import the AWS SDK from
+  an interactor.
+- One use case per folder under
+  `application/interactors/<aggregate>/<operation>/` and
+  `presentation/http/v1/<aggregate>/<operation>/{dto,handlers}/`.
+  Register interactors as `@Bean` in
+  `setup/config_beans/<aggregate>/<Aggregate>BeansConfig.java`.
+- Controllers return response DTOs mapped from `*View` records via
+  `presentation/http/v1/mappers/<Aggregate>MapperQuery`. Do not return
+  `Hibernate*` JPA entities or application views from a handler.
+- Schema is owned by Liquibase under
+  `deploy/liquibase/changelog/v.<version>/`. Hibernate runs in
+  `validate` mode in production — do not regenerate the schema from
+  entities.
+- Build with Gradle Groovy DSL (`build.gradle`, not `build.gradle.kts`).
+
+## Validation
+
+Run from `learning_service/`:
+
+```
+./gradlew build
+./gradlew check
+./gradlew test
+./gradlew bootRun
+```
+
+Tests use H2 in PostgreSQL compatibility mode via
+`src/test/resources/application-test.yaml` (`ddl-auto: create-drop`).
+Swagger UI at `http://localhost:8082/swagger-ui.html`.

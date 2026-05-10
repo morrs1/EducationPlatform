@@ -1,0 +1,92 @@
+---
+description: "answer_service: Python FastAPI RAG (ChromaDB + OpenAI). Clean Architecture, DDD, CQRS, outbox."
+globs:
+  - "answer_service/**/*.py"
+  - "answer_service/justfile"
+  - "answer_service/pyproject.toml"
+alwaysApply: false
+---
+
+# answer_service rules
+
+Python 3.12 RAG microservice. Answers questions grounded in lesson content via ChromaDB vector search + OpenAI LLM. The long-form spec lives in `answer_service/CLAUDE.md` and `answer_service/AGENTS.md` — this file is the prescriptive auto-attach ruleset for in-editor edits.
+
+## Layout map (`src/answer_service/`)
+
+| Package | Responsibility |
+|---|---|
+| `domain/common/` | `BaseEntity`, `BaseAggregateRoot`, `ValueObject`, `Event`, `EventsCollection`, base errors. |
+| `domain/user/` | `User` aggregate (identity projection from auth service). |
+| `domain/conversation/` | `Conversation` aggregate, `Message` entity, VOs (`Question`, `Answer`, `TokenUsage`, `ModelName`, statuses), factories, `ContextWindowService`. |
+| `domain/lesson_index/` | `LessonIndex` aggregate, `DocumentChunk` entity, VOs (`LessonId`, `ChunkContent`, `Embedding`, `IndexStatus`), factories, `TextSplitterService`. |
+| `application/commands/<domain>/<operation>.py` | One file per write use case. Holds `<Op>Command` + `<Op>CommandHandler`. |
+| `application/queries/<domain>/<operation>.py` | One file per read use case. Holds `<Op>Query` + `<Op>QueryHandler`. |
+| `application/common/ports/` | All infra interfaces (`*Repository`, `EmbeddingPort`, `VectorSearchPort`, `LLMPort`, `EventBus`, `OutboxPublisher`, `TransactionManager`, `TaskScheduler`, `EventSerializer`). |
+| `application/common/views/` | Frozen-slots dataclass DTOs for query responses. |
+| `application/common/inbox_message.py`, `outbox_message.py` | Inbox / outbox row dataclasses. |
+| `infrastructure/adapters/{common,langchain,messaging,persistence}` | Concrete adapters behind ports. |
+| `infrastructure/cache/` | `CacheStore` protocol, `RedisCacheStore`. |
+| `infrastructure/mappers/` | Adaptix event serializer, LLM and vector mappers. |
+| `infrastructure/persistence/` | SQLAlchemy models (imperative mapping), engine + session provider, `chroma_provider.py`, Alembic `migrations/`. |
+| `infrastructure/scheduler/` | `task_iq_scheduler.py` and TaskIQ task definitions in `tasks/`. |
+| `presentation/http/v1/routes/<domain>/<operation>/{handlers.py,schemas.py}` | One folder per HTTP operation. |
+| `presentation/http/v1/{common,middlewares}/` | Healthcheck, exception handler, logging middleware. |
+| `presentation/rabbitmq/v1/` | FastStream subscribers (`lesson.created`, `lesson.updated`), manual ack/nack. |
+| `setup/configs/` | Pydantic settings (Postgres, Redis, OpenAI, Chroma, RabbitMQ, ASGI, TaskIQ, logging). |
+| `setup/ioc.py`, `setup/bootstrap.py` | Dishka providers, app factories. |
+| `fastapi_app.py`, `faststream_app.py`, `worker.py` | The three runnable entry points. |
+
+## Hard rules
+
+- Domain has zero framework imports. No FastAPI, SQLAlchemy, LangChain, Dishka, Pydantic, ChromaDB, FastStream, TaskIQ, or Bazario in `domain/`.
+- Every external dependency goes through a port in `application/common/ports/`. The concrete adapter lives in `infrastructure/`. No port — no adapter.
+- Commands and queries are separate. Use `application/commands/<domain>/<operation>.py` and `application/queries/<domain>/<operation>.py`. One file per use case. Do not collapse two operations into one handler.
+- Aggregates never own their `EventsCollection`. Inject it through factories (Dishka, REQUEST scope). One `EventsCollection` per request; events publish atomically at the end of the use case.
+- Domain events flow: aggregate method pushes to `EventsCollection` → handler calls `event_bus.publish(events_collection.pull())` → outbox row written in the same DB transaction → `RelayOutboxCommandHandler` publishes to RabbitMQ via TaskIQ.
+- Value objects override only `_validate()` and `__str__()`. Never override `__post_init__`. Validate in `_validate()`.
+- `Embedding.vector` is `tuple[float, ...]`. Never expose mutable internals on value objects. Prefer immutable collections.
+- All entities/aggregates inherit `BaseEntity` / `BaseAggregateRoot`; all VOs inherit `ValueObject`; all domain services inherit `BaseDomainService`.
+- HTTP routes: one folder per operation under `presentation/http/v1/routes/<domain>/<operation>/` with `handlers.py` (router named `<operation>_router`, `route_class=DishkaRoute`) and `schemas.py`. `__init__.py` is always empty.
+- Inject interactors via `FromDishka[HandlerType]`. Document non-2xx responses with `{"model": ExceptionSchema}` in `responses=`.
+- Map application views (dataclasses) to Pydantic responses explicitly. Do not call `model_validate` on dataclasses.
+- Use `@dataclass(frozen=True, slots=True, kw_only=True)` for commands, queries, and views. Use `@final` on handler classes.
+- Handler signature: `__init__` receives ports + services via Dishka; `__call__(self, data: <Command|Query>) -> <View>`. Store deps as `Final[...]`.
+- Full type annotations everywhere. Avoid `typing.Any`. `# type: ignore` only with an inline reason.
+- Russian copy stays Russian in user-visible messages where it already exists.
+- Inter-service references are UUIDs only. `LessonId`, `UserId` come from other services — no cross-service imports.
+- New infra dependency: add the port in `application/common/ports/` first, then the adapter in `infrastructure/`, then wire it in `setup/ioc.py`.
+
+## Tests
+
+- Tests mirror `src/` under `tests/{unit,integration,e2e}`.
+- Arrange / Act / Assert with explicit `# Arrange`, `# Act`, `# Assert` comments.
+- No other comments inside test bodies except parametrization case descriptions.
+- Use fakes (in-memory port implementations) for unit tests of interactors. Do not mock domain types.
+- Keep tests deterministic and isolated from network / IO. Integration tests cover infra adapters; e2e covers entry points.
+- Name tests by behavior + expected outcome (`test_<unit>_<condition>_<expected>`).
+
+## Anti-patterns
+
+- Spring-style annotations or decorators outside `presentation/` (no `@router`, `@inject` magic in domain or application).
+- Raw `requests`, `httpx`, `openai`, `chromadb`, or `aio_pika` imports outside `infrastructure/adapters/`.
+- Calling `chroma_client`, an OpenAI client, or `redis` directly from a route handler or interactor.
+- Publishing to RabbitMQ from a domain method, factory, or VO.
+- Side effects inside a value object's constructor or `_validate()`.
+- Aggregates instantiating their own `EventsCollection`.
+- `model_validate` on application dataclasses to coerce them into Pydantic responses.
+- `# type: ignore` without a reason. `typing.Any` to silence mypy.
+- Editing generated files (`_version.py`, `.venv/`, `dist/`).
+
+## Validation
+
+Run from `answer_service/`:
+
+```sh
+just lint            # ruff format + ruff check + codespell
+just mypy
+just bandit
+just static-analysis # mypy + bandit + semgrep, run before commit
+pytest -v
+```
+
+`just lint` is the minimum bar after every code change. `just static-analysis` before any commit. Fix all ruff and mypy errors before moving on.

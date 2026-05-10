@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { requestViewerDisplayProfileById } from "../../../shared/api/userServiceApi";
+import { requestViewerDisplayProfileById } from "../../../shared/api";
 import {
-  INCLUDE_MOCK_COURSES_IN_UI,
   buildCatalogData,
   getAllCourses,
-  getMockCourses,
   mapReadCourseByIdResponseToCoursePageData,
   requestAllCourses,
 } from "../../../entities/course";
@@ -137,7 +135,6 @@ export function useCatalogCollections() {
   const [backendCourses, setBackendCourses] = useState([]);
   const [backendStatus, setBackendStatus] = useState("idle");
   const [backendError, setBackendError] = useState("");
-  const mockCourseCount = getMockCourses().length;
 
   useEffect(() => {
     let isCancelled = false;
@@ -205,7 +202,7 @@ export function useCatalogCollections() {
 
   const allCourses = useMemo(
     () => [...backendCourses, ...getAllCourses()],
-    [backendCourses, INCLUDE_MOCK_COURSES_IN_UI, mockCourseCount],
+    [backendCourses],
   );
   const catalogData = useMemo(() => buildCatalogData(allCourses), [allCourses]);
   const catalogTagModel = useMemo(

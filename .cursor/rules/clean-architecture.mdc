@@ -1,0 +1,76 @@
+---
+description: "Clean Architecture rules. Auto-attached on Java + Python sources in backend services."
+globs:
+  - "answer_service/**/*.py"
+  - "api_gateway/**/*.java"
+  - "user_service/**/*.java"
+  - "course_service/**/*.java"
+  - "learning_service/**/*.java"
+---
+
+# Clean Architecture — Backend Services
+
+All backend services follow the same layering. If you propose code, make sure it fits the layer it belongs in.
+
+## The Four Layers
+
+```
+┌────────────────────────────────────────────────┐
+│ presentation/  (controllers, schemas, mappers)  │
+└──────────────────────┬─────────────────────────┘
+                       ▼
+┌────────────────────────────────────────────────┐
+│ application/   (interactors, ports, views)      │
+└──────────────────────┬─────────────────────────┘
+                       ▼
+┌────────────────────────────────────────────────┐
+│ domain/        (aggregates, VOs, domain events) │
+└────────────────────────────────────────────────┘
+                       ▲
+┌──────────────────────┴─────────────────────────┐
+│ infrastructure/ (adapters implementing ports)   │
+└────────────────────────────────────────────────┘
+```
+
+### Dependency Rule
+
+`presentation → application → domain` and `infrastructure → application`. The arrows never reverse.
+
+- **`domain/`** — pure business logic. Zero framework imports. No Spring, no JPA, no FastAPI, no SQLAlchemy, no Jackson, no Pydantic, no LangChain.
+- **`application/`** — use cases (one per file under `interactors/<aggregate>/<operation>/` in Java, `commands/queries/<domain>/<operation>.py` in Python). Talks to the outside world only through `ports/` interfaces.
+- **`infrastructure/`** — concrete adapters that implement application `ports/`. All framework code lives here (Spring annotations, JPA entities, SQLAlchemy models, FastStream subscribers, ChromaDB / S3 / OpenAI clients).
+- **`presentation/`** — HTTP controllers, request / response DTOs, exception → HTTP mappers. Knows how to talk to an interactor and convert its view to an HTTP response.
+
+## Hard Rules
+
+1. A file in `domain/` may only import from `domain/`. (And from the language stdlib.)
+2. A file in `application/` may import from `application/` and `domain/`. Never from `infrastructure/` or `presentation/`.
+3. A file in `infrastructure/` may import from `application/` (for ports) and `domain/`. Never from `presentation/`.
+4. A file in `presentation/` may import from `application/` (handlers + views) and `domain/` (rare). Never from `infrastructure/` directly.
+5. If you need a new outside dependency from a use case, **add a port in `application/ports/` first**, then implement it in `infrastructure/`.
+6. Transactions are owned by the application layer through a `TransactionManager` port. Do not sprinkle `@Transactional` across domain code.
+
+## Use-Case Folder Convention
+
+One use case = one folder.
+
+- Java: `application/interactors/<aggregate>/<operation>/{Command.java, Interactor.java, View.java}` + `presentation/.../<operation>/{handlers/Handler.java, dto/}`.
+- Python: `application/commands/<domain>/<operation>.py` (or `queries/<domain>/<operation>.py`) + `presentation/.../routes/<domain>/<operation>/{handlers.py, schemas.py}`.
+
+Do not collapse multiple use cases into one giant controller or service.
+
+## Patterns Used Here
+
+- **Ports & Adapters** — every external dependency goes through a port.
+- **CQRS** — commands and queries are separate handlers. They can share repositories but not handlers.
+- **Outbox** — every cross-service event is written to an outbox table in the same DB transaction. A worker relays them to RabbitMQ. Never publish to RabbitMQ inside an aggregate or inside a domain service.
+- **Repository** — per-aggregate repositories defined in `application/ports/`, implemented with the chosen ORM in `infrastructure/`.
+
+## Anti-patterns to Reject
+
+- Calling a repository from a controller. Go through an interactor.
+- Spring `@Component` / `@Service` in `domain/`.
+- JPA / SQLAlchemy annotations in `domain/`.
+- Mixing two use cases in one handler ("`createOrUpdate`", "`upsert`"). Split them.
+- Adding a "service" that exists only to wrap a repository call. Either it has business logic or it should not exist.
+- Returning JPA / SQLAlchemy entities from the application layer to the presentation. Map to a view first.

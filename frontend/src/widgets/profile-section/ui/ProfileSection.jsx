@@ -1,7 +1,8 @@
 import { useSelector } from "react-redux";
 import { ProfileActivity, ProfileCard } from "../../../entities/user";
 import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
-import { resolveRemoteViewerId, selectViewer } from "../../../features/viewer";
+import { selectViewer } from "../../../features/viewer";
+import { resolveRemoteViewerId } from "../../../shared/api";
 
 function ProfileSection() {
   const isLogged = useSelector(selectIsLogged);

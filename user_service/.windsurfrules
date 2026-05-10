@@ -1,0 +1,36 @@
+# user_service — Windsurf rules
+
+Spring Boot 4.0.3 on Java 25. Source of truth for user identity: registration, BCrypt credential check, profile, roles, S3 photo. Package root `org.example.user_service`. Port 8080.
+
+- Read `user_service/AGENTS.md`, `user_service/README.md`, and the repo-root `CLAUDE.md` before editing.
+- Dependencies flow inward: `presentation -> application -> domain`, with `infrastructure` implementing application and domain ports.
+- `domain/` is pure Java — no Spring, JPA, AWS SDK, or Jackson imports.
+- `PasswordHasher` is the only seam for hashing. BCrypt lives only in `infrastructure/adapters/password_hasher/PasswordHasherBcrypt`. Never call `BCryptPasswordEncoder` from `application/` or `presentation/`.
+- `PhotoStorage` is the only seam for S3. Only `infrastructure/adapters/s3/SeaweedFSUserProfilePhotoRepo` may import `software.amazon.awssdk.*`.
+- One folder per use case under `application/interactors/user/<operation>/`, each with its own Command, Interactor, and (optional) View. Do not collapse `change_name`, `change_surname`, `change_patronymic`, or `change_status` into a single updater for new work.
+- State mutation goes through `UserDomainService`. Interactors do not mutate `User` fields directly.
+- Domain events leave the service via `EventBus` inside `TransactionManager.inTransaction(...)`. The future outbox replaces the adapter, not the call sites. Never publish to RabbitMQ from a domain method.
+- DTOs (records under `presentation/http/v1/user/<op>/dto/`) never cross into `application/`. Commands never cross into `presentation/`.
+- `MultipartFile` stops at the controller. Pass `byte[]` + filename + content type into the command.
+- Profile photo uploads: multipart, max 10MB, allowed `jpg|jpeg|png|webp`. Cap is enforced by `spring.servlet.multipart.*` in `application.yaml` — do not raise it in the controller.
+- Role assignment endpoints (`/user/{id}/assign_author`, `/assign_admin`) are admin-only. Gateway enforces; application layer re-checks.
+- Lombok forbidden on `domain/` types. MapStruct mappers live in `presentation/http/v1/mappers/` (`UserMapperCommand`, `UserMapperQuery`) and `infrastructure/persistence/mappers/UserMapperHibernate`.
+- Constructor injection only. No field `@Autowired`.
+- Russian strings, log messages, and TODOs already in code are intentional — preserve them.
+- Do not add Spring Security HTTP filters here. `spring-security-crypto` is the only Spring Security dep, and only via the `PasswordHasher` adapter.
+- The `temp.s3.*` config prefix is intentional. Do not rename it. SeaweedFS Spring wiring lives in `setup/config_beans/s3/`.
+- The S3 adapter and `/user/add_photo` are gated by `@ConditionalOnBean` + `temp.s3.enabled`. The service must boot with `TEMP_S3_ENABLED=false`.
+- New schema changes go to a new Liquibase changelog under `deploy/liquibase/changelog/v.<version>/`. Never edit a committed changelog.
+- Every interactor under `application/interactors/user/<op>/` requires `<Op>InteractorTest` at `src/test/java/.../application/interactors/user/<op>/`. Use in-memory fakes of `UserRepo`, `EventBus`, `TransactionManager`, `PasswordHasher`. JUnit 5, no Spring context.
+
+## Validation
+
+Run from `user_service/`:
+
+```
+./gradlew build
+./gradlew check
+./gradlew test
+```
+
+`./gradlew build` is the minimum after any edit; `./gradlew check` before committing.

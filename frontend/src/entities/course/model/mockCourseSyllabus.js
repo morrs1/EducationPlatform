@@ -284,6 +284,8 @@ function buildFallbackSyllabus(course) {
 }
 
 function normalizeSyllabus(course, syllabus) {
+  const primaryTag =
+    (Array.isArray(course?.tags) && course.tags[0]) ? course.tags[0] : "курс";
   const totalListedLessons = syllabus.modules.reduce(
     (sum, module) => sum + module.lessons.length,
     0,

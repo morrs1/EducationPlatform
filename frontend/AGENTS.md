@@ -15,26 +15,32 @@ This frontend is a React 19 + Vite application using:
 - Tailwind CSS 4
 - ESLint 9
 
-The codebase is currently mid-refactor into an FSD-like structure. Treat the new structure as the source of truth:
+The codebase uses a full FSD structure. Treat the layer boundaries and public APIs as the source of truth:
 
 - `src/app/` - application bootstrap, router, providers, store
 - `src/pages/` - route pages
 - `src/widgets/` - composed UI sections
 - `src/features/` - feature state and public feature exports
 - `src/entities/` - reusable lower-level UI/domain pieces
+- `src/shared/` - shared API/lib infrastructure
 
 Do not recreate legacy folders like old `src/components/`, old `src/pages/*.jsx`, or old `src/features/account/...` paths unless the user explicitly asks for it.
 
 ## Architecture Rules
 
-- Keep app bootstrap in `src/main.jsx` and `src/App.jsx`.
+- Keep app bootstrap in `src/main.jsx`. Mount the root component from `src/app/entry` (`App.jsx` + public `index.js` per `check-fsd`).
 - Keep router setup in `src/app/router/AppRouter.jsx`.
+- Keep app shell layout in `src/app/layout/`.
 - Keep Redux store wiring in `src/app/store/index.js`.
 - Keep Redux provider wiring in `src/app/providers/StoreProvider.jsx`.
 - Export feature public APIs from `src/features/<feature>/index.js`.
 - Put route-level screens in `src/pages/.../ui/`.
 - Put cross-page composed sections in `src/widgets/.../ui/`.
 - Put smaller reusable building blocks in `src/entities/.../ui/`.
+- Import another slice through its public `index.js` API.
+- Use an explicit `@x/<consumer>.js` contract for unavoidable same-layer cross-slice dependencies.
+- Do not create nested feature slices like `src/features/user/change-email`; feature slices are flat.
+- Do not compose widgets from other widgets. Move private widget parts inside the owning widget slice, or compose widgets from `app`/`pages`.
 
 When adding new code, follow the existing folder naming convention:
 
@@ -118,6 +124,8 @@ npm run dev
 npm run lint
 npm run build
 ```
+
+`npm run lint` includes the FSD boundary checker in `tools/check-fsd.mjs`.
 
 Validation expectations:
 

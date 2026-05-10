@@ -1,5 +1,5 @@
-import { CourseActionsPanel } from "../../course-actions-panel";
-import { CourseStatsPanel } from "../../course-stats-panel";
+import CourseActionsPanel from "./CourseActionsPanel";
+import CourseStatsPanel from "./CourseStatsPanel";
 
 function CourseSidebar({
   course,

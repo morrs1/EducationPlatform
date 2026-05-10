@@ -23,25 +23,7 @@ export {
   resetDemoState,
 } from "./model/viewerSlice";
 
-export {
-  buildAvatarUrl,
-  createViewerCourseSnapshot,
-  createInitialViewerState,
-  createViewerProfileFromRegistration,
-} from "../../entities/viewer";
 export { resolveCourseServiceAuthorId } from "./model/courseServiceAuthorId";
-
-export {
-  loadViewerProfilesMap,
-  saveViewerProfilesMap,
-  loadViewerProfileByViewerId,
-  saveViewerProfile,
-} from "../../entities/viewer";
-
-export {
-  requestViewerDisplayProfileById,
-  resolveRemoteViewerId,
-} from "../../shared/api/userServiceApi";
 
 export {
   selectViewer,

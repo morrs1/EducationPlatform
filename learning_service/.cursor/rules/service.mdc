@@ -1,0 +1,146 @@
+---
+description: "learning_service: enrollments, certificates, study activity. Spring Boot Java service, three bounded contexts."
+globs:
+  - "learning_service/**/*.java"
+  - "learning_service/**/*.gradle"
+  - "learning_service/**/*.yaml"
+alwaysApply: false
+---
+
+# learning_service — Cursor rules
+
+`learning_service` is a Spring Boot 4 / Java 25 microservice that records
+user learning progress for the Education Platform. It owns no course
+content and no user identity — it consumes `userId`, `courseId`, and
+`lessonId` as opaque UUIDs and exposes its own HTTP API. It is reached by
+clients through `api_gateway` at `/api/learning/...` and listens on
+`8082` directly.
+
+Build system is Gradle with the Groovy DSL (`build.gradle`, not
+`build.gradle.kts`). PostgreSQL is on `localhost:5437` with
+`hibernate.ddl-auto: validate` and `spring.jpa.open-in-view: false`.
+Liquibase changesets under `deploy/liquibase/changelog/` are the source
+of truth for the schema.
+
+Always read `learning_service/AGENTS.md`, `learning_service/CLAUDE.md`,
+and `learning_service/README.md` before editing.
+
+## Layout
+
+```
+src/main/java/org/example/learning_service/
+  domain/
+    base/             BaseEntity, BaseValueObject, BaseDomainService,
+                      base/exceptions/ValidateException
+    enrollment/       Enrollment (root), LessonCompletion, vo/, services/
+    certificate/      Certificate (root), services/
+    activity/         UserStudyDay (root), services/
+  application/
+    ports/            EnrollmentRepo, CertificateRepo, StudyActivityRepo,
+                      TransactionManager
+    interactors/<aggregate>/<operation>/
+                      <Operation>Command, <Operation>Interactor,
+                      <Operation>View
+    interactors/mappers/   domain/view mappers used by interactors
+    exceptions/       use-case-level exceptions
+    certificate/      CertificateStubS3Url (S3 stub)
+  infrastructure/
+    adapters/persistence/      *RepoJpaAdapter implements *Repo
+    adapters/transactions/     SpringTransactionManagerAdapter
+    persistence/repositories/  *SpringDataRepo (Spring Data JPA)
+    persistence/mappers/       *PersistenceMapper (domain <-> JPA)
+    persistence/models/<aggregate>/  Hibernate* JPA entities
+  presentation/http/v1/
+    <aggregate>/<operation>/{dto,handlers}
+    exception_handlers/   ApiExceptionHandler, ErrorResponse
+    mappers/              *MapperQuery (view -> response DTO)
+  setup/config_beans/<aggregate>/   *BeansConfig
+```
+
+## Three bounded contexts
+
+```
++--------------+--------------------------+----------------------+
+| Context      | Aggregate root           | Port                 |
++--------------+--------------------------+----------------------+
+| enrollment   | Enrollment (+ Lesson-    | EnrollmentRepo       |
+|              | Completion entity)       |                      |
+| certificate  | Certificate              | CertificateRepo      |
+| activity     | UserStudyDay             | StudyActivityRepo    |
++--------------+--------------------------+----------------------+
+```
+
+Each context has its own folder under `domain/`, `application/interactors/`,
+`infrastructure/persistence/models/`, `presentation/http/v1/`, and
+`setup/config_beans/`. Do not flatten or merge them.
+
+## Hard rules
+
+- Domain is pure Java. Do not import Spring, `jakarta.persistence.*`,
+  Jackson, or any web/JPA type in `domain/`. Domain entities extend
+  `BaseEntity`, value objects extend `BaseValueObject`, domain services
+  extend `BaseDomainService`. Validation throws `ValidateException`.
+- State changes go through aggregate methods. Lesson completion goes
+  through the `Enrollment` aggregate (`addLessonCompletion(...)` plus
+  `updatedAt` bookkeeping inside the `complete_lesson` interactor),
+  never through a setter on `LessonCompletion` from outside. Certificate
+  issuance goes through the `create_certificate` interactor.
+- `CertificateStubS3Url` (`application/certificate/`) is a stub. Do not
+  import the AWS SDK or any object-storage client from an interactor. To
+  wire real storage, add a `CertificateStorage` port in
+  `application/ports/`, implement it under `infrastructure/adapters/`,
+  and wire it in `setup/config_beans/certificate/`.
+- Activity is updated transactionally inside the enrollment interactors
+  (`complete_lesson` increments the matching `UserStudyDay`,
+  `leave_course` decrements it). Controllers must not write to
+  `StudyActivityRepo` directly; activity changes follow lesson events
+  through the enrollment use cases.
+- Every interactor wraps its side effects in
+  `TransactionManager.inTransaction(...)`. Do not put `@Transactional`
+  on an interactor and do not inject a Spring Data repository,
+  `EntityManager`, or `JpaRepository` into one — go through the
+  `application/ports/*Repo` interface.
+- Cross-context references are UUIDs. `Enrollment` holds `userId`,
+  `courseId`, and lessons hold `lessonId` as `UUID` values. No shared
+  JPA entity with `course_service` or `user_service` is allowed.
+- Controllers depend only on an interactor and the matching
+  `*MapperQuery`. They never return application `*View` records or
+  `Hibernate*` JPA entities — always map to a response DTO under
+  `presentation/http/v1/<aggregate>/<operation>/dto/`.
+- New use cases register as a `@Bean` in the matching
+  `setup/config_beans/<aggregate>/<Aggregate>BeansConfig.java`.
+  Interactors are not `@Component`.
+
+## Tests
+
+- Test profile is `application-test.yaml` (H2 in PostgreSQL compatibility
+  mode, `ddl-auto: create-drop`).
+- Mirror the package layout under `src/test/java/...`.
+- Slice the test by layer: domain tests do not need Spring; interactor
+  tests use port doubles; persistence tests use `@DataJpaTest` against H2.
+
+## Anti-patterns
+
+- Annotating an interactor with `@Transactional` instead of using
+  `TransactionManager`.
+- Calling a `*SpringDataRepo` or `EntityManager` from an interactor.
+- Placing Spring or JPA annotations in `domain/`.
+- Returning `Hibernate*` entities or application `*View` records from a
+  `@RestController`.
+- Mixing two contexts (e.g. enrollment + certificate) in a single
+  `BeansConfig`, single handler, or single folder.
+- Importing AWS SDK or any S3 client in place of `CertificateStubS3Url`.
+
+## Validation
+
+Run from `learning_service/`:
+
+```
+./gradlew build
+./gradlew check
+./gradlew test
+./gradlew bootRun
+```
+
+Swagger UI: `http://localhost:8082/swagger-ui.html`.
+OpenAPI JSON: `http://localhost:8082/v3/api-docs`.

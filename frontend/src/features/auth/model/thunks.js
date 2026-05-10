@@ -13,7 +13,7 @@ import {
 import {
   requestGatewayLogin,
   requestGatewayRegister,
-} from "../../../shared/api/authGatewayApi";
+} from "../../../shared/api";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

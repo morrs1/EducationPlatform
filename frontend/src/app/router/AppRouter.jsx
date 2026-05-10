@@ -7,7 +7,7 @@ import {
 } from "react-router";
 import { useSelector } from "react-redux";
 
-import { Layout } from "../../widgets/layout";
+import { Layout } from "../layout";
 import { HomePage as Home } from "../../pages/home";
 import { SearchPage } from "../../pages/search";
 import { CoursePage } from "../../pages/course";

@@ -1,0 +1,76 @@
+---
+description: "frontend: React 19 + Vite client. Feature-Sliced Design (FSD) architecture."
+globs:
+  - "frontend/**/*.{js,jsx,css,html,mjs}"
+alwaysApply: false
+---
+
+# frontend - Cursor rules
+
+React 19 + Vite client for the EducationPlatform. Redux Toolkit, React Router 7, Tailwind CSS 4. JavaScript / JSX only - no TypeScript. Layout is Feature-Sliced Design. Auth and catalog are mocked; there is no backend integration yet.
+
+Authoritative reading: `frontend/AGENTS.md`, then `frontend/CLAUDE.md`. The root Clean Architecture / DDD / TDD rules are backend-only and do not apply here.
+
+## FSD layer map
+
+Higher layers import from lower layers. Reverse imports are forbidden.
+
+```
+app -> pages -> widgets -> features -> entities -> shared
+```
+
+| Layer      | Purpose                                | Examples                                                                        |
+|------------|----------------------------------------|---------------------------------------------------------------------------------|
+| `app/`     | Bootstrap, router, store, providers    | `entry/`, `router/AppRouter.jsx`, `layout/`, `store/index.js`, `providers/`     |
+| `pages/`   | Route-level screens                    | `home`, `account`, `course`, `lesson`, `edit-profile`, `search`, `teach`        |
+| `widgets/` | Composed UI sections                   | `header`, `footer`, `auth-modal`, `catalog-sidebar`, `course-content`           |
+| `features/`| Feature state and public exports       | `auth`, `catalog`, `assistant`, `change-email`, `theme`, `update-profile`       |
+| `entities/`| Reusable domain pieces                 | `course`, `lesson`, `user`, `viewer`                                            |
+| `shared/`  | Shared infra                           | `api/`, `lib/`                                                                  |
+
+Per-slice public API: `index.js`. Internal layout: `ui/` for components, `model/` for Redux logic and selectors.
+
+## Hard rules
+
+- Strict layer order: `app -> pages -> widgets -> features -> entities -> shared`. Never import upward.
+- Import another slice only through its public `index.js`. Do not reach into its `ui/` or `model/` files.
+- For unavoidable same-layer cross-slice contracts, use the explicit `@x/<consumer>.js` pattern.
+- Feature slices are flat. Do not create `src/features/user/change-email`; create `src/features/change-email/`.
+- Widgets do not compose other widgets. Compose widgets from `app` or `pages` only.
+- Do not recreate legacy folders: `src/components/`, old `src/pages/*.jsx`, old `src/features/account/...`.
+- Function components only.
+- Tailwind utility classes first. Reuse semantic classes from `src/index.css` (`header-btn`, `account-sidebar-navlink`, `profile-card`, ...).
+- No TypeScript. No `.ts` or `.tsx` files. Match the existing JSX style.
+- `auth` and `catalog` are mocked. Do not assume a backend exists. Login state is in `localStorage`; catalog data is mock data inside `catalogSlice`.
+- Access slice state through exported selectors, not inline `state.xxx.yyy`.
+- App bootstrap stays in `src/main.jsx` mounting the root from `src/app/entry`.
+- Router definitions stay in `src/app/router/AppRouter.jsx`. Store wiring in `src/app/store/index.js`. Provider wiring in `src/app/providers/StoreProvider.jsx`.
+- Routing primitives are imported from `react-router`. Existing route paths use camelCase (for example `/account/currentCourses`, `/editProfile`). Preserve that style.
+- Keep responsive behavior. Components already use `sm:` and `md:` breakpoints heavily.
+
+## Anti-patterns
+
+- A `.ts` / `.tsx` file under `src/`.
+- CSS Modules, styled-components, Emotion, or any non-Tailwind styling layer.
+- A widget importing another widget.
+- Importing a private path from another slice (for example `features/auth/model/authSlice.js` from outside `features/auth`).
+- Adding routes outside `src/app/router/AppRouter.jsx`.
+- Nested feature slices.
+- Inventing an API client where none exists. If one is needed, place it in `shared/api/` and make the boundary explicit.
+- Collapsing recently-split modules back into monolithic components.
+
+## Validation
+
+Run from `frontend/`.
+
+```sh
+npm run lint
+npm run build
+```
+
+- Small UI / content / classname change: `npm run lint`.
+- Route, store, config, or large component change: `npm run lint` and `npm run build`.
+
+`npm run lint` runs ESLint 9 plus the FSD boundary checker in `tools/check-fsd.mjs`. That checker is authoritative on layer boundaries. If the agent and the linter disagree, the linter wins - update the code, not the rule.
+
+There is no frontend test framework configured. Do not claim test coverage unless it is added as part of the task.

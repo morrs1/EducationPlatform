@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { UpdateProfileForm } from "../../../features/user/update-profile";
+import { UpdateProfileForm } from "../../../features/update-profile";
 import {
   selectViewer,
   submitViewerProfileUpdate,

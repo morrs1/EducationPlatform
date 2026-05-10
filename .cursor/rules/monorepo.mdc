@@ -1,0 +1,43 @@
+---
+description: "Repository-wide orientation for the EducationPlatform monorepo. Always loaded."
+alwaysApply: true
+---
+
+# EducationPlatform — Monorepo Rules
+
+You are working in a polyglot microservice monorepo. Each top-level directory is an independent service.
+
+| Directory          | Stack                                      | Role                                       | Port |
+|--------------------|--------------------------------------------|--------------------------------------------|------|
+| `api_gateway/`     | Java 25, Spring Boot 4                     | Auth, authorization, reverse proxy         | 8090 |
+| `user_service/`    | Java 25, Spring Boot 4, PostgreSQL         | User identity, auth, profile, roles        | 8080 |
+| `course_service/`  | Java 25, Spring Boot 4, PostgreSQL, RabbitMQ, S3 | Courses, modules, lessons, assets    | 8081 |
+| `learning_service/`| Java 25, Spring Boot 4, PostgreSQL         | Enrollments, certificates, study activity  | 8082 |
+| `answer_service/`  | Python 3.12, FastAPI, ChromaDB, OpenAI     | RAG: question answering                    | 8080 |
+| `frontend/`        | React 19, Vite, Redux Toolkit, Tailwind 4  | Web client (Feature-Sliced Design)         | 5173 |
+
+## Always
+
+- Read the per-service `AGENTS.md` (or `CLAUDE.md`) before editing inside that service. Service-specific rules win over repo-wide rules.
+- Run commands from inside the service directory you are editing. The repo root has no `package.json`, no shared build system.
+- Inter-service references are **UUIDs only**. No shared schema, no shared code, no shared types.
+- Domain events leave a service via the **transactional outbox** pattern: event row in the same DB transaction, scheduler / worker relays to RabbitMQ.
+- `course_service` produces lesson events that `answer_service` consumes for indexing.
+- `user_service` is the source of truth for user identity. Other services hold thin projections.
+- The gateway is the single public entry. Downstream services trust the gateway's authenticated principal.
+
+## Never
+
+- Never push without explicit user instruction.
+- Never commit without explicit user instruction.
+- Never bypass git hooks (`--no-verify`) without explicit user instruction.
+- Never introduce a new architectural layout. Java + Python services use Clean Architecture / DDD; frontend uses FSD.
+- Never add cross-service imports. Services communicate over the network, not the file system.
+
+## Validation Bar
+
+| Service           | Minimum after edit          | Before commit                          |
+|-------------------|-----------------------------|----------------------------------------|
+| Java services     | `./gradlew build`           | `./gradlew check`                      |
+| `answer_service`  | `just lint`                 | `just static-analysis` + `pytest -v`   |
+| `frontend`        | `npm run lint`              | `npm run lint` + `npm run build`       |

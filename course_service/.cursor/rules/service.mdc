@@ -1,0 +1,108 @@
+---
+description: "course_service: courses, modules, lessons, assets. Spring Boot Java service, RabbitMQ producer, S3 for assets."
+globs:
+  - "course_service/**/*.java"
+  - "course_service/**/*.kts"
+  - "course_service/**/*.yaml"
+alwaysApply: false
+---
+
+# course_service — Cursor Rules
+
+## Service Summary
+
+`course_service` is the Spring Boot microservice that owns the course catalog of the Education Platform: courses, modules, lessons, typed lesson content, lesson assets (S3), and tags. It produces `lesson.*` domain events via a transactional outbox to RabbitMQ. Downstream `answer_service` consumes those for RAG indexing. It does NOT track user progress.
+
+| Item             | Value                                                          |
+|------------------|----------------------------------------------------------------|
+| Language         | Java 25 (Gradle toolchain)                                     |
+| Framework        | Spring Boot 4.0.5 (WebMVC, Data JPA, JDBC, AMQP)               |
+| Build            | Gradle Kotlin DSL                                              |
+| Java root pkg    | `com.example.course_service`                                   |
+| HTTP port        | `8081`; reached via `api_gateway` at `/api/course/...`         |
+| Multipart cap    | 200MB                                                          |
+| Eventing         | Outbox -> RabbitMQ (publisher only)                            |
+| Asset storage    | S3 (SeaweedFS-compatible)                                      |
+
+Architecture is Clean Architecture / DDD, dependencies inward only:
+
+```
+presentation -> application -> domain
+                    ^
+              infrastructure
+```
+
+## Layout Map
+
+| Package                                                                 | Responsibility                                                                          |
+|-------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `domain/base/`                                                          | `BaseEntity`, `BaseValueObject`, `BaseDomainEvent`, `BaseDomainService`                  |
+| `domain/{course,module,lesson_preview,lesson,asset,tag,outbox_message}/`| Aggregates and value objects. Lesson events under `domain/lesson/events/`, payloads under `domain/lesson/payload/` |
+| `application/interactors/<aggregate>/<operation>/`                      | One use case per folder (e.g. `course/publish_course/PublishCourseInteractor`)          |
+| `application/interactors/mappers/`                                      | Read-side view mappers                                                                  |
+| `application/ports/`                                                    | Port interfaces — `CourseRepo`, `LessonRepo`, `AssetRepo`, `AssetFileStorage`, `OutboxRepo`, `EventBus`, `TransactionManager`, `LessonPayloadMapper` |
+| `application/exceptions/`                                               | Application exceptions                                                                  |
+| `infrasructure/adapters/{persistence,file_storage,event_bus,event_handlers,transactions}/` | Port implementations                                                                    |
+| `infrasructure/persistence/{models,mappers,repositories}/`              | JPA models, JPA <-> domain mappers, Spring Data repos                                   |
+| `infrasructure/schedulers/OutboxSpringScheduler`                        | `@Scheduled(fixedRate = 5000)` outbox relay to RabbitMQ                                 |
+| `presentation/http/v1/handlers/<aggregate>/<operation>/`                | `@RestController` per operation, plus `dto/request/`, `dto/response/`                   |
+| `presentation/http/v1/{mappers,exceptions,exceptions_handlers}/`        | Boundary mappers, presentation-only exceptions, `@RestControllerAdvice`                 |
+| `setup/config_beans/{course,lesson,asset,brokers/rabbitMQ,s3,serialization,transations}/` | `@Configuration` classes wiring interactors and adapters                                |
+
+### Typo paths — preserve as-is
+
+Two paths in the tree contain typos that the codebase imports against. They are intentional. Do NOT rename them as a side-effect of unrelated work.
+
+| Typo path                          | Correct English  |
+|------------------------------------|------------------|
+| `infrasructure/`                   | `infrastructure` |
+| `setup/config_beans/transations/`  | `transactions`   |
+
+A rename, if ever desired, must be its own dedicated change.
+
+## Hard Rules
+
+1. The outbox is mandatory for any state change that another service may observe. Persist an `OutboxMessage` in the same transaction as the aggregate change; let `OutboxSpringScheduler` relay to RabbitMQ. Do not call `rabbitTemplate.send(...)` from interactors or domain services.
+2. One folder per use case under `application/interactors/<aggregate>/<operation>/` and a matching `presentation/http/v1/handlers/<aggregate>/<operation>/`. Do not extend an existing handler with another endpoint.
+3. The AWS S3 SDK is imported only by the file-storage adapter under `infrasructure/adapters/file_storage/`. Use cases interact with `AssetFileStorage` (port). Reuse the `S3Client` exposed in `setup/config_beans/s3/SeaweedFSBeansConfig` rather than constructing a new one.
+4. Use MapStruct for `domain <-> JPA` mapping under `infrasructure/persistence/mappers/` (`CourseHibernateMapper`, `LessonHibernateMapper`, `AssetHibernateMapper`, `OutboxMessageHibernateMapper`). Use MapStruct for `request <-> command` and `view <-> response` under `presentation/http/v1/mappers/`. Do not write hand-rolled stream mappers when MapStruct can express the mapping.
+5. Wrap write paths in `TransactionManager.inTransaction(() -> { ... })`. Inside the same transaction, persist aggregate changes and `eventBus.publish(domainService.pullEvents())`.
+6. Course publishing flows through `PublishCourseInteractor.publish(UUID)` (PATCH `/course/{id}/publish`). Never set `is_preview` from a controller or a Spring Data repo call outside the interactor.
+7. Multipart uploads are capped at 200MB via `spring.servlet.multipart.max-file-size` / `max-request-size`. If a feature needs more, change config; do not stream-around the limit.
+8. Lesson content payloads (`TheoryLessonPayload`, `QuizLessonPayload`, `CodingLessonPayload`) cross the JSON boundary via the `LessonPayloadMapper` port, implemented by `JacksonLessonPayloadMapper`. Jackson must not be imported from `domain/` or `application/`.
+9. Every schema change requires a new Liquibase changelog under `deploy/liquibase/changelog/v.<version>/` plus an entry in `db.changelog-master.yaml`.
+10. The HTTP base path is `/course` (`/course/lesson` for lessons, `/course/lesson/{id}/asset` for assets). The gateway adds `/api`. Keep this as-is.
+
+## Tests
+
+There is one canonical pure-JUnit example to follow when adding mapper tests:
+
+```
+src/test/java/com/example/course_service/infrasructure/persistence/mappers/LessonHibernateMapperTest.java
+```
+
+Use the same shape (no Spring context, MapStruct-generated mapper instantiated directly, fixtures built from domain factories) for new JPA <-> domain mapper tests.
+
+## Anti-patterns
+
+- Spring / JPA / Jackson annotations on classes under `domain/`.
+- Spring Data repositories injected into a handler.
+- Domain events emitted without an outbox row in the same transaction.
+- `rabbitTemplate.send(...)` outside `OutboxSpringScheduler`.
+- New `S3Client` instances instead of reusing `SeaweedFSBeansConfig`.
+- Renaming `infrasructure/` or `transations/` as a drive-by.
+- Domain types passed across the HTTP boundary in request/response DTOs.
+- `IllegalArgumentException` from domain code instead of `ValidateException`.
+
+## Validation
+
+Run from `course_service/`:
+
+```sh
+./gradlew build       # compile + run tests + annotation processors (MapStruct)
+./gradlew check       # all verification tasks
+./gradlew test        # tests only
+./gradlew bootRun     # run on :8081
+```
+
+Minimum after edit: `./gradlew build`. Before commit: `./gradlew check`.
