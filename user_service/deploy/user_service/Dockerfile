@@ -2,11 +2,11 @@
 #
 # Multi-stage build for user_service.
 #
-# 1. `builder` resolves Gradle dependencies, compiles the project, runs `bootJar`,
-#    and extracts the Spring Boot layered jar so the runtime image can copy each
-#    layer separately (best-cached layer first).
-# 2. `runtime` is a minimal JRE image that runs the layered jar as a non-root
-#    user under tini for clean signal handling.
+# 1. `builder` resolves Gradle dependencies, compiles the project, and runs
+#    `bootJar`. Dependency resolution lives on its own layer so source-only
+#    changes do not invalidate it.
+# 2. `runtime` is a minimal JRE image that runs the resulting Spring Boot fat
+#    jar as a non-root user under tini for clean signal handling.
 #
 # Build from the repository's `user_service/` directory:
 #   docker build -f deploy/user_service/Dockerfile -t user_service:latest .
@@ -35,14 +35,13 @@ COPY config ./config
 RUN chmod +x ./gradlew && \
     ./gradlew --no-daemon --quiet dependencies > /dev/null 2>&1 || true
 
-# 2. Copy sources and produce a Spring Boot fat jar. Tests are skipped: the CI
-#    pipeline runs them in a dedicated job; rerunning them in the image build
-#    only slows iteration.
+# 2. Copy sources and produce a Spring Boot fat jar. Tests are skipped — CI
+#    runs them in a dedicated job; rerunning them inside the image build only
+#    slows iteration. The produced jar is copied to a known path so the
+#    runtime stage does not depend on its versioned filename.
 COPY src ./src
 RUN ./gradlew --no-daemon --quiet -x test bootJar && \
-    mkdir -p /workspace/extracted && \
-    cd /workspace/extracted && \
-    java -Djarmode=tools -jar /workspace/build/libs/*-SNAPSHOT.jar extract --layers --launcher
+    cp /workspace/build/libs/*-SNAPSHOT.jar /workspace/app.jar
 
 # ─── Runtime ─────────────────────────────────────────────────────────────────
 FROM ${JRE_IMAGE} AS runtime
@@ -54,13 +53,7 @@ RUN apk add --no-cache curl tini && \
 
 WORKDIR /app
 
-# Copy layered jar contents in cache-friendly order (least to most volatile).
-# Spring Boot's `tools` jarmode produces: dependencies / spring-boot-loader /
-# snapshot-dependencies / application.
-COPY --from=builder --chown=app:app /workspace/extracted/dependencies/         ./
-COPY --from=builder --chown=app:app /workspace/extracted/spring-boot-loader/   ./
-COPY --from=builder --chown=app:app /workspace/extracted/snapshot-dependencies/ ./
-COPY --from=builder --chown=app:app /workspace/extracted/application/          ./
+COPY --from=builder --chown=app:app /workspace/app.jar /app/app.jar
 
 USER app
 
@@ -72,4 +65,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=5 \
     CMD curl -fsSL "http://localhost:${USER_SERVICE_SERVER_PORT}/v3/api-docs" >/dev/null || exit 1
 
-ENTRYPOINT ["/sbin/tini", "--", "java", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["/sbin/tini", "--", "java", "-jar", "/app/app.jar"]
