@@ -1,0 +1,77 @@
+---
+description: "api_gateway: auth, authorization policy, reverse proxy. Spring Boot Java service."
+globs:
+  - "api_gateway/**/*.java"
+  - "api_gateway/**/*.kts"
+  - "api_gateway/**/*.yaml"
+alwaysApply: false
+---
+
+# api_gateway — Service Rule
+
+Single public entry point for the EducationPlatform backend. Java 25, Spring Boot 4.0.6, Gradle Kotlin DSL, port `8090`, base package `org.example.api_gateway_authz_service`. Stateless: auth, authorization, reverse proxy. No DB, no broker, no cache.
+
+## Layout
+
+| Package                     | Responsibility                                                  |
+|-----------------------------|-----------------------------------------------------------------|
+| `auth/`                     | `/auth/**` endpoints, JWT issuing, sole `user_service` client.  |
+| `auth/dto/`                 | Public request/response DTOs on `/auth/**`.                     |
+| `auth/client/`              | Wire DTOs for `user_service`. Never returned to clients.        |
+| `authz/`                    | `AuthorizationPolicy` + `CourseOwnershipVerifier`.              |
+| `gateway/config/`           | `RestClient` bean, `GatewayProperties` binding.                 |
+| `gateway/proxy/`            | `ProxyForwardService`, `HopByHopHeaders`.                       |
+| `gateway/routing/`          | `RouteResolver`, `MatchedRoute` (longest-prefix match).         |
+| `gateway/web/`              | `ProxyController` — the only `/api/**` entry.                   |
+| `setup/config_beans/openapi/` | Springdoc / Swagger UI config.                                |
+
+## Hard rules
+
+- **Auth flow.** `AuthController` -> `UserServiceAuthClient` -> `JwtTokenService`. No fourth hop. No other class calls `user_service` for register/login.
+- **Authorization isolation.** All role and ownership decisions live in `AuthorizationPolicy.authorize(...)`. Do not branch by `UserRole` inside controllers, clients, `ProxyForwardService`, or `RouteResolver`. Admins bypass via the early return; preserve it.
+- **Ownership lookups.** Always through `CourseOwnershipVerifier` (impl: `CourseServiceOwnershipClient`). Add new methods on the interface; do not call `RestClient` from inside `AuthorizationPolicy`.
+- **Proxy routes in YAML.** Downstream routes live exclusively in `src/main/resources/application.yaml` under `gateway.routes`, bound via `GatewayProperties`. Never hardcode a target URI in Java. New downstream services = new YAML entry, not a new controller.
+- **Single proxy entry.** `ProxyController` is the only `/api/**` mapping. `ProxyForwardService` is the only place that performs the upstream HTTP call. Use the shared `RestClient` from `GatewayClientConfig`. Do not add a second `RestClient` or `RestTemplate`.
+- **Hop-by-hop headers.** `HopByHopHeaders` is the source of truth for stripped headers, inbound and outbound.
+- **JWT properties.** Secret and TTL come from `JwtProperties` (`auth.jwt.secret`, `auth.jwt.ttl`). Never inline defaults, never read `auth.jwt.*` with `@Value` elsewhere. JWT signing/parsing lives only in `JwtTokenService` (HS256, hand-rolled). Do not add an external JWT library.
+- **JWT claims.** `sub`, `email`, `role`, `userStatus`, `iat`, `exp`. Changing any of them is a coordinated edit across `JwtTokenService.createToken`, `JwtTokenService.parseBearerToken`, `AuthenticatedPrincipal`, `AuthenticatedUser`.
+- **Public reads whitelist.** Extend only `ProxyController.isPublicPublishedCourseRead` and its private `Pattern` fields. Paths containing `/drafts` are never public.
+- **Config properties.** New `@ConfigurationProperties` types must be registered on `ApiGatewayApplication` via `@EnableConfigurationProperties`.
+- **Java style.** `record` for DTOs and value carriers. Constructor injection only. SLF4J for logs (no `System.out`). Spring `HttpMethod` / `HttpHeaders` constants over raw strings.
+
+## DTOs
+
+| Layer        | Package          | Direction                          | Examples                                                             |
+|--------------|------------------|------------------------------------|----------------------------------------------------------------------|
+| Public API   | `auth/dto/`      | Client <-> `AuthController`        | `LoginRequest`, `LoginResponse`, `RegisterRequest`, `RegisterResponse` |
+| Wire (down)  | `auth/client/`   | `UserServiceAuthClient` <-> `user_service` | `UserServiceLoginRequest`, `UserServiceRegisterRequest`, `UserServiceRegisterResponse` |
+
+Never return a `auth/client/` type from a controller. Never accept a `auth/dto/` type into the client.
+
+## Tests
+
+JUnit 5 under `src/test/java/...`.
+
+- New or changed branch in `AuthorizationPolicy.authorize` -> add a case in `authz/AuthorizationPolicyTest.java`.
+- New or changed proxy behavior, public-read whitelist, or `ProxyController` path -> add a case in `gateway/web/ProxyControllerTest.java`.
+- JWT claim/format change -> add a case in `auth/JwtTokenServiceTest.java`.
+- Routing change in YAML or `RouteResolver` -> exercise it through `ProxyControllerTest`; smoke-run `bootRun` if reasonable.
+
+## Anti-patterns
+
+- Adding a second proxy controller or a parallel `/api/**` mapping.
+- Calling `user_service` directly from any class other than `UserServiceAuthClient`.
+- Calling `course_service` directly from `AuthorizationPolicy` instead of through `CourseOwnershipVerifier`.
+- Putting JWT signing or parsing in `gateway/`.
+- Branching on `UserRole` inside `gateway/**`.
+- Hardcoding a downstream URI or adding a new `RestClient` instead of a YAML route.
+- Inlining a fallback JWT secret or TTL in code.
+- Introducing field injection, `RestTemplate`, `System.out`, or per-request state.
+
+## Validation
+
+```sh
+./gradlew build     # compile + test + assemble
+./gradlew check     # build + verification
+./gradlew test      # JUnit 5 only
+```

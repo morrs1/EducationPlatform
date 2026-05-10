@@ -1,0 +1,42 @@
+# frontend - Windsurf rules
+
+React 19 + Vite client. Redux Toolkit, React Router 7, Tailwind CSS 4. Feature-Sliced Design (FSD). Read `frontend/AGENTS.md` and `frontend/CLAUDE.md` first.
+
+## Stack
+
+- JavaScript / JSX only. **No TypeScript.** Do not add `.ts` or `.tsx` files.
+- Function components only.
+- Tailwind utility classes plus semantic classes in `src/index.css` (`header-btn`, `account-sidebar-navlink`, `profile-card`, ...). No CSS Modules, no styled-components.
+
+## FSD layer order
+
+Higher imports lower. Never the reverse.
+
+```
+app -> pages -> widgets -> features -> entities -> shared
+```
+
+## Rules
+
+- Import another slice only through its public `index.js`. Do not reach into its internals.
+- For unavoidable same-layer cross-slice contracts, use the explicit `@x/<consumer>.js` pattern.
+- Feature slices are flat. No `src/features/user/change-email`; use `src/features/change-email/`.
+- Widgets do not compose other widgets. Compose widgets only from `app` or `pages`.
+- App bootstrap in `src/main.jsx`. Root component from `src/app/entry`. Router in `src/app/router/AppRouter.jsx`. Store in `src/app/store/index.js`. Providers in `src/app/providers/StoreProvider.jsx`.
+- Routing primitives from `react-router`. Existing route paths are camelCase (`/account/currentCourses`, `/editProfile`); preserve that style.
+- Access slice state via exported selectors, not inline `state.xxx.yyy`.
+- Do not recreate legacy folders: `src/components/`, old `src/pages/*.jsx`, old `src/features/account/...`.
+- `auth` and `catalog` are mocked. There is no backend integration. Login state is in `localStorage`. Catalog sidebar reads mock data.
+- Do not invent an API client. If one is genuinely needed, place it under `shared/api/` and make the boundary explicit.
+- Keep responsive behavior intact (`sm:`, `md:` breakpoints are used throughout).
+
+## Validation
+
+Run from `frontend/`.
+
+```sh
+npm run lint
+npm run build
+```
+
+`npm run lint` runs ESLint 9 plus `tools/check-fsd.mjs`, which enforces FSD boundaries and is authoritative. No test framework is configured - do not claim test coverage.

@@ -1,0 +1,56 @@
+# answer_service — Windsurf rules
+
+Python 3.12 RAG microservice. FastAPI + ChromaDB + OpenAI (LangChain) + PostgreSQL (SQLAlchemy asyncio) + RabbitMQ (FastStream) + Redis + TaskIQ + Dishka + Bazario. This service has the most mature DDD setup in the monorepo. The long-form spec is `answer_service/CLAUDE.md` (authoritative) plus `answer_service/AGENTS.md` and `answer_service/README.md`. Read those before structural changes.
+
+## Architecture
+
+- Clean Architecture, inward-only: `presentation -> application -> domain`, `infrastructure -> application`.
+- Three runnable entry points: `fastapi_app`, `faststream_app`, `worker`.
+- CQRS: one file per use case under `application/commands/<domain>/<op>.py` and `application/queries/<domain>/<op>.py`.
+- Ports live in `application/common/ports/`. Adapters live in `infrastructure/`. New infra dependency means new port first.
+- Outbox pattern: domain events written to the outbox in the same DB transaction; `RelayOutboxCommandHandler` publishes to RabbitMQ via TaskIQ.
+- Inter-service references are UUIDs only. No shared schema, no cross-service imports.
+
+## Domain
+
+- Zero framework imports in `domain/`. No FastAPI, SQLAlchemy, LangChain, Dishka, Pydantic, ChromaDB.
+- Entities and aggregates inherit `BaseEntity` / `BaseAggregateRoot`. Value objects inherit `ValueObject`.
+- Value objects override only `_validate()` and `__str__()`. Never override `__post_init__`.
+- `Embedding.vector` is `tuple[float, ...]`. Never expose mutable internals on a VO.
+- Aggregates never own their `EventsCollection`. Inject it through factories (Dishka, REQUEST scope). One `EventsCollection` per request; events publish atomically at the end of the use case.
+- Domain services are stateless and inherit `BaseDomainService`. Data flows in via method parameters.
+
+## Application
+
+- `@dataclass(frozen=True, slots=True, kw_only=True)` for commands, queries, and views. `@final` on handlers.
+- Handler shape: `__init__` takes ports + services via Dishka; `__call__(self, data: <Command|Query>) -> <View>`. Store deps as `Final[...]`.
+- Map dataclass views to Pydantic responses explicitly in `presentation/`. Do not call `model_validate` on a dataclass.
+
+## Presentation
+
+- One folder per HTTP operation: `presentation/http/v1/routes/<domain>/<operation>/{handlers.py,schemas.py}`. `__init__.py` empty.
+- Router is named `<operation>_router` and uses `route_class=DishkaRoute`. Inject handlers via `FromDishka[HandlerType]`.
+- Document non-2xx responses with `{"model": ExceptionSchema}`.
+- FastStream subscribers in `presentation/rabbitmq/v1/` use manual ack/nack.
+
+## Coding standards
+
+- Python 3.12, fully type-annotated. Avoid `typing.Any`. `# type: ignore` requires an inline reason.
+- No raw `httpx`, `openai`, `chromadb`, `aio_pika`, or `redis` outside `infrastructure/adapters/`.
+- Keep Russian copy in user-visible messages where it already exists.
+
+## Tests
+
+- Mirror `src/` under `tests/{unit,integration,e2e}`.
+- Arrange / Act / Assert with explicit comments. No other comments inside test bodies except parametrization case descriptions.
+- Use in-memory fakes of ports for unit tests of interactors. Keep tests deterministic, no network.
+
+## Validation (run from `answer_service/`)
+
+```sh
+just lint            # minimum bar after every change
+just mypy
+just bandit
+just static-analysis # before any commit
+pytest -v
+```
