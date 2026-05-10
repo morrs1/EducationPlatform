@@ -1,0 +1,37 @@
+# ─── Build output ────────────────────────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+.cache/
+
+# ─── IDE / editor ────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+
+# ─── OS metadata ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Secrets & local env ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Git ─────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ─── Docker / compose ────────────────────────────────────────────────────────
+docker-compose*.yaml
+docker-compose*.yml
+**/.dockerignore
+**/Dockerfile
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
+README.md
+AGENTS.md
+CLAUDE.md
+.windsurfrules
+.cursor/
+**/*.log

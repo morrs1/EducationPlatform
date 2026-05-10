@@ -1,0 +1,63 @@
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+set shell := ["sh", "-c"]
+
+compose_file := "docker-compose.yaml"
+env_file := ".env"
+
+[doc("List all targets")]
+default:
+  @just --list --unsorted --list-heading $'frontend commands…\n'
+
+# ─── Docker Compose ──────────────────────────────────────────────────────────
+
+[doc("Build the production frontend image (nginx + bundle)")]
+[group("docker")]
+build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} build
+
+[doc("Start the frontend")]
+[group("docker")]
+up:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d
+
+[doc("Build then start")]
+[group("docker")]
+up-build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build
+
+[doc("Stop")]
+[group("docker")]
+down:
+  docker compose -f {{compose_file}} --env-file {{env_file}} down
+
+[doc("Tail logs")]
+[group("docker")]
+logs:
+  docker compose -f {{compose_file}} --env-file {{env_file}} logs -f
+
+[doc("Rebuild and recreate the app")]
+[group("docker")]
+redeploy:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build app
+
+# ─── Local dev (npm) ─────────────────────────────────────────────────────────
+
+[doc("Install dependencies")]
+[group("dev")]
+install:
+  npm install
+
+[doc("Run vite dev server")]
+[group("dev")]
+dev:
+  npm run dev
+
+[doc("Production build into ./dist")]
+[group("dev")]
+prod-build:
+  npm run build
+
+[doc("Lint (ESLint + FSD boundary checker)")]
+[group("dev")]
+lint:
+  npm run lint

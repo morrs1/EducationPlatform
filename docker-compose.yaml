@@ -1,0 +1,16 @@
+# Full-stack compose. Pulls every per-service compose into one project so
+# all containers share the `overlay` network and can resolve each other
+# by hostname (e.g. `user_service.app`, `api_gateway.app`).
+#
+# course_service has no docker setup yet; the gateway will return 5xx for
+# /api/course/* until that lands. The rest of the stack is independent.
+#
+# Usage:
+#   cp .env.example .env
+#   just up-build              # or: docker compose --env-file .env up -d --build
+
+include:
+  - ./user_service/docker-compose.yaml
+  - ./learning_service/docker-compose.yaml
+  - ./api_gateway/docker-compose.yaml
+  - ./frontend/docker-compose.yaml

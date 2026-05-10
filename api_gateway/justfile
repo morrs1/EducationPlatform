@@ -1,0 +1,63 @@
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+set shell := ["sh", "-c"]
+
+compose_file := "docker-compose.yaml"
+env_file := ".env"
+
+[doc("List all targets")]
+default:
+  @just --list --unsorted --list-heading $'api_gateway commands…\n'
+
+# ─── Docker Compose ──────────────────────────────────────────────────────────
+
+[doc("Build the gateway image")]
+[group("docker")]
+build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} build
+
+[doc("Start the gateway")]
+[group("docker")]
+up:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d
+
+[doc("Build then start")]
+[group("docker")]
+up-build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build
+
+[doc("Stop the gateway")]
+[group("docker")]
+down:
+  docker compose -f {{compose_file}} --env-file {{env_file}} down
+
+[doc("Show running services")]
+[group("docker")]
+ps:
+  docker compose -f {{compose_file}} --env-file {{env_file}} ps
+
+[doc("Tail logs")]
+[group("docker")]
+logs:
+  docker compose -f {{compose_file}} --env-file {{env_file}} logs -f
+
+[doc("Rebuild and recreate the app (pick up code changes)")]
+[group("docker")]
+redeploy:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build app
+
+# ─── Gradle ──────────────────────────────────────────────────────────────────
+
+[doc("Compile + run unit tests")]
+[group("gradle")]
+gradle-build:
+  ./gradlew --no-daemon build
+
+[doc("Run unit tests only")]
+[group("gradle")]
+test:
+  ./gradlew --no-daemon test
+
+[doc("Run the gateway locally on port 8090 (loads .env via Spring)")]
+[group("gradle")]
+run:
+  ./gradlew --no-daemon bootRun
