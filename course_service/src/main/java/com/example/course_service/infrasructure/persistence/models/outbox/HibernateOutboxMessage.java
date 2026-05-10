@@ -21,6 +21,9 @@ public class HibernateOutboxMessage {
     @Id
     private UUID id;
 
+    @Column(name = "event_type")
+    private String eventType;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb")
     private JsonNode payload;

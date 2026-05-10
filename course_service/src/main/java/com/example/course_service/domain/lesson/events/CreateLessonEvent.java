@@ -6,12 +6,10 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
 
-@RequiredArgsConstructor
 @Getter
-public class UploadLessonContentEvent extends BaseDomainEvent {
-
+@RequiredArgsConstructor
+public class CreateLessonEvent extends BaseDomainEvent {
     private final UUID lessonId;
-    private final String newTitle;
-    private final String newContent;
-
+    private final String title;
+    private final String content;
 }

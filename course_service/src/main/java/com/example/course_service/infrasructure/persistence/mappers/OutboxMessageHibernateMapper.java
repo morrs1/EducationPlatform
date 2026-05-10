@@ -17,6 +17,7 @@ public class OutboxMessageHibernateMapper {
     public HibernateOutboxMessage toHibernateOutboxMessage(OutboxMessage message) {
         var hibernateMessage = new HibernateOutboxMessage();
         hibernateMessage.setId(message.getId());
+        hibernateMessage.setEventType(message.getEventType());
         hibernateMessage.setPayload(readPayload(message.getPayload()));
         hibernateMessage.setProcessedAt(message.getProcessedAt());
         return hibernateMessage;
@@ -25,6 +26,7 @@ public class OutboxMessageHibernateMapper {
     public OutboxMessage toOutboxMessage(HibernateOutboxMessage message) {
         return new OutboxMessage(
                 message.getId(),
+                message.getEventType(),
                 writePayload(message),
                 message.getProcessedAt()
         );
