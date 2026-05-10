@@ -1,0 +1,91 @@
+---
+description: "Testing rules: TDD where practical, AAA structure, behavior-first naming, mirror src/."
+globs:
+  - "**/test/**/*.java"
+  - "**/tests/**/*.py"
+  - "answer_service/tests/**/*"
+---
+
+# Testing — TDD and Conventions
+
+This rule applies to any test file. Tests are part of the code, held to the same quality bar as production code.
+
+## When to TDD
+
+- **Domain logic and application interactors:** prefer test-first. Write a failing unit test that captures the behavior, make it pass with the smallest change, then refactor.
+- **Adapters and presentation:** test-after is acceptable, but every adapter must have at least one integration test.
+- **Bug fixes:** always start with a failing test that reproduces the bug. The test, not the fix, is the proof.
+
+## Test Pyramid
+
+```
+       /\
+      /e2\        few, slow, real environment
+     /----\
+    / int  \      adapter-level, real I/O via Testcontainers / pytest fixtures
+   /--------\
+  /   unit   \    many, fast, deterministic, no IO
+ /------------\
+```
+
+- Default to **unit tests** for domain + application.
+- Add **integration tests** when behavior spans layers (e.g. a repository roundtrip, an outbox relay producing a real RabbitMQ message).
+- Reserve **e2e** for golden-path user flows.
+
+## Structure
+
+- Tests **mirror `src/`**.
+  - Java: `src/test/java/<package>/<MirroredPath>Test.java`.
+  - Python: `tests/{unit,integration,e2e}/...` with the same package layout as `src/`.
+
+## Test Body
+
+- Use **Arrange / Act / Assert**:
+  ```python
+  async def test_create_user_persists_new_user_when_email_is_unique() -> None:
+      # Arrange
+      command = CreateUserCommand(email="x@y.com", name="x", password="pw")
+
+      # Act
+      view = await handler(command)
+
+      # Assert
+      assert view.user_id is not None
+  ```
+- Comments inside test bodies are limited to the `# Arrange / # Act / # Assert` markers and parametrization case descriptions. No other comments.
+- One behavior per test. If you find yourself writing `and` in the test name, split it.
+
+## Naming
+
+- Behavior + expected outcome.
+  - Good: `shouldRejectWhenEmailAlreadyExists`, `test_publish_emits_lesson_published_event`.
+  - Bad: `testCreate`, `test_user_1`, `it_works`.
+- Avoid "happy path" / "edge case" labels. The test name is the spec.
+
+## Isolation
+
+- Tests are deterministic. No network, no real time, no real filesystem in unit tests. Stub clocks (`Clock` port) and ID generators.
+- Tests are independent: any test can run alone, in any order, in parallel.
+- Reset shared state between tests. No `static` mutable state in Java tests, no module-level singletons in Python tests.
+
+## Test Doubles
+
+- **Fakes** (in-memory repository implementing the port) — preferred for unit-testing an interactor.
+- **Stubs** (canned answers) — fine for adapters' boundaries.
+- **Mocks** (verify interactions) — use sparingly. Verifying behavior is fine; verifying that a method was called three times is fragile.
+- Never mock the type you own. Mock at the seam (port / interface), not on a concrete class.
+
+## Coverage
+
+- Coverage is a signal, not a goal. Aim for `~80%+` on `domain/` and `application/`. Do not chase 100% by testing trivial getters.
+- A green build with weak assertions is worse than a few tests with strong assertions.
+
+## Validation
+
+| Service           | Test command          |
+|-------------------|-----------------------|
+| Java services     | `./gradlew test`      |
+| `answer_service`  | `pytest -v`           |
+| `frontend`        | (no test framework configured) |
+
+Tests must be green before reporting work done. A flaky test is a bug — quarantine and file an issue, do not retry until it passes.

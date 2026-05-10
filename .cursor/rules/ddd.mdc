@@ -1,0 +1,59 @@
+---
+description: "DDD building blocks: aggregates, value objects, domain events, domain services."
+globs:
+  - "answer_service/**/domain/**/*.py"
+  - "api_gateway/**/domain/**/*.java"
+  - "user_service/**/domain/**/*.java"
+  - "course_service/**/domain/**/*.java"
+  - "learning_service/**/domain/**/*.java"
+---
+
+# Domain-Driven Design — Building Blocks
+
+This rule applies to anything inside a `domain/` directory. It defines how aggregates, value objects, domain events, and domain services are built across the codebase.
+
+## Aggregate Roots
+
+- Extend the per-service base (`BaseAggregateRoot` / `BaseEntity` in Java, `Aggregate[Id]` / `Entity[Id]` in Python).
+- Have a single identity value object (e.g. `UserId`, `LessonId`, `ConversationId`).
+- Encapsulate invariants. **No public setters.** State changes through methods that read like business actions: `enroll`, `publish`, `markFailed`.
+- Emit domain events for state transitions that other parts of the system need to know about. In Java services, events go through a per-aggregate events list pulled by the application layer. In `answer_service`, events go through an injected `EventsCollection` (REQUEST scope).
+- An aggregate is a **consistency boundary**. One transaction touches one aggregate. Multi-aggregate consistency lives in a domain service or an interactor.
+- Reference other aggregates by **ID only**, never by direct object reference.
+
+## Value Objects
+
+- Extend the per-service base (`BaseValueObject` in Java, `ValueObject` in Python). Immutable. Equality by value.
+- Validate in the constructor (`_validate()` in Python, constructor body in Java). Throw a domain exception (`DomainFieldError`, `ValidateException`, etc.) on invalid input. Do not wait until persistence.
+- In Python, never override `__post_init__`; only `_validate()` and `__str__`.
+- Prefer many small value objects over primitive strings / numbers. `UserEmail`, `CourseTitle`, `Embedding` carry meaning that `String` and `tuple[float, ...]` do not.
+- Immutability: in Python use `tuple` instead of `list` inside VOs (e.g. `Embedding.vector: tuple[float, ...]`).
+
+## Domain Events
+
+- Past tense names: `ConversationStarted`, `LessonPublished`, `UserRegistered`.
+- Carry the IDs and the minimal payload needed by consumers. Do not embed whole aggregates.
+- Emitted by aggregates, **published by the application layer** at the end of the use case:
+  - Java: `eventBus.publish(aggregate.pullDomainEvents())`.
+  - Python: `await event_bus.publish(events_collection.pull())`.
+- Domain events written to the outbox in the same transaction as the aggregate change.
+
+## Domain Services
+
+- Stateless. Inputs in, outputs out.
+- Live in `domain/<aggregate>/services/`.
+- Use them when behavior does not naturally belong to a single aggregate (cross-aggregate calculation, complex coordination that should not pollute an aggregate).
+- Never inject infrastructure into a domain service. If it needs I/O, the use case must orchestrate the I/O and pass results in.
+
+## Bounded Contexts
+
+- Each service is a bounded context. The same word (e.g. `User`) may mean different things in different services. Do not share types across services.
+- Cross-context references are by UUID only. If `answer_service` needs to know that a user exists, it has its own thin `User` aggregate populated from `UserRegistered` events.
+
+## Anti-patterns to Reject
+
+- Anemic models: an aggregate that is only getters and setters. Push behavior into it.
+- Validation in the application layer for things that belong in the value object. (The opposite — re-checking invariants in the application layer for use-case-level rules — is fine.)
+- Aggregates that hold direct references to other aggregates. Use IDs.
+- Domain events that exist only because "we might need them someday". If there is no consumer, do not raise the event.
+- Putting infrastructure types (e.g. JPA entities, SQLAlchemy models, Pydantic models) inside `domain/`.

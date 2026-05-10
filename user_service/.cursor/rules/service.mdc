@@ -1,0 +1,99 @@
+---
+description: "user_service: user identity, BCrypt auth, profile, roles, S3 photo. Spring Boot Java service."
+globs:
+  - "user_service/**/*.java"
+  - "user_service/**/*.kts"
+  - "user_service/**/*.yaml"
+alwaysApply: false
+---
+
+# user_service — Cursor rules
+
+Spring Boot 4.0.3 on Java 25. Source of truth for user identity in the EducationPlatform monorepo: registration, BCrypt credential check, profile data, role assignment, S3-backed profile photo.
+
+## Package and layout
+
+Package root: `org.example.user_service`. Port `8080`. Multipart cap 10MB.
+
+```
+domain/
+  base/                         BaseEntity, BaseValueObject, BaseDomainEvent,
+                                BaseDomainService, base/exceptions/
+  user/
+    User.java                   aggregate root
+    events/                     CreateUserDomainEvent, ...
+    ports/PasswordHasher        domain-owned port
+    services/UserDomainService  state mutation + event recording
+    vo/                         UserId, UserEmail, UserName, UserSurname,
+                                UserPatronymic, UserStatus, UserPassword,
+                                UserProfilePhotoLink, UserRole
+application/
+  exceptions/                   UserNotFoundException, UserAlreadyExistsException,
+                                InvalidCredentialsException
+  ports/                        UserRepo, PhotoStorage, EventBus, TransactionManager
+  interactors/
+    mappers/UserViewMapper
+    user/<operation>/           one folder per use case: Command, Interactor, View
+infrastructure/
+  adapters/persistence/         HibernateUserRepo
+  adapters/password_hasher/     PasswordHasherBcrypt
+  adapters/s3/                  SeaweedFSUserProfilePhotoRepo
+  adapters/event_bus/           SpringEventBus
+  adapters/transactions/        SpringTransactionManagerAdapter
+  event_handlers/               UserEventHandler
+  persistence/models/           HibernateUser
+  persistence/mappers/          UserMapperHibernate
+presentation/http/v1/
+  user/<operation>/{dto,handlers}/
+  mappers/                      UserMapperCommand, UserMapperQuery
+  exceptionHandlers/            ApiExceptionHandler, ErrorResponse
+setup/config_beans/{user,s3,transaction,openapi}/
+```
+
+## Hard rules
+
+- `PasswordHasher` is the only seam for hashing. BCrypt lives only in `infrastructure/adapters/password_hasher/`. Do not import `BCryptPasswordEncoder` from `application/`, `presentation/`, or any other adapter.
+- `PhotoStorage` is the only seam for S3. `infrastructure/adapters/s3/SeaweedFSUserProfilePhotoRepo` is the only file in this service that may import `software.amazon.awssdk.*`.
+- One folder per command under `application/interactors/user/<operation>/`. Do not collapse `change_name` / `change_surname` / `change_patronymic` / `change_status` into a single updater for new work.
+- Mapping rules:
+  - `UserMapperCommand` (presentation) — request DTO -> application command.
+  - `UserMapperQuery` (presentation) — application view -> response DTO.
+  - `UserMapperHibernate` (infrastructure) — domain `User` <-> `HibernateUser`.
+  - All MapStruct. `lombok-mapstruct-binding` is wired in Gradle.
+- Lombok is forbidden on `domain/` types. Allowed on Spring components, interactors, and JPA entities.
+- Constructor injection only; no field `@Autowired`.
+- DTOs are records under `presentation/http/v1/user/<op>/dto/`. Commands and views are records under `application/interactors/user/<op>/`. DTO types never cross into `application/`; commands never cross into `presentation/`.
+- `MultipartFile` stops at the controller. Interactors receive `byte[]` + filename + content type via the command.
+- Role assignment endpoints are admin-only. The gateway enforces this; the application layer re-checks.
+- Domain events flow `UserDomainService` -> `EventBus.publish(...)` inside `TransactionManager.inTransaction(...)`. Never publish to RabbitMQ from a domain method — that is the outbox adapter's job.
+
+## Tests
+
+Every interactor under `application/interactors/user/<op>/` must have a matching `<Op>InteractorTest` at:
+
+```
+src/test/java/org/example/user_service/application/interactors/user/<op>/<Op>InteractorTest.java
+```
+
+Pattern: in-memory fakes of `UserRepo`, `EventBus`, `TransactionManager`, and `PasswordHasher`. No Spring context. JUnit 5. Existing references: `create_user`, `assign_role`, `authenticate_user`.
+
+## Anti-patterns
+
+- BCrypt imports inside `domain/` or `application/`.
+- `software.amazon.awssdk.*` imports outside `infrastructure/adapters/s3/`.
+- Role-check logic inside controllers (move to interactor; gateway is the outer fence).
+- Mutable JPA-only domain objects, or returning `HibernateUser` from a port.
+- Skipping `UserDomainService` and mutating `User` fields directly from an interactor.
+- Adding a second password hashing algorithm or a second S3 adapter "for testing".
+
+## Validation
+
+From `user_service/`:
+
+```sh
+./gradlew build
+./gradlew check
+./gradlew test
+```
+
+`./gradlew build` is the minimum after any edit. `./gradlew check` before committing.

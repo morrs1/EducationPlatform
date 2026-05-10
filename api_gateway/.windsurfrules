@@ -1,0 +1,52 @@
+# api_gateway — Windsurf Rules
+
+Spring Boot 4.0.6 / Java 25 reverse-proxy gateway. Port `8090`. Base package `org.example.api_gateway_authz_service`. Stateless: no DB, no broker, no cache.
+
+## Read first
+
+- `api_gateway/AGENTS.md` — authoritative architecture and validation bar.
+- `api_gateway/README.md` — HTTP API, routing table, configuration.
+- `api_gateway/CLAUDE.md` — Claude-specific elaboration of these rules.
+
+## Layout
+
+- `auth/` — `/auth/**`, JWT issuing, sole `user_service` client.
+- `auth/dto/` — public request/response DTOs. `auth/client/` — wire DTOs for `user_service`. Do not mix.
+- `authz/` — `AuthorizationPolicy`, `CourseOwnershipVerifier`, `UserRole`.
+- `gateway/{config,proxy,routing,web}` — transport: shared `RestClient`, `ProxyForwardService`, `RouteResolver`, `ProxyController`.
+- `setup/config_beans/openapi/` — Springdoc config.
+
+## Rules
+
+- Auth flow is exactly `AuthController` -> `UserServiceAuthClient` -> `JwtTokenService`. No other class calls `user_service` for auth.
+- All role and ownership decisions live in `AuthorizationPolicy.authorize`. Do not branch by role anywhere else.
+- Course / lesson ownership goes through `CourseOwnershipVerifier`. Do not call `course_service` from `AuthorizationPolicy` directly.
+- New downstream routes go in `application.yaml` under `gateway.routes`. Never hardcode a target URI in Java, never add a second proxy controller.
+- `ProxyController` is the only `/api/**` entry. `ProxyForwardService` is the only place that performs the upstream call. Use the shared `RestClient` from `GatewayClientConfig`.
+- `HopByHopHeaders` is the only source of truth for stripped headers.
+- Public reads: extend only `ProxyController.isPublicPublishedCourseRead`. Paths containing `/drafts` stay private.
+- JWT secret and TTL come only from `JwtProperties`. JWT signing/parsing lives only in `JwtTokenService` (HS256). Do not inline defaults, do not add an external JWT library.
+- JWT claims are fixed: `sub`, `email`, `role`, `userStatus`, `iat`, `exp`. Change them in `JwtTokenService` and `AuthenticatedPrincipal`/`AuthenticatedUser` together.
+- New `@ConfigurationProperties` must be registered on `ApiGatewayApplication` via `@EnableConfigurationProperties`.
+- Java: `record` for DTOs and value carriers, constructor injection only, SLF4J only, Spring `HttpMethod`/`HttpHeaders` constants over raw strings.
+
+## Tests
+
+- New policy branch -> case in `authz/AuthorizationPolicyTest`.
+- New proxy or whitelist behavior -> case in `gateway/web/ProxyControllerTest`.
+- JWT change -> case in `auth/JwtTokenServiceTest`.
+
+## Anti-patterns
+
+- Calling `user_service` for auth from outside `UserServiceAuthClient`.
+- JWT logic in `gateway/`. Role checks in controllers or `ProxyForwardService`.
+- Second `RestClient`, `RestTemplate`, or WebClient. Field injection. `System.out`.
+- Hardcoded downstream URIs. Per-request DB calls, caches, or sessions.
+
+## Validation
+
+```sh
+./gradlew build
+./gradlew check
+./gradlew test
+```

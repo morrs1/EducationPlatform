@@ -1,0 +1,50 @@
+# course_service — Windsurf Rules
+
+`course_service` is a Spring Boot 4 / Java 25 microservice that owns the course catalog: courses, modules, lessons, typed lesson content, lesson assets (S3), and tags. It produces `lesson.*` events via a transactional outbox to RabbitMQ. It does NOT track user progress.
+
+- Read `course_service/AGENTS.md` and `course_service/README.md` before editing. Repo-wide rules live in the root `CLAUDE.md` and `.cursor/rules/`.
+- Java root package is `com.example.course_service`. HTTP port `8081`. Reached via `api_gateway` at `/api/course/...`.
+- Architecture is Clean Architecture / DDD with strict inward-only dependencies: `presentation -> application -> domain`, and `infrastructure -> application` via ports.
+- The `domain/` layer must have zero framework imports (no Spring, no JPA, no Jackson). Value objects extend `BaseValueObject` and throw `ValidateException` from `validate()`.
+- Use cases live one-per-folder under `application/interactors/<aggregate>/<operation>/`. Add a new operation by adding a new folder, not by extending an existing one.
+- Ports live flat under `application/ports/`: `CourseRepo`, `LessonRepo`, `AssetRepo`, `AssetFileStorage`, `OutboxRepo`, `EventBus`, `TransactionManager`, `LessonPayloadMapper`. Ports must not reference Spring or Hibernate types.
+- Adapters live under `infrasructure/adapters/...` (note typo). The AWS S3 SDK is imported ONLY in `infrasructure/adapters/file_storage/`. Reuse `S3Client` from `setup/config_beans/s3/SeaweedFSBeansConfig` — do not construct a new client.
+- Wrap writes in `TransactionManager.inTransaction(...)`. Inside the same transaction persist aggregate changes and call `eventBus.publish(domainService.pullEvents())` so events land in the outbox atomically.
+- Every state change another service cares about (`lesson.created`, `lesson.updated`, `lesson.published`, etc.) must be written as an `OutboxMessage` in the same DB transaction. `OutboxSpringScheduler` (`fixedRate=5000`) relays to RabbitMQ. Never call `rabbitTemplate.send(...)` from a domain method or an interactor.
+- Course publishing flows through `PublishCourseInteractor.publish(UUID)` (PATCH `/course/{id}/publish`). Never inline status changes in a controller.
+- Lesson content payloads (`TheoryLessonPayload`, `QuizLessonPayload`, `CodingLessonPayload`) cross JSON via the `LessonPayloadMapper` port. The Jackson impl is `JacksonLessonPayloadMapper` under `infrasructure/persistence/mappers/`.
+- HTTP layout is one folder per operation under `presentation/http/v1/handlers/<aggregate>/<operation>/` with `dto/request/` and `dto/response/` subfolders. One `@RestController`, one endpoint per handler class. Base path is `/course` (`/course/lesson` for lessons, `/course/lesson/{id}/asset` for assets).
+- Multipart limit is 200MB (`spring.servlet.multipart.max-file-size` / `max-request-size`). If you need more, change config — do not stream-around the limit.
+- Use MapStruct for `domain <-> JPA` mappers (under `infrasructure/persistence/mappers/`) and for `request <-> command` / `view <-> response` mappers (under `presentation/http/v1/mappers/`). Lombok for boilerplate.
+- Schema changes require a new Liquibase changelog under `deploy/liquibase/changelog/v.<version>/` plus an entry in `db.changelog-master.yaml`.
+
+## Typo-path warning — DO NOT RENAME
+
+Two paths in the tree contain known typos that the rest of the codebase imports against. They are intentional at this point. Do NOT rename them as part of unrelated work.
+
+- `infrasructure/` (correct English: `infrastructure`)
+- `setup/config_beans/transations/` (correct English: `transactions`)
+
+A rename, if it ever happens, must be its own dedicated, isolated change.
+
+## Anti-patterns
+
+- Spring / JPA / Jackson annotations on `domain/` classes.
+- Spring Data repos injected into handlers.
+- Domain events emitted without writing to the outbox in the same transaction.
+- `rabbitTemplate.send(...)` outside `OutboxSpringScheduler`.
+- Domain types used in HTTP request/response DTOs.
+- `IllegalArgumentException` from domain code instead of `ValidateException`.
+
+## Validation
+
+Run from `course_service/`:
+
+```sh
+./gradlew build       # compile + tests + MapStruct annotation processors
+./gradlew check       # all verification tasks
+./gradlew test        # tests only
+./gradlew bootRun     # run on :8081
+```
+
+Minimum after edit: `./gradlew build`. Before commit: `./gradlew check`.
