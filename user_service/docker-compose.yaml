@@ -111,42 +111,50 @@ services:
       -ip.bind=0.0.0.0
       -s3
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8333/ || exit 0"]
+      # SeaweedFS master exposes a plain HTTP /cluster/status JSON endpoint on
+      # 9333 with no auth — perfect for liveness. Avoid hitting the S3 API on
+      # 8333, which returns 403 for unauthenticated GET requests.
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9333/cluster/status || exit 1"]
       <<: *hc-interval
 
+  # Bucket bootstrap. Uses MinIO client (`mc`) — a single Go binary, ~25MB and
+  # near-instant startup, instead of the ~280MB AWS CLI v2 Python bundle.
   seaweedfs-init:
     <<: *default
     container_name: user_service.seaweedfs.init
-    image: public.ecr.aws/aws-cli/aws-cli:2.34.7
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
     restart: "no"
     depends_on:
       seaweedfs:
-        condition: service_started
+        condition: service_healthy
     environment:
-      AWS_ACCESS_KEY_ID: ${USER_SERVICE_S3_ACCESS_KEY}
-      AWS_SECRET_ACCESS_KEY: ${USER_SERVICE_S3_SECRET_KEY}
-      AWS_DEFAULT_REGION: ${USER_SERVICE_S3_REGION}
+      MC_HOST_seaweed: http://${USER_SERVICE_S3_ACCESS_KEY}:${USER_SERVICE_S3_SECRET_KEY}@user_service.seaweedfs:8333
       BUCKET: ${USER_SERVICE_S3_BUCKET}
     entrypoint:
       - /bin/sh
       - -ec
     command:
       - |
-        aws configure set default.s3.addressing_style path
-
-        until aws --endpoint-url http://user_service.seaweedfs:8333 s3api list-buckets >/dev/null 2>&1; do
-          echo "Waiting for SeaweedFS S3 ..."
-          sleep 2
+        # `mc` starts in milliseconds; this loop spins out in well under a
+        # second once the S3 endpoint actually accepts requests.
+        attempts=0
+        until mc ls seaweed >/dev/null 2>&1; do
+          attempts=$$((attempts + 1))
+          if [ $$attempts -ge 30 ]; then
+            echo "SeaweedFS S3 still not reachable after 30 tries; giving up." >&2
+            exit 1
+          fi
+          echo "Waiting for SeaweedFS S3 ($$attempts/30) ..."
+          sleep 1
         done
 
-        if aws --endpoint-url http://user_service.seaweedfs:8333 s3api head-bucket --bucket "$$BUCKET" >/dev/null 2>&1; then
+        if mc ls "seaweed/$$BUCKET" >/dev/null 2>&1; then
           echo "Bucket '$$BUCKET' already exists"
         else
           echo "Creating bucket '$$BUCKET'"
-          aws --endpoint-url http://user_service.seaweedfs:8333 s3api create-bucket --bucket "$$BUCKET"
+          mc mb "seaweed/$$BUCKET"
         fi
-
-        aws --endpoint-url http://user_service.seaweedfs:8333 s3api list-buckets
+        mc ls seaweed
 
   app:
     <<: *default
