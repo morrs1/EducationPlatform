@@ -6,8 +6,8 @@
 
 services:
   app:
-    container_name: api_gateway.app
-    hostname: api_gateway.app
+    container_name: api-gateway-app
+    hostname: api-gateway-app
     restart: unless-stopped
     build:
       context: .

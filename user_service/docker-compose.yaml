@@ -35,8 +35,8 @@ x-app-environment: &x-app-environment
 services:
   postgres:
     <<: *default
-    container_name: user_service.postgres
-    hostname: user_service.postgres
+    container_name: user-service-postgres
+    hostname: user-service-postgres
     image: postgres:16.10-alpine3.22
     environment:
       POSTGRES_DB: ${USER_SERVICE_POSTGRES_DB}
@@ -56,11 +56,11 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${USER_SERVICE_POSTGRES_USER} -d ${USER_SERVICE_POSTGRES_DB}"]
       <<: *hc-interval
     volumes:
-      - user_service.postgres.data:/var/lib/postgresql/data
+      - user-service-postgres.data:/var/lib/postgresql/data
 
   liquibase:
     <<: *default
-    container_name: user_service.liquibase
+    container_name: user-service-liquibase
     image: liquibase/liquibase:4.31-alpine
     restart: "no"
     depends_on:
@@ -75,15 +75,15 @@ services:
     command: >
       --search-path=/liquibase
       --changelog-file=migrations/${USER_SERVICE_LIQUIBASE_CHANGELOG}
-      --url=jdbc:postgresql://user_service.postgres:${USER_SERVICE_POSTGRES_PORT}/${USER_SERVICE_POSTGRES_DB}
+      --url=jdbc:postgresql://user-service-postgres:${USER_SERVICE_POSTGRES_PORT}/${USER_SERVICE_POSTGRES_DB}
       --username=${USER_SERVICE_POSTGRES_USER}
       --password=${USER_SERVICE_POSTGRES_PASSWORD}
       update
 
   seaweedfs:
     <<: *default
-    container_name: user_service.seaweedfs
-    hostname: user_service.seaweedfs
+    container_name: user-service-seaweedfs
+    hostname: user-service-seaweedfs
     image: chrislusf/seaweedfs:4.19
     environment:
       AWS_ACCESS_KEY_ID: ${USER_SERVICE_S3_ACCESS_KEY}
@@ -101,7 +101,7 @@ services:
       - "127.0.0.1:${USER_SERVICE_S3_FILER_PORT}:8888"
       - "127.0.0.1:${USER_SERVICE_S3_ADMIN_PORT}:9333"
     volumes:
-      - user_service.seaweedfs.data:/data
+      - user-service-seaweedfs.data:/data
     command: >
       server
       -dir=/data
@@ -115,14 +115,14 @@ services:
 
   seaweedfs-init:
     <<: *default
-    container_name: user_service.seaweedfs.init
+    container_name: user-service-seaweedfs.init
     image: minio/mc:RELEASE.2024-11-21T17-21-54Z
     restart: "no"
     depends_on:
       seaweedfs:
         condition: service_healthy
     environment:
-      MC_HOST_seaweed: http://${USER_SERVICE_S3_ACCESS_KEY}:${USER_SERVICE_S3_SECRET_KEY}@user_service.seaweedfs:8333
+      MC_HOST_seaweed: http://${USER_SERVICE_S3_ACCESS_KEY}:${USER_SERVICE_S3_SECRET_KEY}@user-service-seaweedfs:8333
       BUCKET: ${USER_SERVICE_S3_BUCKET}
     entrypoint:
       - /bin/sh
@@ -150,8 +150,8 @@ services:
 
   app:
     <<: *default
-    container_name: user_service.app
-    hostname: user_service.app
+    container_name: user-service-app
+    hostname: user-service-app
     build:
       context: .
       dockerfile: ./deploy/user_service/Dockerfile
@@ -162,7 +162,7 @@ services:
         *x-app-environment,
       ]
       # In-container clients reach SeaweedFS via the service hostname.
-      USER_SERVICE_S3_PUBLIC_BASE_URL: http://user_service.seaweedfs:8333/${USER_SERVICE_S3_BUCKET}
+      USER_SERVICE_S3_PUBLIC_BASE_URL: http://user-service-seaweedfs:8333/${USER_SERVICE_S3_BUCKET}
     deploy:
       resources:
         limits:
@@ -186,8 +186,8 @@ services:
       <<: *hc-interval
 
 volumes:
-  user_service.postgres.data: {}
-  user_service.seaweedfs.data: {}
+  user-service-postgres.data: {}
+  user-service-seaweedfs.data: {}
 
 networks:
   overlay:

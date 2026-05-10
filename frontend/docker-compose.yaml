@@ -5,8 +5,8 @@
 
 services:
   app:
-    container_name: frontend.app
-    hostname: frontend.app
+    container_name: frontend-app
+    hostname: frontend-app
     restart: unless-stopped
     build:
       context: .

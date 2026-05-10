@@ -23,8 +23,8 @@ x-app-environment: &x-app-environment
 services:
   postgres:
     <<: *default
-    container_name: learning_service.postgres
-    hostname: learning_service.postgres
+    container_name: learning-service-postgres
+    hostname: learning-service-postgres
     image: postgres:16.10-alpine3.22
     environment:
       POSTGRES_DB: ${LEARNING_SERVICE_POSTGRES_DB}
@@ -44,11 +44,11 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${LEARNING_SERVICE_POSTGRES_USER} -d ${LEARNING_SERVICE_POSTGRES_DB}"]
       <<: *hc-interval
     volumes:
-      - learning_service.postgres.data:/var/lib/postgresql/data
+      - learning-service-postgres.data:/var/lib/postgresql/data
 
   liquibase:
     <<: *default
-    container_name: learning_service.liquibase
+    container_name: learning-service-liquibase
     image: liquibase/liquibase:4.31-alpine
     restart: "no"
     depends_on:
@@ -63,15 +63,15 @@ services:
     command: >
       --search-path=/liquibase
       --changelog-file=migrations/${LEARNING_SERVICE_LIQUIBASE_CHANGELOG}
-      --url=jdbc:postgresql://learning_service.postgres:${LEARNING_SERVICE_POSTGRES_PORT}/${LEARNING_SERVICE_POSTGRES_DB}
+      --url=jdbc:postgresql://learning-service-postgres:${LEARNING_SERVICE_POSTGRES_PORT}/${LEARNING_SERVICE_POSTGRES_DB}
       --username=${LEARNING_SERVICE_POSTGRES_USER}
       --password=${LEARNING_SERVICE_POSTGRES_PASSWORD}
       update
 
   app:
     <<: *default
-    container_name: learning_service.app
-    hostname: learning_service.app
+    container_name: learning-service-app
+    hostname: learning-service-app
     build:
       context: .
       dockerfile: ./deploy/learning_service/Dockerfile
@@ -101,7 +101,7 @@ services:
       <<: *hc-interval
 
 volumes:
-  learning_service.postgres.data: {}
+  learning-service-postgres.data: {}
 
 networks:
   overlay:
