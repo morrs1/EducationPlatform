@@ -9,6 +9,12 @@ spring:
     username: ${POSTGRES_USER:morrs}
     password: ${POSTGRES_PASSWORD:123}
     driver-class-name: org.postgresql.Driver
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_DEFAULT_USER}
+    password: ${RABBITMQ_DEFAULT_USER}
+    virtual-host: /
   servlet:
     multipart:
       max-file-size: 200MB
@@ -26,3 +32,4 @@ temp:
     secret-key: ${TEMP_S3_SECRET_KEY:}
     public-base-url: ${TEMP_S3_PUBLIC_BASE_URL:}
     path-style-access: ${TEMP_S3_PATH_STYLE_ACCESS:false}
+

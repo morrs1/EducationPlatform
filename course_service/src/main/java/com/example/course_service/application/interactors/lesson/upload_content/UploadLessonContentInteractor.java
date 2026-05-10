@@ -1,9 +1,7 @@
 package com.example.course_service.application.interactors.lesson.upload_content;
 
 import com.example.course_service.application.exceptions.LessonNotFoundException;
-import com.example.course_service.application.ports.LessonPayloadMapper;
-import com.example.course_service.application.ports.LessonRepo;
-import com.example.course_service.application.ports.TransactionManager;
+import com.example.course_service.application.ports.*;
 import com.example.course_service.domain.lesson.services.LessonDomainService;
 import lombok.RequiredArgsConstructor;
 
@@ -14,6 +12,7 @@ public class UploadLessonContentInteractor {
     private final LessonPayloadMapper lessonPayloadMapper;
     private final TransactionManager transactionManager;
     private final LessonDomainService domainService;
+    private final EventBus eventBus;
 
     public void uploadContent(UploadLessonContentCommand command) {
         transactionManager.inTransaction(() -> {
@@ -25,6 +24,7 @@ public class UploadLessonContentInteractor {
             );
             domainService.uploadContent(lesson, payload);
             lessonRepo.uploadContent(lesson);
+            eventBus.publish(domainService.pullEvents());
         });
     }
 
