@@ -1,25 +1,9 @@
-# Pre-commit configuration for user_service.
-#
-# Uses the `pre-commit` framework (https://pre-commit.com/) — the same framework
-# answer_service already relies on, so the contributor experience is consistent
-# across the monorepo.
-#
-# Install once:
-#   pip install pre-commit          # (or: pipx install pre-commit)
-#   cd user_service
-#   pre-commit install              # registers .git/hooks/pre-commit
-#
-# Manual run on the whole tree:
-#   pre-commit run --all-files
-#
-# CI also enforces the same checks (see .github/workflows/user_service_ci.yaml).
-# If a hook fails locally, fix the issue and re-stage; do NOT use --no-verify.
+# Install: `pre-commit install && pre-commit install --hook-type pre-push`
 
 default_language_version:
   python: python3
 
 repos:
-  # Generic hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -34,11 +18,6 @@ repos:
       - id: check-added-large-files
         args: [--maxkb=512]
 
-  # Project-local Gradle hooks.
-  #
-  # We run Gradle as a system command and scope each hook to staged Java files
-  # under user_service/ so the hook stays fast for cross-service commits.
-  # The hook fires only when relevant files are staged.
   - repo: local
     hooks:
       - id: spotless-check

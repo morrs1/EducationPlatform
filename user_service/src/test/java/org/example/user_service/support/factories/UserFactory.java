@@ -12,13 +12,6 @@ import org.example.user_service.domain.user.vo.UserRole;
 import org.example.user_service.domain.user.vo.UserStatus;
 import org.example.user_service.domain.user.vo.UserSurname;
 
-/**
- * Test factory for the {@link User} aggregate.
- *
- * <p>Provides sane defaults so tests only spell out the fields they actually
- * care about. Use {@link #aUser()} for a fully default user and the {@code Builder}
- * to override specific fields.
- */
 public final class UserFactory {
 
     public static final String DEFAULT_SURNAME = "Иванов";

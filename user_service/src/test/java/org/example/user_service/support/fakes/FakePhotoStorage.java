@@ -4,10 +4,6 @@ import org.example.user_service.application.interactors.user.add_profile_photo.A
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoView;
 import org.example.user_service.application.ports.PhotoStorage;
 
-/**
- * In-memory {@link PhotoStorage}. Records the last command it received and
- * returns a configurable {@link AddProfilePhotoView}.
- */
 public final class FakePhotoStorage implements PhotoStorage {
 
     public static final String DEFAULT_BUCKET = "user-photos";

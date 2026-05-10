@@ -2,10 +2,6 @@ package org.example.user_service.support.factories;
 
 import org.example.user_service.application.interactors.user.create_user.CreateUserCommand;
 
-/**
- * Test factory for {@link CreateUserCommand}. Mirrors {@link UserFactory} defaults
- * so a command produced here is guaranteed to pass value-object validation.
- */
 public final class CreateUserCommandFactory {
 
     private CreateUserCommandFactory() {

@@ -22,9 +22,7 @@ springdoc:
     operationsSorter: method
     tagsSorter: alpha
 
-# The S3 subsystem is provisional — the Spring property prefix stays `temp.s3.*`
-# (referenced from Java via @Value("${temp.s3.*}")). The env vars are namespaced
-# under USER_SERVICE_S3_* to align with the monorepo convention.
+# Property prefix `temp.s3.*` is referenced from Java @Value — do not rename.
 temp:
   s3:
     enabled: ${USER_SERVICE_S3_ENABLED:false}

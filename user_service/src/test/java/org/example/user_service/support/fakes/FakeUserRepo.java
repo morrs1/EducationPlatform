@@ -8,15 +8,6 @@ import java.util.UUID;
 import org.example.user_service.application.ports.UserRepo;
 import org.example.user_service.domain.user.User;
 
-/**
- * In-memory {@link UserRepo} for unit tests.
- *
- * <p>Behaves like the real repo for the surface tests need: by-id and by-email lookups,
- * inserts, and updates. Tracks call counts and the last updated user so tests can
- * verify side effects without resorting to mocks.
- *
- * <p>Use {@link #withUser(User)} to pre-seed an existing user.
- */
 public final class FakeUserRepo implements UserRepo {
 
     private final Map<UUID, User> usersById = new HashMap<>();

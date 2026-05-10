@@ -1,8 +1,3 @@
-# .dockerignore for user_service.
-#
-# Keeps the Docker build context small (faster + smaller layers) and avoids
-# leaking local state, secrets, or build artefacts into the image.
-
 # ─── Build output ────────────────────────────────────────────────────────────
 build/
 .gradle/
@@ -50,7 +45,6 @@ docker-compose*.yml
 **/Dockerfile
 
 # ─── Deploy state ────────────────────────────────────────────────────────────
-# Local SeaweedFS data accumulated by past runs of the previous compose files.
 deploy/s3/data/
 
 # ─── Misc ────────────────────────────────────────────────────────────────────
