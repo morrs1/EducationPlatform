@@ -103,10 +103,9 @@ tasks.named<Checkstyle>("checkstyleTest") {
     }
 }
 
-val checkstyleIntegrationTestTask = tasks.register<Checkstyle>("checkstyleIntegrationTest") {
-    source = fileTree(integrationTest.java.srcDirs)
-    classpath = integrationTest.compileClasspath
-    configFile = file("config/checkstyle/checkstyle.xml")
+// The Checkstyle plugin auto-creates a checkstyle<SourceSetName> task for every
+// source set, so `checkstyleIntegrationTest` already exists — we only configure it.
+tasks.named<Checkstyle>("checkstyleIntegrationTest") {
     reports {
         xml.required.set(false)
         html.required.set(true)
@@ -114,7 +113,7 @@ val checkstyleIntegrationTestTask = tasks.register<Checkstyle>("checkstyleIntegr
 }
 
 tasks.named("check") {
-    dependsOn(integrationTestTask, checkstyleIntegrationTestTask)
+    dependsOn(integrationTestTask)
 }
 
 spotless {
