@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { ChangeEmailForm } from "../../../features/user/change-email";
+import { ChangeEmailForm } from "../../../features/change-email";
 import { submitEmailChange } from "../../../features/auth";
 import { changeViewerEmail, selectViewerEmail } from "../../../features/viewer";
 

@@ -26,9 +26,8 @@ export function createInitialAuthState({
     normalizeText(savedSession?.accountViewerId);
   const nextViewerId =
     sessionViewerId || normalizeText(nextAccount?.viewerId) || null;
-  const hasCredential = Boolean(savedToken || savedPassword);
   const isLogged = Boolean(
-    savedSession?.isLogged && nextViewerId && hasCredential,
+    savedSession?.isLogged && nextViewerId && savedToken,
   );
 
   return {

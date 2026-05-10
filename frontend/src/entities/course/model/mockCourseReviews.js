@@ -1,5 +1,5 @@
 import { getCourseById } from "./selectors";
-import { mockUsersById } from "../../user/model/mockUsers";
+import { mockUsersById } from "../../user/@x/course";
 
 const specificReviewsByCourseId = {
   2003: [

@@ -1,5 +1,9 @@
 export { default as assistantReducer } from "./model/assistantSlice";
-export { submitAssistantMessage } from "./model/thunks";
+export {
+  hydrateAssistantConversation,
+  hydrateAssistantConversationForLesson,
+  submitAssistantMessage,
+} from "./model/thunks";
 
 export {
   openAssistant,
@@ -8,8 +12,8 @@ export {
   setActiveAssistantContext,
   startAssistantReply,
   assistantReplyFailed,
-  addAssistantMessage,
-  setAssistantThreadId,
+  startAssistantThreadLoading,
+  assistantThreadLoaded,
   resetAssistantThread,
 } from "./model/assistantSlice";
 
@@ -21,3 +25,9 @@ export {
   selectAssistantThreadByContextKey,
   selectActiveAssistantThread,
 } from "./model/selectors";
+
+export {
+  requestAssistantConversation,
+  requestAssistantConversations,
+  requestCloseAssistantConversation,
+} from "./api/answerServiceApi";

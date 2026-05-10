@@ -1,6 +1,6 @@
 import { getCourseSyllabus } from "./mockCourseSyllabus";
 import { getMockCourses } from "./mockCourses";
-import { getLessonProgressMap } from "../../lesson/model/progress";
+import { getLessonProgressMap } from "../../lesson/@x/course";
 
 function getInteractiveLessonIds(syllabus) {
   return (syllabus?.modules ?? [])

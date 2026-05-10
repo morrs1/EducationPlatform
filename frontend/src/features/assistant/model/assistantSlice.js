@@ -76,28 +76,32 @@ const assistantSlice = createSlice({
       thread.error = error ?? "Не удалось получить ответ ассистента.";
     },
 
-    addAssistantMessage(state, action) {
-      const { contextKey, message } = action.payload ?? {};
-      const thread = ensureThread(state, contextKey);
-
-      if (!thread || !message) {
-        return;
-      }
-
-      thread.messages.push(message);
-      thread.status = "idle";
-      thread.error = null;
-    },
-
-    setAssistantThreadId(state, action) {
-      const { contextKey, threadId } = action.payload ?? {};
+    startAssistantThreadLoading(state, action) {
+      const { contextKey } = action.payload ?? {};
       const thread = ensureThread(state, contextKey);
 
       if (!thread) {
         return;
       }
 
-      thread.threadId = threadId ?? null;
+      thread.status = "loading";
+      thread.error = null;
+    },
+
+    assistantThreadLoaded(state, action) {
+      const { contextKey, threadId, messages } = action.payload ?? {};
+      const thread = ensureThread(state, contextKey);
+
+      if (!thread) {
+        return;
+      }
+
+      thread.threadId = Object.hasOwn(action.payload ?? {}, "threadId")
+        ? threadId
+        : thread.threadId;
+      thread.messages = Array.isArray(messages) ? messages : thread.messages;
+      thread.status = "idle";
+      thread.error = null;
     },
 
     resetAssistantThread(state, action) {
@@ -123,8 +127,8 @@ export const {
   setActiveAssistantContext,
   startAssistantReply,
   assistantReplyFailed,
-  addAssistantMessage,
-  setAssistantThreadId,
+  startAssistantThreadLoading,
+  assistantThreadLoaded,
   resetAssistantThread,
 } = assistantSlice.actions;
 

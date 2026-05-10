@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Outlet, useLocation } from "react-router";
-import { Header } from "../../header";
-import { Footer } from "../../footer";
-import { AuthModal } from "../../auth-modal";
-import { CatalogSidebar } from "../../catalog-sidebar";
+import { Header } from "../../../widgets/header";
+import { Footer } from "../../../widgets/footer";
+import { AuthModal } from "../../../widgets/auth-modal";
+import { CatalogSidebar } from "../../../widgets/catalog-sidebar";
 import { ViewerProfileBootstrap } from "../../../features/viewer";
 import {
   selectCurrentViewerId,

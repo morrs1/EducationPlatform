@@ -1,3 +1,4 @@
+import { isUuid, normalizeText } from "../lib/gatewayValues";
 import {
   buildAvatarInitialsSeed,
   buildAvatarUrl,
@@ -7,17 +8,7 @@ import { withGatewayAuth } from "./gatewayFetch";
 
 const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const viewerProfileRequestCache = new Map();
-
-function normalizeText(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function isUuid(value) {
-  return UUID_PATTERN.test(normalizeText(value));
-}
 
 function buildUserServiceUrl(pathname = "") {
   const apiBaseUrl = getUserServiceApiBaseUrl();
