@@ -64,6 +64,7 @@ async def test_lifespan_yields_control() -> None:
     # Assert
     assert executed_in_context
 
+
 async def test_lifespan_handles_error_during_startup() -> None:
     """Test that errors raised inside the lifespan body are propagated."""
     # Arrange
