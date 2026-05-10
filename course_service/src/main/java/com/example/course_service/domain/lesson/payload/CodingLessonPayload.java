@@ -3,14 +3,12 @@ package com.example.course_service.domain.lesson.payload;
 import com.example.course_service.domain.base.BaseValueObject;
 import com.example.course_service.domain.base.exceptions.ValidateException;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Getter
-@ToString
 public class CodingLessonPayload extends BaseValueObject implements LessonPayload {
 
     private final String taskMarkdown;
@@ -57,5 +55,13 @@ public class CodingLessonPayload extends BaseValueObject implements LessonPayloa
         if (testCases.stream().anyMatch(Objects::isNull)) {
             throw new ValidateException("Coding lesson test cases must not contain null items");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "taskMarkdown='" + taskMarkdown + '\'' +
+                ", checkerType='" + checkerType + '\'' +
+                ", languages=" + languages +
+                ", testCases=" + testCases;
     }
 }

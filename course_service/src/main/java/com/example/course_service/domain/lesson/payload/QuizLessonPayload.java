@@ -3,14 +3,12 @@ package com.example.course_service.domain.lesson.payload;
 import com.example.course_service.domain.base.BaseValueObject;
 import com.example.course_service.domain.base.exceptions.ValidateException;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Getter
-@ToString
 public class QuizLessonPayload extends BaseValueObject implements LessonPayload {
 
     private final String introMarkdown;
@@ -36,5 +34,11 @@ public class QuizLessonPayload extends BaseValueObject implements LessonPayload 
         if (questions.stream().anyMatch(Objects::isNull)) {
             throw new ValidateException("Quiz questions must not contain null items");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "introMarkdown='" + introMarkdown + '\'' +
+                ", questions=" + questions;
     }
 }
