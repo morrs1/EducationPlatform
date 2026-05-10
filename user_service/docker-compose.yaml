@@ -69,10 +69,15 @@ services:
     environment:
       <<: *x-db-environment
     volumes:
-      - ./deploy/liquibase/changelog:/liquibase/changelog
+      # Mount the changelog tree under /liquibase/migrations so that the
+      # include paths inside db.changelog-master.yaml (`migrations/v.1.0.x/…`)
+      # resolve to /liquibase/migrations/v.1.0.x/… relative to the default
+      # search path `/liquibase`. Mirrors the original
+      # deploy/postgres/docker_compose_user_service.yaml layout.
+      - ./deploy/liquibase/changelog:/liquibase/migrations
     command: >
-      --search-path=/liquibase/changelog
-      --changelog-file=${USER_SERVICE_LIQUIBASE_CHANGELOG}
+      --search-path=/liquibase
+      --changelog-file=migrations/${USER_SERVICE_LIQUIBASE_CHANGELOG}
       --url=jdbc:postgresql://user_service.postgres:${USER_SERVICE_POSTGRES_PORT}/${USER_SERVICE_POSTGRES_DB}
       --username=${USER_SERVICE_POSTGRES_USER}
       --password=${USER_SERVICE_POSTGRES_PASSWORD}
