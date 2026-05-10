@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { parseLessonMarkdown } from "../../../entities/lesson";
 import {
   getCachedLessonContentMarkdown,
   getLessonContentMarkdown,
-} from "../lib/getLessonContentMarkdown";
+  parseLessonMarkdown,
+} from "../../../entities/lesson";
 
 export function useLessonContent(lesson) {
   const [contentStatus, setContentStatus] = useState("idle");

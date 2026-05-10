@@ -3,8 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router";
 import { createPortal } from "react-dom";
 
-import { getLessonPageData } from "../lib/getLessonPageData";
-import { getLessonProgressMap } from "../../../entities/lesson";
+import {
+  getLessonPageData,
+  getLessonProgressMap,
+} from "../../../entities/lesson";
 import { getCourseSyllabus } from "../../../entities/course";
 import { isUuid } from "../../../shared/lib";
 import { useBackendLessonPageData } from "../model/useBackendLessonPageData";

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { getCourseDescriptionMarkdown } from "../lib/getCourseDescriptionMarkdown";
-import { parseCourseDescriptionMarkdown } from "../lib/parseCourseDescriptionMarkdown";
+import {
+  getCourseDescriptionMarkdown,
+  parseCourseDescriptionMarkdown,
+} from "../../../entities/course";
 
 export function useCourseDescription(course) {
   const [mockStatus, setMockStatus] = useState("loading");

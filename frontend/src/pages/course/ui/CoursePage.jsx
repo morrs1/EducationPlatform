@@ -27,11 +27,13 @@ import { CourseSidebar } from "../../../widgets/course-sidebar";
 import { CourseDescriptionTab } from "../../../widgets/course-description";
 import { CourseContentTab } from "../../../widgets/course-content";
 import { CourseReviewsTab } from "../../../widgets/course-reviews";
-import { getCoursePageData } from "../lib/getCoursePageData";
 import { useBackendCoursePageData } from "../model/useBackendCoursePageData";
 import { useCourseDescription } from "../model/useCourseDescription";
 import { useCourseLearningSync } from "../model/useCourseLearningSync";
-import { formatCourseTagLabel } from "../../../entities/course";
+import {
+  formatCourseTagLabel,
+  getCoursePageData,
+} from "../../../entities/course";
 import { isUuid } from "../../../shared/lib";
 import { createViewerCourseSnapshot } from "../../../entities/viewer";
 import CourseHero from "./CourseHero";

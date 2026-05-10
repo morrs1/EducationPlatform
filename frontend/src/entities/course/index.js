@@ -2,8 +2,11 @@
 export { buildCatalogData } from "./model/buildCatalogData";
 export { filterCoursesByQuery } from "./model/filterCoursesByQuery";
 export { getCourseCoverSrc } from "./model/getCourseCoverSrc";
+export { getCourseDescriptionMarkdown } from "./model/getCourseDescriptionMarkdown";
+export { getCoursePageData } from "./model/getCoursePageData";
 export { getCourseProgressByCourseId } from "./model/progress";
 export { mockCatalogData } from "./model/mockCatalogData";
+export { parseCourseDescriptionMarkdown } from "./model/parseCourseDescriptionMarkdown";
 export {
   getMockCourses,
   INCLUDE_MOCK_COURSES_IN_UI,
