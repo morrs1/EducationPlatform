@@ -5,6 +5,7 @@ from typing import Final, final
 
 from answer_service.application.common.inbox_message import InboxMessage
 from answer_service.application.common.ports.inbox_repository import InboxRepository
+from answer_service.application.common.ports.transaction_manager import TransactionManager
 from answer_service.application.errors import DuplicateInboxMessageError
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
@@ -17,8 +18,13 @@ class CheckInboxCommand:
 
 @final
 class CheckInboxCommandHandler:
-    def __init__(self, inbox_repository: InboxRepository) -> None:
+    def __init__(
+        self,
+        inbox_repository: InboxRepository,
+        transaction_manager: TransactionManager,
+    ) -> None:
         self._inbox_repository: Final[InboxRepository] = inbox_repository
+        self._transaction_manager: Final[TransactionManager] = transaction_manager
 
     async def __call__(self, data: CheckInboxCommand) -> None:
         logger.debug("check_inbox: message_id='%s'.", data.message_id)
@@ -33,4 +39,5 @@ class CheckInboxCommandHandler:
         await self._inbox_repository.save(
             InboxMessage(message_id=data.message_id, created_at=datetime.now(UTC))
         )
+        await self._transaction_manager.commit()
         logger.debug("check_inbox: saved. message_id='%s'.", data.message_id)

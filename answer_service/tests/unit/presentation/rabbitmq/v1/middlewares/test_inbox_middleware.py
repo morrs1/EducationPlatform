@@ -38,7 +38,7 @@ def _make_msg(message_id: str | None) -> Any:
 
 async def test_calls_next_when_no_message_id() -> None:
     # Arrange
-    handler = AsyncMock(spec=CheckInboxCommandHandler)
+    handler = AsyncMock()
     middleware = _make_middleware(handler)
     msg = _make_msg(message_id=None)
     call_next = AsyncMock(return_value="result")
@@ -54,7 +54,7 @@ async def test_calls_next_when_no_message_id() -> None:
 
 async def test_calls_handler_with_correct_command_when_message_id_present() -> None:
     # Arrange
-    handler = AsyncMock(spec=CheckInboxCommandHandler)
+    handler = AsyncMock()
     middleware = _make_middleware(handler)
     msg = _make_msg(message_id="msg-xyz")
     call_next = AsyncMock(return_value=None)
@@ -68,7 +68,7 @@ async def test_calls_handler_with_correct_command_when_message_id_present() -> N
 
 async def test_acks_and_returns_none_on_duplicate() -> None:
     # Arrange
-    handler = AsyncMock(spec=CheckInboxCommandHandler)
+    handler = AsyncMock()
     handler.side_effect = DuplicateInboxMessageError("msg-dup")
     middleware = _make_middleware(handler)
     msg = _make_msg(message_id="msg-dup")
@@ -85,7 +85,7 @@ async def test_acks_and_returns_none_on_duplicate() -> None:
 
 async def test_calls_next_when_message_is_new() -> None:
     # Arrange
-    handler = AsyncMock(spec=CheckInboxCommandHandler)
+    handler = AsyncMock()
     middleware = _make_middleware(handler)
     msg = _make_msg(message_id="msg-new")
     call_next = AsyncMock(return_value="processed")
@@ -100,7 +100,7 @@ async def test_calls_next_when_message_is_new() -> None:
 
 async def test_does_not_ack_when_message_is_new() -> None:
     # Arrange
-    handler = AsyncMock(spec=CheckInboxCommandHandler)
+    handler = AsyncMock()
     middleware = _make_middleware(handler)
     msg = _make_msg(message_id="msg-new")
     call_next = AsyncMock(return_value=None)
