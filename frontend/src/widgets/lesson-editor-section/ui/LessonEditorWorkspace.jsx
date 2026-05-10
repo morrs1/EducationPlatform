@@ -21,7 +21,6 @@ function LessonEditorWorkspace({
   quizQuestions,
   onQuizQuestionsChange,
   onSave,
-  onRefresh,
   onUploadCover,
   onUploadAssets,
   saveState,
@@ -67,15 +66,6 @@ function LessonEditorWorkspace({
           >
             Открыть урок
           </Link>
-
-          <button
-            type="button"
-            className="lesson-editor-secondary-action"
-            onClick={onRefresh}
-            disabled={saveState === "saving"}
-          >
-            Обновить
-          </button>
 
           <button
             type="button"

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Outlet, useParams } from "react-router";
+import { Outlet, useParams } from "react-router";
 import { selectCurrentViewerId } from "../../../features/auth";
 import {
   resolveCourseServiceAuthorId,
@@ -201,7 +201,8 @@ function CourseBuilderPage() {
     if (course?.isPublished) {
       return {
         ok: false,
-        error: "Опубликованный курс недоступен для редактирования.",
+        error:
+          "После публикации можно редактировать содержимое существующих уроков, но не структуру курса.",
       };
     }
 
@@ -227,7 +228,8 @@ function CourseBuilderPage() {
     if (course?.isPublished) {
       return {
         ok: false,
-        error: "Опубликованный курс недоступен для редактирования.",
+        error:
+          "После публикации можно редактировать содержимое существующих уроков, но не структуру курса.",
       };
     }
 
@@ -272,37 +274,20 @@ function CourseBuilderPage() {
 
       <main className="course-builder-layout-main-rail">
         <section className="course-builder-page">
-          {pageStatus === "success" && course?.isPublished ? (
-            <div className="course-editor-empty-state">
-              <strong className="course-editor-empty-title">
-                Курс уже опубликован
-              </strong>
-              <p className="course-editor-empty-body">
-                Опубликованный курс доступен студентам и закрыт для
-                редактирования.
-              </p>
-              <Link
-                to={`/courses/${course.id}`}
-                className="course-editor-primary-action"
-              >
-                Посмотреть курс
-              </Link>
-            </div>
-          ) : (
-            <Outlet
-              context={{
-                courseId,
-                course,
-                modules,
-                pageStatus,
-                pageError,
-                viewerName,
-                reloadCourse,
-                createModule,
-                createLesson,
-              }}
-            />
-          )}
+          <Outlet
+            context={{
+              courseId,
+              course,
+              modules,
+              pageStatus,
+              pageError,
+              viewerName,
+              reloadCourse,
+              createModule,
+              createLesson,
+              canEditStructure: !course?.isPublished,
+            }}
+          />
         </section>
       </main>
     </div>
