@@ -1,18 +1,24 @@
 name: User Service CI
 
+# TEMPORARILY DISABLED: workflow runs on manual dispatch only.
+# To re-enable automatic CI, uncomment the push/pull_request triggers below
+# and remove this notice.
+#
+# on:
+#   push:
+#     paths:
+#       - "user_service/**"
+#       - ".github/workflows/user_service_ci.yaml"
+#   pull_request:
+#     paths:
+#       - "user_service/**"
+#       - ".github/workflows/user_service_ci.yaml"
+#     types:
+#       - opened
+#       - synchronize
+#       - ready_for_review
 on:
-  push:
-    paths:
-      - "user_service/**"
-      - ".github/workflows/user_service_ci.yaml"
-  pull_request:
-    paths:
-      - "user_service/**"
-      - ".github/workflows/user_service_ci.yaml"
-    types:
-      - opened
-      - synchronize
-      - ready_for_review
+  workflow_dispatch:
 
 concurrency:
   group: user_service-ci-${{ github.workflow }}-${{ github.ref }}
