@@ -344,7 +344,6 @@ function LessonEditorSection() {
           quizQuestions={quizQuestions}
           onQuizQuestionsChange={setQuizQuestions}
           onSave={handleSave}
-          onRefresh={() => setReloadSeed((value) => value + 1)}
           onUploadCover={handleUploadCover}
           onUploadAssets={handleUploadAssets}
           saveState={saveState}

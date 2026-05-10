@@ -53,11 +53,15 @@ const assistantSlice = createSlice({
     },
 
     startAssistantReply(state, action) {
-      const { contextKey } = action.payload ?? {};
+      const { contextKey, message } = action.payload ?? {};
       const thread = ensureThread(state, contextKey);
 
       if (!thread) {
         return;
+      }
+
+      if (message?.id && message?.text) {
+        thread.messages.push(message);
       }
 
       thread.status = "loading";

@@ -21,6 +21,7 @@ function CourseContentEditorSection() {
     reloadCourse,
     createModule,
     createLesson,
+    canEditStructure = true,
   } = useOutletContext();
   const [moduleDraft, setModuleDraft] = useState(initialModuleDraft);
   const [moduleError, setModuleError] = useState("");
@@ -164,7 +165,9 @@ function CourseContentEditorSection() {
             {course?.title || "Соберите модули и уроки"}
           </h1>
           <p className="course-editor-empty-copy">
-            Сначала собирайте модули, затем добавляйте в них уроки.
+            {canEditStructure
+              ? "Сначала собирайте модули, затем добавляйте в них уроки."
+              : "Курс опубликован: структуру менять нельзя, но можно редактировать содержимое существующих уроков."}
           </p>
         </div>
 
@@ -199,34 +202,29 @@ function CourseContentEditorSection() {
                 module={module}
                 onCreateLesson={handleLessonCreate}
                 onLessonDraftChange={updateLessonDraft}
+                canEditStructure={canEditStructure}
                 viewerName={viewerName}
               />
             ))
           : null}
 
-        <CourseModuleComposer
-          draft={moduleDraft}
-          error={moduleError}
-          isCreating={isCreatingModule}
-          onChange={(patch) =>
-            setModuleDraft((currentDraft) => ({
-              ...currentDraft,
-              ...patch,
-            }))
-          }
-          onCreate={handleModuleCreate}
-        />
+        {canEditStructure ? (
+          <CourseModuleComposer
+            draft={moduleDraft}
+            error={moduleError}
+            isCreating={isCreatingModule}
+            onChange={(patch) =>
+              setModuleDraft((currentDraft) => ({
+                ...currentDraft,
+                ...patch,
+              }))
+            }
+            onCreate={handleModuleCreate}
+          />
+        ) : null}
       </div>
 
       <footer className="course-editor-footer">
-        <button
-          type="button"
-          className="course-editor-save-btn"
-          onClick={reloadCourse}
-        >
-          Обновить структуру
-        </button>
-
         <Link to="../syllabus" className="course-editor-return-link">
           Вернуться к просмотру
         </Link>
