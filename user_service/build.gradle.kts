@@ -1,7 +1,9 @@
 plugins {
     java
+    checkstyle
     id("org.springframework.boot") version "4.0.3"
     id("io.spring.dependency-management") version "1.1.7"
+    id("com.diffplug.spotless") version "6.25.0"
 }
 
 group = "org.example"
@@ -18,6 +20,18 @@ repositories {
     mavenCentral()
 }
 
+val integrationTest: SourceSet by sourceSets.creating {
+    java.srcDir("src/integrationTest/java")
+    resources.srcDir("src/integrationTest/resources")
+    compileClasspath += sourceSets["main"].output + sourceSets["test"].output
+    runtimeClasspath += sourceSets["main"].output + sourceSets["test"].output
+}
+
+configurations {
+    named("integrationTestImplementation") { extendsFrom(configurations["testImplementation"]) }
+    named("integrationTestRuntimeOnly") { extendsFrom(configurations["testRuntimeOnly"]) }
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.security:spring-security-crypto")
@@ -28,14 +42,101 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
     runtimeOnly("org.postgresql:postgresql")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    "integrationTestImplementation"("org.springframework.boot:spring-boot-starter-test")
+    "integrationTestImplementation"("org.springframework.boot:spring-boot-starter-data-jpa")
+    "integrationTestImplementation"("org.testcontainers:postgresql:1.20.4")
+    "integrationTestImplementation"("org.testcontainers:junit-jupiter:1.20.4")
+    "integrationTestRuntimeOnly"("org.postgresql:postgresql")
 }
 
-tasks.withType<Test> {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = false
+    }
+}
+
+// `UserServiceApplicationTests` is a @SpringBootTest smoke test that needs a real
+// datasource. Exclude it from the default `test` task; CI relies on the
+// integration tests (Testcontainers) for end-to-end Spring wiring coverage.
+tasks.named<Test>("test") {
+    exclude("**/UserServiceApplicationTests.class")
+}
+
+val integrationTestTask = tasks.register<Test>("integrationTest") {
+    description = "Runs integration tests with Testcontainers."
+    group = "verification"
+    testClassesDirs = integrationTest.output.classesDirs
+    classpath = integrationTest.runtimeClasspath
+    shouldRunAfter("test")
+}
+
+checkstyle {
+    toolVersion = "10.18.2"
+    configFile = file("config/checkstyle/checkstyle.xml")
+    isIgnoreFailures = false
+    maxWarnings = 0
+}
+
+tasks.named<Checkstyle>("checkstyleMain") {
+    reports {
+        xml.required.set(false)
+        html.required.set(true)
+    }
+}
+
+tasks.named<Checkstyle>("checkstyleTest") {
+    reports {
+        xml.required.set(false)
+        html.required.set(true)
+    }
+}
+
+val checkstyleIntegrationTestTask = tasks.register<Checkstyle>("checkstyleIntegrationTest") {
+    source = fileTree(integrationTest.java.srcDirs)
+    classpath = integrationTest.compileClasspath
+    configFile = file("config/checkstyle/checkstyle.xml")
+    reports {
+        xml.required.set(false)
+        html.required.set(true)
+    }
+}
+
+tasks.named("check") {
+    dependsOn(integrationTestTask, checkstyleIntegrationTestTask)
+}
+
+spotless {
+    java {
+        target("src/**/*.java")
+        targetExclude("**/generated/**")
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        importOrder(
+            "java",
+            "javax",
+            "jakarta",
+            "org",
+            "com",
+            ""
+        )
+        toggleOffOn()
+    }
+    format("misc") {
+        target("*.md", "*.gradle.kts", ".gitignore")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }

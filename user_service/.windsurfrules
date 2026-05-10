@@ -21,16 +21,22 @@ Spring Boot 4.0.3 on Java 25. Source of truth for user identity: registration, B
 - The `temp.s3.*` config prefix is intentional. Do not rename it. SeaweedFS Spring wiring lives in `setup/config_beans/s3/`.
 - The S3 adapter and `/user/add_photo` are gated by `@ConditionalOnBean` + `temp.s3.enabled`. The service must boot with `TEMP_S3_ENABLED=false`.
 - New schema changes go to a new Liquibase changelog under `deploy/liquibase/changelog/v.<version>/`. Never edit a committed changelog.
-- Every interactor under `application/interactors/user/<op>/` requires `<Op>InteractorTest` at `src/test/java/.../application/interactors/user/<op>/`. Use in-memory fakes of `UserRepo`, `EventBus`, `TransactionManager`, `PasswordHasher`. JUnit 5, no Spring context.
+- Every interactor under `application/interactors/user/<op>/` requires `<Op>InteractorTest`. Use the shared fakes in `src/test/java/.../support/fakes/` and factories in `support/factories/`. JUnit 5, AssertJ, Arrange / Act / Assert with explicit comments. No Spring context.
+- Integration tests for adapters live in `src/integrationTest/java/.../<adapter>IT.java` and extend `support/integration/PostgresIntegrationTest` (Testcontainers PostgreSQL).
+- Spotless and Checkstyle are mandatory. Lint config: `config/checkstyle/checkstyle.xml`. Never silence a violation by editing the XML — use `@SuppressWarnings("checkstyle:RuleName")` with a one-line reason.
+- Pre-commit hooks are wired in `user_service/.pre-commit-config.yaml`. Run `pre-commit install` once and `pre-commit install --hook-type pre-push` to enable test-on-push. Never bypass with `--no-verify`.
 
 ## Validation
 
 Run from `user_service/`:
 
 ```
-./gradlew build
-./gradlew check
-./gradlew test
+./gradlew spotlessApply       # auto-fix
+./gradlew spotlessCheck       # verify
+./gradlew checkstyleMain checkstyleTest checkstyleIntegrationTest
+./gradlew test                # unit tests
+./gradlew integrationTest     # Testcontainers (needs Docker)
+./gradlew check               # everything above + assemble (bar before commit)
 ```
 
-`./gradlew build` is the minimum after any edit; `./gradlew check` before committing.
+`./gradlew check` is the bar before commit. CI mirrors the same chain.

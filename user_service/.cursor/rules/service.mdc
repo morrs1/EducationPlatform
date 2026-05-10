@@ -75,7 +75,39 @@ Every interactor under `application/interactors/user/<op>/` must have a matching
 src/test/java/org/example/user_service/application/interactors/user/<op>/<Op>InteractorTest.java
 ```
 
-Pattern: in-memory fakes of `UserRepo`, `EventBus`, `TransactionManager`, and `PasswordHasher`. No Spring context. JUnit 5. Existing references: `create_user`, `assign_role`, `authenticate_user`.
+Unit tests:
+
+- AAA structure with explicit `// Arrange`, `// Act`, `// Assert` comments.
+- Reuse `support/factories/UserFactory` and `support/factories/CreateUserCommandFactory` to build test data.
+- Reuse `support/fakes/FakeUserRepo`, `FakePasswordHasher`, `CountingPasswordHasher`, `FakeEventBus`, `FakePhotoStorage`, `ImmediateTransactionManager`. Do NOT introduce Mockito unless a fake cannot express the case.
+- AssertJ (`assertThat`) preferred over JUnit `assertEquals`.
+- Behavior-first names. JUnit `@DisplayName` for the human-readable form.
+
+Integration tests live in `src/integrationTest/java/...`, inherit from `support/integration/PostgresIntegrationTest` (Testcontainers PostgreSQL, `ddl-auto: create-drop`). Use them when behavior spans the JPA layer.
+
+Domain VO and `UserDomainService` get their own unit-test files under `domain/user/{vo,services}/`.
+
+## Linters and validation
+
+Two tools wired into Gradle. Both run in CI and via pre-commit. **Never bypass them.**
+
+- **Spotless** (`6.25.0`): unused imports, trailing whitespace, EOF newline, import order. Tasks: `spotlessCheck` / `spotlessApply`.
+- **Checkstyle** (`10.18.2`): static checks (naming, braces, modifier order, missing override, no star imports, etc.). Config at `config/checkstyle/checkstyle.xml`. Tasks: `checkstyleMain`, `checkstyleTest`, `checkstyleIntegrationTest`.
+
+If a single file is justifiably off-spec, use `@SuppressWarnings("checkstyle:RuleName")` plus a one-line reason. Do not edit `checkstyle.xml` to silence a single violation.
+
+## Pre-commit
+
+The repository ships `user_service/.pre-commit-config.yaml` using the [`pre-commit`](https://pre-commit.com/) framework. Install once:
+
+```sh
+pip install pre-commit
+cd user_service
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
+Hooks: hygiene + Spotless + Checkstyle on commit, unit tests on push. Never `--no-verify`.
 
 ## Anti-patterns
 
@@ -91,9 +123,12 @@ Pattern: in-memory fakes of `UserRepo`, `EventBus`, `TransactionManager`, and `P
 From `user_service/`:
 
 ```sh
-./gradlew build
-./gradlew check
-./gradlew test
+./gradlew spotlessApply       # auto-fix what can be fixed
+./gradlew spotlessCheck       # verify clean
+./gradlew checkstyleMain checkstyleTest checkstyleIntegrationTest
+./gradlew test                # unit tests
+./gradlew integrationTest     # Testcontainers (needs Docker)
+./gradlew check               # all of the above + assemble
 ```
 
-`./gradlew build` is the minimum after any edit. `./gradlew check` before committing.
+`./gradlew check` is the bar before commit. CI runs the same chain.

@@ -1,0 +1,131 @@
+name: User Service CI
+
+on:
+  push:
+    paths:
+      - "user_service/**"
+      - ".github/workflows/user_service_ci.yaml"
+  pull_request:
+    paths:
+      - "user_service/**"
+      - ".github/workflows/user_service_ci.yaml"
+    types:
+      - opened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: user_service-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-user_service:
+    name: Lint (Checkstyle + Spotless)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: user_service
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Spotless format check
+        run: ./gradlew --no-daemon spotlessCheck
+
+      - name: Checkstyle (main + test + integrationTest)
+        run: ./gradlew --no-daemon checkstyleMain checkstyleTest checkstyleIntegrationTest
+
+  test-user_service:
+    name: Unit tests
+    runs-on: ubuntu-22.04
+    needs: [lint-user_service]
+    defaults:
+      run:
+        working-directory: user_service
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests
+        run: ./gradlew --no-daemon test
+
+      - name: Upload unit-test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: user_service-unit-test-reports
+          path: user_service/build/reports/tests/test
+
+  integration-test-user_service:
+    name: Integration tests (Testcontainers)
+    runs-on: ubuntu-22.04
+    needs: [lint-user_service]
+    defaults:
+      run:
+        working-directory: user_service
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run integration tests
+        run: ./gradlew --no-daemon integrationTest
+
+      - name: Upload integration-test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: user_service-integration-test-reports
+          path: user_service/build/reports/tests/integrationTest
+
+  build-user_service:
+    name: Build
+    runs-on: ubuntu-22.04
+    needs: [test-user_service, integration-test-user_service]
+    defaults:
+      run:
+        working-directory: user_service
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build (skip tests already run)
+        run: ./gradlew --no-daemon assemble

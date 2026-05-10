@@ -155,19 +155,135 @@ Adding a new use case (command or query):
 - Keep controller methods thin: parse DTO -> map to command -> call interactor -> map view to response. No business logic in controllers.
 - Russian strings, log messages, and TODOs that already exist in the file should be preserved unless the task specifically asks to change them.
 
-## Validation
+## Linting and formatting
 
-There is no separate `just`/`make` runner — everything goes through the Gradle wrapper from the `user_service/` directory:
+Two complementary tools are wired into the Gradle build. Both run in CI and via pre-commit; never bypass them.
+
+| Tool                       | What it does                                                                 | Gradle task                                                       |
+|----------------------------|------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| **Spotless** (`6.25.0`)    | Removes unused imports, trims whitespace, enforces import order + EOF newline | `spotlessCheck` (verify) / `spotlessApply` (auto-fix)             |
+| **Checkstyle** (`10.18.2`) | Static checks: naming, braces, modifier order, no star imports, no empty blocks, missing-override, etc. | `checkstyleMain`, `checkstyleTest`, `checkstyleIntegrationTest`   |
+
+The Checkstyle config is at `config/checkstyle/checkstyle.xml`. It is intentionally lightweight — it catches real bugs and style smells without forcing a wholesale reformat of the existing codebase. Spotless handles whitespace + imports separately.
+
+Run the linters from `user_service/`:
 
 ```sh
-./gradlew bootRun          # run the service locally on port 8080
-./gradlew build            # full build (compile + test)
-./gradlew test             # JUnit 5 tests only
+./gradlew spotlessCheck                      # verify formatting (CI-style)
+./gradlew spotlessApply                      # auto-fix what it can
+./gradlew checkstyleMain checkstyleTest checkstyleIntegrationTest
 ```
 
-Existing tests cover `application/interactors/user/{create_user, assign_role, authenticate_user}`. If you touch any of these interactors, run `./gradlew test` and update or add tests in `src/test/java/.../application/interactors/user/<operation>/`.
+If a file is purposefully off-spec, mark it with `@SuppressWarnings("checkstyle:RuleName")` and explain why in a one-line comment. Do not edit `checkstyle.xml` to silence a single violation.
 
-For schema changes:
+## Testing
+
+Tests are mandatory for any change to `domain/`, `application/`, or `infrastructure/`. The full test suite must be green locally and in CI before reporting work done.
+
+### Layout
+
+```
+src/test/java/org/example/user_service/
+  support/
+    factories/                                # Test data builders. Use these.
+      UserFactory.java                        # User aggregate + Builder
+      CreateUserCommandFactory.java
+    fakes/                                    # In-memory port implementations.
+      FakeUserRepo.java                       # UserRepo + tracking helpers
+      FakePasswordHasher.java                 # plain hash/verify
+      CountingPasswordHasher.java             # records call counts
+      FakeEventBus.java                       # captures published events
+      FakePhotoStorage.java                   # PhotoStorage with default view
+      ImmediateTransactionManager.java        # runs the action synchronously
+  domain/user/
+    vo/<VO>Test.java                          # Value-object validation tests
+    services/UserDomainServiceTest.java
+  application/interactors/user/
+    <operation>/<Operation>InteractorTest.java
+src/integrationTest/java/org/example/user_service/
+  support/integration/PostgresIntegrationTest.java   # Testcontainers base class
+  infrastructure/adapters/persistence/
+    HibernateUserRepoIT.java
+```
+
+### Unit-test rules
+
+- **Use Arrange / Act / Assert with explicit comments.** Three blocks separated by `// Arrange`, `// Act`, `// Assert`. Combined `// Arrange + Act + Assert` is allowed for one-liners.
+- **No Mockito for ports.** The in-memory fakes in `support/fakes/` are the standard. Reach for Mockito only if behavior cannot be expressed through a fake.
+- **Use the factories.** `UserFactory.aUser()` / `UserFactory.builder()...build()` keep tests focused on what they actually exercise. Do not hand-roll `new User(UUID.randomUUID(), new UserSurname(...), ...)` in test methods — that hides the meaningful variation.
+- **Name tests by behavior + expected outcome.** `shouldRejectDuplicateEmailWithoutSideEffects`, not `testCreate1`. JUnit `@DisplayName` is encouraged for the human-readable form.
+- **AssertJ first.** `assertThat(...).isEqualTo(...)`. Avoid `assertEquals` in new code.
+- **Parametrized tests** (`@ParameterizedTest` + `@ValueSource` / `@CsvSource`) for VO validation matrices.
+
+### Integration-test rules
+
+- Live in `src/integrationTest/java/...` (separate source set wired in `build.gradle.kts`).
+- Use the `PostgresIntegrationTest` base class — it spins up a single Testcontainers PostgreSQL instance, shared across the JVM.
+- Schema is materialised by Hibernate (`ddl-auto: create-drop` in `application-integration-test.yaml`). Do not depend on Liquibase changelogs from the integration tests; Liquibase runs separately in prod.
+- Use `flush()` + `entityManager.clear()` between write and read steps to bypass the first-level cache and confirm the row actually round-trips through PostgreSQL.
+
+### Commands
+
+```sh
+./gradlew test                # unit tests
+./gradlew integrationTest     # Testcontainers integration tests (requires Docker)
+./gradlew check               # spotlessCheck + checkstyle* + test + integrationTest
+```
+
+`./gradlew check` is the bar before commit and in CI.
+
+If you touch an interactor under `application/interactors/user/<operation>/`, the matching `<Operation>InteractorTest` must be updated or extended. New interactors require a new test file in the same path.
+
+## Validation Workflow
+
+Use this order. Every step must pass before you call work done.
+
+```sh
+./gradlew spotlessApply       # auto-fix what is fixable
+./gradlew spotlessCheck       # verify clean
+./gradlew checkstyleMain checkstyleTest checkstyleIntegrationTest
+./gradlew test integrationTest
+./gradlew build               # full assemble + tests
+```
+
+Or, in one shot:
+
+```sh
+./gradlew check               # everything above except spotlessApply
+```
+
+## Pre-commit hooks
+
+Hooks are managed by the `pre-commit` framework — the same one already used by `answer_service`. Install once per checkout:
+
+```sh
+pip install pre-commit         # or: pipx install pre-commit / brew install pre-commit
+cd user_service
+pre-commit install             # writes .git/hooks/pre-commit
+pre-commit install --hook-type pre-push   # enables the pre-push test hook
+```
+
+What runs on `git commit` (only for files staged under `user_service/`):
+
+1. **Hygiene hooks** — trailing whitespace, end-of-file newline, merge-conflict markers, YAML validity, large-file guard, line endings.
+2. **Spotless format check** — fails if any Java file is not formatted.
+3. **Checkstyle** — fails on any rule violation in main / test / integrationTest.
+
+What runs on `git pre-push`:
+
+4. **Unit tests** — `./gradlew test`.
+
+Manual run on the whole tree:
+
+```sh
+pre-commit run --all-files
+```
+
+Never bypass hooks with `git commit --no-verify` or `git push --no-verify`. If a hook fails, fix the underlying issue and re-stage. If you need to disable a hook temporarily (e.g. work-in-progress branch), do it via configuration, not on the command line.
+
+CI enforces the same checks (see `.github/workflows/user_service_ci.yaml`).
+
+## Schema changes
 
 - Add a new Liquibase changelog under `deploy/liquibase/changelog/v.<version>/` and reference it from `db.changelog-master.yaml`. Do not edit committed changelogs in place.
 

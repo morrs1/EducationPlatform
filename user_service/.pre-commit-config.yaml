@@ -1,0 +1,64 @@
+# Pre-commit configuration for user_service.
+#
+# Uses the `pre-commit` framework (https://pre-commit.com/) — the same framework
+# answer_service already relies on, so the contributor experience is consistent
+# across the monorepo.
+#
+# Install once:
+#   pip install pre-commit          # (or: pipx install pre-commit)
+#   cd user_service
+#   pre-commit install              # registers .git/hooks/pre-commit
+#
+# Manual run on the whole tree:
+#   pre-commit run --all-files
+#
+# CI also enforces the same checks (see .github/workflows/user_service_ci.yaml).
+# If a hook fails locally, fix the issue and re-stage; do NOT use --no-verify.
+
+default_language_version:
+  python: python3
+
+repos:
+  # Generic hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-yaml
+        files: ^user_service/.*\.ya?ml$
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-added-large-files
+        args: [--maxkb=512]
+
+  # Project-local Gradle hooks.
+  #
+  # We run Gradle as a system command and scope each hook to staged Java files
+  # under user_service/ so the hook stays fast for cross-service commits.
+  # The hook fires only when relevant files are staged.
+  - repo: local
+    hooks:
+      - id: spotless-check
+        name: Spotless format check (user_service)
+        entry: bash -c 'cd user_service && ./gradlew --no-daemon --quiet spotlessCheck'
+        language: system
+        files: ^user_service/.*\.(java|kts|md)$
+        pass_filenames: false
+
+      - id: checkstyle-main
+        name: Checkstyle (main + test + integrationTest)
+        entry: bash -c 'cd user_service && ./gradlew --no-daemon --quiet checkstyleMain checkstyleTest checkstyleIntegrationTest'
+        language: system
+        files: ^user_service/.*\.java$
+        pass_filenames: false
+
+      - id: gradle-test
+        name: Gradle unit tests (user_service)
+        entry: bash -c 'cd user_service && ./gradlew --no-daemon --quiet test'
+        language: system
+        files: ^user_service/.*\.(java|kts)$
+        pass_filenames: false
+        stages: [pre-push]
