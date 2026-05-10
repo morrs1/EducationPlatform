@@ -1,0 +1,78 @@
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+set shell := ["sh", "-c"]
+
+compose_file := "docker-compose.yaml"
+env_file := ".env"
+
+[doc("List all targets")]
+default:
+  @just --list --unsorted --list-heading $'course_service commands…\n'
+
+# ─── Docker Compose ──────────────────────────────────────────────────────────
+
+[doc("Build images for every service in the compose file")]
+[group("docker")]
+build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} build
+
+[doc("Start the stack (postgres + liquibase + app)")]
+[group("docker")]
+up:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d
+
+[doc("Build then start")]
+[group("docker")]
+up-build:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build
+
+[doc("Stop but keep volumes")]
+[group("docker")]
+down:
+  docker compose -f {{compose_file}} --env-file {{env_file}} down
+
+[doc("Stop and drop volumes (DESTROYS database)")]
+[group("docker")]
+down-volumes:
+  docker compose -f {{compose_file}} --env-file {{env_file}} down -v
+
+[doc("Show running services")]
+[group("docker")]
+ps:
+  docker compose -f {{compose_file}} --env-file {{env_file}} ps
+
+[doc("Tail logs from every service")]
+[group("docker")]
+logs:
+  docker compose -f {{compose_file}} --env-file {{env_file}} logs -f
+
+[doc("Tail logs from the app service only")]
+[group("docker")]
+logs-app:
+  docker compose -f {{compose_file}} --env-file {{env_file}} logs -f app
+
+[doc("Rebuild and recreate the app (picks up code changes)")]
+[group("docker")]
+redeploy:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up -d --build app
+
+[doc("Re-run liquibase migrations (one-shot)")]
+[group("docker")]
+migrate:
+  docker compose -f {{compose_file}} --env-file {{env_file}} up --no-deps liquibase
+
+# ─── Gradle ──────────────────────────────────────────────────────────────────
+
+[doc("Compile + run unit tests")]
+[group("gradle")]
+gradle-build:
+  ./gradlew --no-daemon build
+
+[doc("Run unit tests only")]
+[group("gradle")]
+test:
+  ./gradlew --no-daemon test
+
+[doc("Run the service locally on port 8081 (loads .env via Spring)")]
+[group("gradle")]
+run:
+  ./gradlew --no-daemon bootRun

@@ -1,10 +1,12 @@
-server:
-  # Чтобы не конфликтовать с downstream на одной машине.
-  port: ${SERVER_PORT:8090}
-
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
   application:
     name: api_gateway
+
+server:
+  port: ${API_GATEWAY_SERVER_PORT:8090}
 
 springdoc:
   api-docs:
@@ -16,41 +18,32 @@ springdoc:
 
 auth:
   user-service:
-    base-uri: ${USER_SERVICE_BASE_URI:http://localhost:8080}
+    base-uri: ${API_GATEWAY_USER_SERVICE_URI:http://localhost:8080}
   jwt:
-    # Только dev default. Для реального окружения обязательно переопределить переменной JWT_SECRET.
-    secret: ${JWT_SECRET:dev-secret-change-me-at-least-32-chars}
-    ttl: ${JWT_TTL:15m}
+    # Only a dev default. MUST be overridden via API_GATEWAY_JWT_SECRET in prod.
+    secret: ${API_GATEWAY_JWT_SECRET:dev-secret-change-me-at-least-32-chars}
+    ttl: ${API_GATEWAY_JWT_TTL:15m}
 
-# Базовый префикс входа на шлюзе; downstream-пути совпадают с теми, что в сервисах (без лишнего /api).
 gateway:
   proxy:
-    entry-path-prefix: /api
+    entry-path-prefix: ${API_GATEWAY_ENTRY_PATH_PREFIX:/api}
+  # Path prefixes are part of the public contract — kept in code.
+  # Target hosts are environment-specific — injected via API_GATEWAY_*_URI.
   routes:
-    # --- course_service (server.port 8081): длинный префикс выше короткого ---
+    # Longest prefix first so /api/course/lesson wins over /api/course.
     - id: course-lesson
       path-prefix: /api/course/lesson
-      target-base-uri: http://localhost:8081
+      target-base-uri: ${API_GATEWAY_COURSE_SERVICE_URI:http://localhost:8081}
       strip-prefix: /api
     - id: course
       path-prefix: /api/course
-      target-base-uri: http://localhost:8081
+      target-base-uri: ${API_GATEWAY_COURSE_SERVICE_URI:http://localhost:8081}
       strip-prefix: /api
-
-    # --- learning_service (server.port 8082) ---
     - id: learning
       path-prefix: /api/learning
-      target-base-uri: http://localhost:8082
+      target-base-uri: ${API_GATEWAY_LEARNING_SERVICE_URI:http://localhost:8082}
       strip-prefix: /api
-
-    # --- user_service (server.port 8080) ---
     - id: user
       path-prefix: /api/user
-      target-base-uri: http://localhost:8080
+      target-base-uri: ${API_GATEWAY_USER_SERVICE_URI:http://localhost:8080}
       strip-prefix: /api
-
-# Примеры:
-#   GET http://localhost:8090/api/course/...     -> http://localhost:8081/course/...
-#   GET http://localhost:8090/api/course/lesson/... -> http://localhost:8081/course/lesson/...
-#   GET http://localhost:8090/api/learning/...   -> http://localhost:8082/learning/...
-#   POST http://localhost:8090/api/user/...      -> http://localhost:8080/user/...

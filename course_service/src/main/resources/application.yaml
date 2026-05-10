@@ -5,31 +5,32 @@ spring:
   application:
     name: course_service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_EXTERNAL_PORT:5435}/${POSTGRES_DB:course_service}
-    username: ${POSTGRES_USER:morrs}
-    password: ${POSTGRES_PASSWORD:123}
+    url: jdbc:postgresql://${COURSE_SERVICE_POSTGRES_HOST:localhost}:${COURSE_SERVICE_POSTGRES_PORT:5432}/${COURSE_SERVICE_POSTGRES_DB:course_service}
+    username: ${COURSE_SERVICE_POSTGRES_USER:morrs}
+    password: ${COURSE_SERVICE_POSTGRES_PASSWORD:123}
     driver-class-name: org.postgresql.Driver
   rabbitmq:
-    host: ${RABBITMQ_HOST}
-    port: ${RABBITMQ_PORT}
-    username: ${RABBITMQ_DEFAULT_USER}
-    password: ${RABBITMQ_DEFAULT_USER}
+    host: ${COURSE_SERVICE_RABBITMQ_HOST:localhost}
+    port: ${COURSE_SERVICE_RABBITMQ_PORT:5672}
+    username: ${COURSE_SERVICE_RABBITMQ_USER:guest}
+    password: ${COURSE_SERVICE_RABBITMQ_PASSWORD:guest}
     virtual-host: /
   servlet:
     multipart:
-      max-file-size: 200MB
-      max-request-size: 200MB
-server:
-  port: 8081
+      max-file-size: ${COURSE_SERVICE_MULTIPART_MAX_FILE_SIZE:200MB}
+      max-request-size: ${COURSE_SERVICE_MULTIPART_MAX_REQUEST_SIZE:200MB}
 
+server:
+  port: ${COURSE_SERVICE_SERVER_PORT:8081}
+
+# Property prefix `temp.s3.*` is referenced from Java @Value — do not rename.
 temp:
   s3:
-    enabled: ${TEMP_S3_ENABLED:false}
-    region: ${TEMP_S3_REGION:eu-central-1}
-    bucket: ${TEMP_S3_BUCKET:}
-    endpoint: ${TEMP_S3_ENDPOINT:}
-    access-key: ${TEMP_S3_ACCESS_KEY:}
-    secret-key: ${TEMP_S3_SECRET_KEY:}
-    public-base-url: ${TEMP_S3_PUBLIC_BASE_URL:}
-    path-style-access: ${TEMP_S3_PATH_STYLE_ACCESS:false}
-
+    enabled: ${COURSE_SERVICE_S3_ENABLED:false}
+    region: ${COURSE_SERVICE_S3_REGION:eu-central-1}
+    bucket: ${COURSE_SERVICE_S3_BUCKET:}
+    endpoint: ${COURSE_SERVICE_S3_ENDPOINT:}
+    access-key: ${COURSE_SERVICE_S3_ACCESS_KEY:}
+    secret-key: ${COURSE_SERVICE_S3_SECRET_KEY:}
+    public-base-url: ${COURSE_SERVICE_S3_PUBLIC_BASE_URL:}
+    path-style-access: ${COURSE_SERVICE_S3_PATH_STYLE_ACCESS:false}
