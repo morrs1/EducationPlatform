@@ -5,9 +5,9 @@ spring:
   application:
     name: learning_service
   datasource:
-    url: jdbc:postgresql://localhost:5437/learning_service_db
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:postgres}
+    url: jdbc:postgresql://${LEARNING_SERVICE_POSTGRES_HOST:localhost}:${LEARNING_SERVICE_POSTGRES_PORT:5432}/${LEARNING_SERVICE_POSTGRES_DB:learning_service_db}
+    username: ${LEARNING_SERVICE_POSTGRES_USER:postgres}
+    password: ${LEARNING_SERVICE_POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     open-in-view: false
@@ -23,4 +23,4 @@ springdoc:
     path: /swagger-ui.html
 
 server:
-  port: 8082
+  port: ${LEARNING_SERVICE_SERVER_PORT:8082}

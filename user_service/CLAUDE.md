@@ -91,29 +91,108 @@ These are not suggestions. Reviewers will reject diffs that break them.
 
 ## Tests
 
-Layout mirrors `application/`:
+Layout:
 
 ```
-src/test/java/org/example/user_service/application/interactors/user/<operation>/
-  <Operation>InteractorTest.java
+src/test/java/org/example/user_service/
+  support/
+    factories/                                Test data builders.
+      UserFactory.java                        User aggregate with sane defaults + Builder.
+      CreateUserCommandFactory.java
+    fakes/                                    In-memory port implementations. Reuse them.
+      FakeUserRepo.java                       UserRepo with size(), addCalls(), lastUpdated() helpers.
+      FakePasswordHasher.java                 Plain hash/verify.
+      CountingPasswordHasher.java             Records call counts.
+      FakeEventBus.java                       Captures every event published.
+      FakePhotoStorage.java                   Returns a configurable AddProfilePhotoView.
+      ImmediateTransactionManager.java        Runs the action synchronously.
+  domain/user/
+    vo/<VO>Test.java                          Value-object validation tests.
+    services/UserDomainServiceTest.java
+  application/interactors/user/
+    <operation>/<Operation>InteractorTest.java
+
+src/integrationTest/java/org/example/user_service/
+  support/integration/PostgresIntegrationTest.java   Testcontainers PostgreSQL base class.
+  infrastructure/adapters/persistence/
+    HibernateUserRepoIT.java
 ```
 
-Existing examples: `create_user/CreateUserInteractorTest.java`, `assign_role/...`, `authenticate_user/...`. Pattern is in-memory fakes of `UserRepo`, `EventBus`, `TransactionManager`, and `PasswordHasher` — no Spring context, no Mockito magic for ports, JUnit 5 only.
+### Unit-test conventions
 
-If you touch an interactor under `create_user`, `assign_role`, or `authenticate_user`, rerun and update the matching test. New interactors require a new test file in the same path.
+- **Arrange / Act / Assert with explicit comments.** Use `// Arrange`, `// Act`, `// Assert`. One-liners may use `// Arrange + Act + Assert`.
+- **In-memory fakes, not Mockito.** All ports have hand-written fakes under `support/fakes/`. They expose tracking accessors (`addCalls()`, `lastUpdated()`, `published()`). Mockito is allowed only when no fake fits — and even then, only at the seam.
+- **Reuse the factories.** Construct test users via `UserFactory.aUser()` or `UserFactory.builder().email(...).role(...).build()` rather than spelling out `new User(...)` every time.
+- **AssertJ first.** Prefer `assertThat(...)` over `assertEquals`. It reads better and the failure messages are stronger.
+- **Behavior-first names.** `shouldRejectDuplicateEmailWithoutSideEffects`. `@DisplayName` for the human-readable form.
+- **Parametrized tests for VO validation matrices** (`@ParameterizedTest` + `@ValueSource` / `@CsvSource` / `@NullSource`).
+
+### Integration-test conventions
+
+- Lives under `src/integrationTest/java/...` (separate Gradle source set).
+- Inherit from `PostgresIntegrationTest` — a single Testcontainers PostgreSQL instance is shared across all subclasses for the JVM lifetime.
+- Schema is created by Hibernate (`ddl-auto: create-drop` in `application-integration-test.yaml`). Integration tests do not depend on Liquibase changelogs.
+- Use `flush()` + `entityManager.clear()` between write and read to bypass the L1 cache and confirm the row actually hits PostgreSQL.
+
+If you touch an interactor under `application/interactors/user/<operation>/`, the matching `<Operation>InteractorTest` must be updated or extended. New interactors require a new test file in the same path. Same rule for adapters in `infrastructure/adapters/` — extend an existing `*IT` or add a new one.
 
 ## Validation
 
-From `user_service/`:
+Use this order. Every step must pass before you call work done.
 
 ```sh
-./gradlew build            # compile + test
-./gradlew check            # full verification (build, test, anything else wired in)
-./gradlew test             # JUnit 5 tests only
-./gradlew bootRun          # run the service on port 8080
+./gradlew spotlessApply       # auto-fix trailing whitespace, unused imports, EOF newlines
+./gradlew spotlessCheck       # CI-style verify
+./gradlew checkstyleMain checkstyleTest checkstyleIntegrationTest
+./gradlew test                # unit tests
+./gradlew integrationTest     # Testcontainers integration tests (requires Docker)
+./gradlew build               # full assemble + tests
 ```
 
-`./gradlew build` is the minimum after any edit; `./gradlew check` is the bar before committing.
+Or, in one shot (the bar for any commit):
+
+```sh
+./gradlew check               # everything above except spotlessApply
+```
+
+Quick local run for a single iteration:
+
+```sh
+./gradlew bootRun             # run the service on port 8080
+```
+
+## Linters
+
+| Tool                       | Why                                                          | Task                                                       |
+|----------------------------|--------------------------------------------------------------|------------------------------------------------------------|
+| **Spotless** (`6.25.0`)    | Whitespace, EOF newline, unused imports, import order         | `spotlessCheck` / `spotlessApply`                          |
+| **Checkstyle** (`10.18.2`) | Naming, braces, modifiers, missing-override, no star imports, no empty blocks | `checkstyleMain`, `checkstyleTest`, `checkstyleIntegrationTest` |
+
+Checkstyle config: `config/checkstyle/checkstyle.xml`. Intentionally lightweight to avoid mass reformatting. If a single file is justifiably off-spec, use `@SuppressWarnings("checkstyle:RuleName")` + a one-line reason. Do not edit the XML to silence a single violation.
+
+Run lints separately if the full `check` is too slow during iteration:
+
+```sh
+./gradlew spotlessCheck checkstyleMain checkstyleTest
+```
+
+Never push code that fails the linters locally; CI will reject it.
+
+## Pre-commit hooks
+
+The repository uses the [`pre-commit`](https://pre-commit.com/) framework — same as `answer_service`. The `user_service/.pre-commit-config.yaml` ships hooks for hygiene, Spotless, Checkstyle, and `pre-push` unit tests.
+
+```sh
+pip install pre-commit                          # or pipx install pre-commit
+cd user_service
+pre-commit install                              # registers .git/hooks/pre-commit
+pre-commit install --hook-type pre-push         # registers .git/hooks/pre-push
+pre-commit run --all-files                      # manual full-tree run
+```
+
+Hooks fire on `git commit` (Spotless + Checkstyle + hygiene) and on `git push` (unit tests). **Never** bypass them with `--no-verify`. Fix the underlying issue and re-stage.
+
+CI mirrors the same checks (see `.github/workflows/user_service_ci.yaml`). A green local pre-commit run is the strongest predictor of green CI.
 
 ## Common gotchas
 

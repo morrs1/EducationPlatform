@@ -1,0 +1,194 @@
+x-default: &default
+  restart: unless-stopped
+  networks:
+    - overlay
+
+x-healthcheck-interval: &hc-interval
+  interval: 30s
+  timeout: 10s
+  retries: 5
+  start_period: 15s
+
+x-db-environment: &x-db-environment
+  USER_SERVICE_POSTGRES_HOST: ${USER_SERVICE_POSTGRES_HOST}
+  USER_SERVICE_POSTGRES_PORT: ${USER_SERVICE_POSTGRES_PORT}
+  USER_SERVICE_POSTGRES_DB: ${USER_SERVICE_POSTGRES_DB}
+  USER_SERVICE_POSTGRES_USER: ${USER_SERVICE_POSTGRES_USER}
+  USER_SERVICE_POSTGRES_PASSWORD: ${USER_SERVICE_POSTGRES_PASSWORD}
+
+x-s3-environment: &x-s3-environment
+  USER_SERVICE_S3_ENABLED: ${USER_SERVICE_S3_ENABLED}
+  USER_SERVICE_S3_BUCKET: ${USER_SERVICE_S3_BUCKET}
+  USER_SERVICE_S3_REGION: ${USER_SERVICE_S3_REGION}
+  USER_SERVICE_S3_ACCESS_KEY: ${USER_SERVICE_S3_ACCESS_KEY}
+  USER_SERVICE_S3_SECRET_KEY: ${USER_SERVICE_S3_SECRET_KEY}
+  USER_SERVICE_S3_ENDPOINT: ${USER_SERVICE_S3_ENDPOINT}
+  USER_SERVICE_S3_PATH_STYLE_ACCESS: ${USER_SERVICE_S3_PATH_STYLE_ACCESS}
+  USER_SERVICE_S3_PUBLIC_BASE_URL: ${USER_SERVICE_S3_PUBLIC_BASE_URL}
+
+x-app-environment: &x-app-environment
+  USER_SERVICE_SERVER_PORT: ${USER_SERVICE_SERVER_PORT}
+  USER_SERVICE_MULTIPART_MAX_FILE_SIZE: ${USER_SERVICE_MULTIPART_MAX_FILE_SIZE}
+  USER_SERVICE_MULTIPART_MAX_REQUEST_SIZE: ${USER_SERVICE_MULTIPART_MAX_REQUEST_SIZE}
+  JAVA_TOOL_OPTIONS: ${USER_SERVICE_JVM_OPTS}
+
+services:
+  postgres:
+    <<: *default
+    container_name: user-service-postgres
+    hostname: user-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      POSTGRES_DB: ${USER_SERVICE_POSTGRES_DB}
+      POSTGRES_USER: ${USER_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${USER_SERVICE_POSTGRES_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    ports:
+      - "127.0.0.1:${USER_SERVICE_POSTGRES_EXTERNAL_PORT}:${USER_SERVICE_POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_SERVICE_POSTGRES_USER} -d ${USER_SERVICE_POSTGRES_DB}"]
+      <<: *hc-interval
+    volumes:
+      - user-service-postgres.data:/var/lib/postgresql/data
+
+  liquibase:
+    <<: *default
+    container_name: user-service-liquibase
+    image: liquibase/liquibase:4.31-alpine
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *x-db-environment
+    volumes:
+      # Mount as /liquibase/migrations so the `migrations/...` include paths
+      # in db.changelog-master.yaml resolve against search-path /liquibase.
+      - ./deploy/liquibase/changelog:/liquibase/migrations
+    command: >
+      --search-path=/liquibase
+      --changelog-file=migrations/${USER_SERVICE_LIQUIBASE_CHANGELOG}
+      --url=jdbc:postgresql://user-service-postgres:${USER_SERVICE_POSTGRES_PORT}/${USER_SERVICE_POSTGRES_DB}
+      --username=${USER_SERVICE_POSTGRES_USER}
+      --password=${USER_SERVICE_POSTGRES_PASSWORD}
+      update
+
+  seaweedfs:
+    <<: *default
+    container_name: user-service-seaweedfs
+    hostname: user-service-seaweedfs
+    image: chrislusf/seaweedfs:4.19
+    environment:
+      AWS_ACCESS_KEY_ID: ${USER_SERVICE_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${USER_SERVICE_S3_SECRET_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    ports:
+      - "127.0.0.1:${USER_SERVICE_S3_API_PORT}:8333"
+      - "127.0.0.1:${USER_SERVICE_S3_FILER_PORT}:8888"
+      - "127.0.0.1:${USER_SERVICE_S3_ADMIN_PORT}:9333"
+    volumes:
+      - user-service-seaweedfs.data:/data
+    command: >
+      server
+      -dir=/data
+      -ip.bind=0.0.0.0
+      -s3
+    healthcheck:
+      # Hit the master /cluster/status (no auth); S3 on :8333 returns 403 to
+      # unauthenticated GETs and is unsuitable as a liveness probe.
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9333/cluster/status || exit 1"]
+      <<: *hc-interval
+
+  seaweedfs-init:
+    <<: *default
+    container_name: user-service-seaweedfs.init
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+    restart: "no"
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      MC_HOST_seaweed: http://${USER_SERVICE_S3_ACCESS_KEY}:${USER_SERVICE_S3_SECRET_KEY}@user-service-seaweedfs:8333
+      BUCKET: ${USER_SERVICE_S3_BUCKET}
+    entrypoint:
+      - /bin/sh
+      - -ec
+    command:
+      - |
+        attempts=0
+        until mc ls seaweed >/dev/null 2>&1; do
+          attempts=$$((attempts + 1))
+          if [ $$attempts -ge 30 ]; then
+            echo "SeaweedFS S3 still not reachable after 30 tries; giving up." >&2
+            exit 1
+          fi
+          echo "Waiting for SeaweedFS S3 ($$attempts/30) ..."
+          sleep 1
+        done
+
+        if mc ls "seaweed/$$BUCKET" >/dev/null 2>&1; then
+          echo "Bucket '$$BUCKET' already exists"
+        else
+          echo "Creating bucket '$$BUCKET'"
+          mc mb "seaweed/$$BUCKET"
+        fi
+        mc ls seaweed
+
+  app:
+    <<: *default
+    container_name: user-service-app
+    hostname: user-service-app
+    build:
+      context: .
+      dockerfile: ./deploy/user_service/Dockerfile
+    environment:
+      <<: [
+        *x-db-environment,
+        *x-s3-environment,
+        *x-app-environment,
+      ]
+      # In-container clients reach SeaweedFS via the service hostname.
+      USER_SERVICE_S3_PUBLIC_BASE_URL: http://user-service-seaweedfs:8333/${USER_SERVICE_S3_BUCKET}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    ports:
+      - "127.0.0.1:${USER_SERVICE_SERVER_PORT}:${USER_SERVICE_SERVER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
+      seaweedfs-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fsSL http://localhost:${USER_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-interval
+
+volumes:
+  user-service-postgres.data: {}
+  user-service-seaweedfs.data: {}
+
+networks:
+  overlay:
+    driver: bridge

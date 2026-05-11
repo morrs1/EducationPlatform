@@ -1,0 +1,38 @@
+# Standalone compose for the frontend only. The gateway is expected to be
+# reachable at FRONTEND_GATEWAY_HOST:FRONTEND_GATEWAY_PORT on an external
+# network. For a full stack including the gateway, use the repository-root
+# docker-compose.yaml.
+
+services:
+  app:
+    container_name: frontend-app
+    hostname: frontend-app
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./deploy/frontend/Dockerfile
+      args:
+        VITE_API_GATEWAY_URL: ${VITE_API_GATEWAY_URL:-/}
+        VITE_AUTH_API_BASE_URL: ${VITE_AUTH_API_BASE_URL:-/auth}
+        VITE_USER_SERVICE_API_BASE_URL: ${VITE_USER_SERVICE_API_BASE_URL:-/api/user}
+        VITE_USER_SERVICE_DEMO_USER_ID: ${VITE_USER_SERVICE_DEMO_USER_ID:-}
+        VITE_LEARNING_SERVICE_API_BASE_URL: ${VITE_LEARNING_SERVICE_API_BASE_URL:-/api/learning}
+        VITE_COURSE_SERVICE_API_BASE_URL: ${VITE_COURSE_SERVICE_API_BASE_URL:-/api/course}
+    environment:
+      FRONTEND_SERVER_PORT: ${FRONTEND_SERVER_PORT}
+      FRONTEND_GATEWAY_HOST: ${FRONTEND_GATEWAY_HOST}
+      FRONTEND_GATEWAY_PORT: ${FRONTEND_GATEWAY_PORT}
+    ports:
+      - "127.0.0.1:${FRONTEND_EXTERNAL_PORT}:${FRONTEND_SERVER_PORT}"
+    networks:
+      - overlay
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider --tries=1 http://localhost:${FRONTEND_SERVER_PORT}/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  overlay:
+    driver: bridge

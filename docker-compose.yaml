@@ -1,0 +1,658 @@
+# Full-stack compose. Monolithic on purpose: `include:` cannot disambiguate
+# duplicate service names across sub-compose files (every backend service
+# names its own DB simply `postgres`), so the root file owns the entire
+# stack and gives every service a unique, prefixed name.
+#
+# Per-service composes under each service/ remain valid for standalone
+# development; this file shadows them when you want everything at once.
+#
+# Inter-service DNS uses container hostnames (user-service-app,
+# api-gateway-app, answer-service-postgres, …) — those stay unique so
+# code that already resolves to them needs no changes.
+#
+# Usage:
+#   cp .env.example .env
+#   just up-build   # or: docker compose --env-file .env up -d --build
+
+x-default: &default
+  restart: unless-stopped
+  networks:
+    - overlay
+
+x-hc-fast: &hc-fast
+  interval: 30s
+  timeout: 10s
+  retries: 5
+  start_period: 15s
+
+x-hc-slow: &hc-slow
+  interval: 30s
+  timeout: 60s
+  retries: 5
+  start_period: 10s
+
+# Answer-service env groups (kept aligned with answer_service/docker-compose.prod.yaml).
+x-answer-db: &x-answer-db
+  POSTGRES_SSL_MODE: 'disable'
+  POSTGRES_HOST: ${POSTGRES_HOST}
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_DRIVER: ${POSTGRES_DRIVER}
+
+x-answer-redis: &x-answer-redis
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+  REDIS_USER: ${REDIS_USER}
+  REDIS_USER_PASSWORD: ${REDIS_USER_PASSWORD}
+  REDIS_PORT: ${REDIS_PORT}
+  REDIS_CACHE_DB: ${REDIS_CACHE_DB}
+  REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+  REDIS_SCHEDULE_SOURCE_DB: ${REDIS_SCHEDULE_SOURCE_DB}
+  REDIS_MAX_CONNECTIONS: ${REDIS_MAX_CONNECTIONS}
+
+x-answer-chroma: &x-answer-chroma
+  CHROMA_PORT: ${CHROMA_PORT}
+  CHROMA_COLLECTION_NAME: ${CHROMA_COLLECTION_NAME}
+
+x-answer-rabbit: &x-answer-rabbit
+  RABBITMQ_HOST: ${RABBITMQ_HOST}
+  RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+  RABBITMQ_PORT: ${RABBITMQ_PORT}
+  RABBITMQ_UI_PORT: ${RABBITMQ_UI_PORT}
+
+x-answer-sqla: &x-answer-sqla
+  DB_POOL_PRE_PING: ${DB_POOL_PRE_PING}
+  DB_POOL_RECYCLE: ${DB_POOL_RECYCLE}
+  DB_ECHO: ${DB_ECHO}
+  DB_AUTO_FLUSH: ${DB_AUTO_FLUSH}
+  DB_EXPIRE_ON_COMMIT: ${DB_EXPIRE_ON_COMMIT}
+  DB_FUTURE: ${DB_FUTURE}
+  DB_POOL_SIZE: ${DB_POOL_SIZE}
+  DB_POOL_MAX_OVERFLOW: ${DB_POOL_MAX_OVERFLOW}
+
+x-answer-api: &x-answer-api
+  UVICORN_HOST: ${UVICORN_HOST}
+  UVICORN_PORT: ${UVICORN_PORT}
+  FASTAPI_DEBUG: ${FASTAPI_DEBUG}
+  FASTAPI_ALLOW_CREDENTIALS: ${FASTAPI_ALLOW_CREDENTIALS}
+
+x-answer-llm: &x-answer-llm
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+  OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL}
+  OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL}
+  OPENAI_TEMPERATURE: ${OPENAI_TEMPERATURE}
+  OPENAI_EMBEDDING_CHUNK_SIZE: ${OPENAI_EMBEDDING_CHUNK_SIZE}
+
+services:
+
+  # ═══ user_service ═══════════════════════════════════════════════════════
+  user-postgres:
+    <<: *default
+    container_name: user-service-postgres
+    hostname: user-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      POSTGRES_DB: ${USER_SERVICE_POSTGRES_DB}
+      POSTGRES_USER: ${USER_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${USER_SERVICE_POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${USER_SERVICE_POSTGRES_EXTERNAL_PORT}:${USER_SERVICE_POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_SERVICE_POSTGRES_USER} -d ${USER_SERVICE_POSTGRES_DB}"]
+      <<: *hc-fast
+    volumes:
+      - user-service-postgres.data:/var/lib/postgresql/data
+
+  user-liquibase:
+    <<: *default
+    container_name: user-service-liquibase
+    image: liquibase/liquibase:4.31-alpine
+    restart: "no"
+    depends_on:
+      user-postgres:
+        condition: service_healthy
+    volumes:
+      - ./user_service/deploy/liquibase/changelog:/liquibase/migrations
+    command: >
+      --search-path=/liquibase
+      --changelog-file=migrations/${USER_SERVICE_LIQUIBASE_CHANGELOG}
+      --url=jdbc:postgresql://user-service-postgres:${USER_SERVICE_POSTGRES_PORT}/${USER_SERVICE_POSTGRES_DB}
+      --username=${USER_SERVICE_POSTGRES_USER}
+      --password=${USER_SERVICE_POSTGRES_PASSWORD}
+      update
+
+  user-seaweedfs:
+    <<: *default
+    container_name: user-service-seaweedfs
+    hostname: user-service-seaweedfs
+    image: chrislusf/seaweedfs:4.19
+    environment:
+      AWS_ACCESS_KEY_ID: ${USER_SERVICE_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${USER_SERVICE_S3_SECRET_KEY}
+    ports:
+      - "127.0.0.1:${USER_SERVICE_S3_API_PORT}:8333"
+      - "127.0.0.1:${USER_SERVICE_S3_FILER_PORT}:8888"
+      - "127.0.0.1:${USER_SERVICE_S3_ADMIN_PORT}:9333"
+    volumes:
+      - user-service-seaweedfs.data:/data
+    command: server -dir=/data -ip.bind=0.0.0.0 -s3
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9333/cluster/status || exit 1"]
+      <<: *hc-fast
+
+  user-seaweedfs-init:
+    <<: *default
+    container_name: user-service-seaweedfs.init
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+    restart: "no"
+    depends_on:
+      user-seaweedfs:
+        condition: service_healthy
+    environment:
+      MC_HOST_seaweed: http://${USER_SERVICE_S3_ACCESS_KEY}:${USER_SERVICE_S3_SECRET_KEY}@user-service-seaweedfs:8333
+      BUCKET: ${USER_SERVICE_S3_BUCKET}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        attempts=0
+        until mc ls seaweed >/dev/null 2>&1; do
+          attempts=$$((attempts + 1))
+          if [ $$attempts -ge 30 ]; then
+            echo "SeaweedFS S3 still not reachable after 30 tries; giving up." >&2
+            exit 1
+          fi
+          echo "Waiting for SeaweedFS S3 ($$attempts/30) ..."
+          sleep 1
+        done
+
+        if mc ls "seaweed/$$BUCKET" >/dev/null 2>&1; then
+          echo "Bucket '$$BUCKET' already exists"
+        else
+          mc mb "seaweed/$$BUCKET"
+        fi
+        mc ls seaweed
+
+  user-app:
+    <<: *default
+    container_name: user-service-app
+    hostname: user-service-app
+    build:
+      context: ./user_service
+      dockerfile: deploy/user_service/Dockerfile
+    environment:
+      USER_SERVICE_SERVER_PORT: ${USER_SERVICE_SERVER_PORT}
+      USER_SERVICE_MULTIPART_MAX_FILE_SIZE: ${USER_SERVICE_MULTIPART_MAX_FILE_SIZE}
+      USER_SERVICE_MULTIPART_MAX_REQUEST_SIZE: ${USER_SERVICE_MULTIPART_MAX_REQUEST_SIZE}
+      USER_SERVICE_POSTGRES_HOST: ${USER_SERVICE_POSTGRES_HOST}
+      USER_SERVICE_POSTGRES_PORT: ${USER_SERVICE_POSTGRES_PORT}
+      USER_SERVICE_POSTGRES_DB: ${USER_SERVICE_POSTGRES_DB}
+      USER_SERVICE_POSTGRES_USER: ${USER_SERVICE_POSTGRES_USER}
+      USER_SERVICE_POSTGRES_PASSWORD: ${USER_SERVICE_POSTGRES_PASSWORD}
+      USER_SERVICE_S3_ENABLED: ${USER_SERVICE_S3_ENABLED}
+      USER_SERVICE_S3_BUCKET: ${USER_SERVICE_S3_BUCKET}
+      USER_SERVICE_S3_REGION: ${USER_SERVICE_S3_REGION}
+      USER_SERVICE_S3_ACCESS_KEY: ${USER_SERVICE_S3_ACCESS_KEY}
+      USER_SERVICE_S3_SECRET_KEY: ${USER_SERVICE_S3_SECRET_KEY}
+      USER_SERVICE_S3_ENDPOINT: ${USER_SERVICE_S3_ENDPOINT}
+      USER_SERVICE_S3_PATH_STYLE_ACCESS: ${USER_SERVICE_S3_PATH_STYLE_ACCESS}
+      USER_SERVICE_S3_PUBLIC_BASE_URL: http://user-service-seaweedfs:8333/${USER_SERVICE_S3_BUCKET}
+      JAVA_TOOL_OPTIONS: ${USER_SERVICE_JVM_OPTS}
+    ports:
+      - "127.0.0.1:${USER_SERVICE_SERVER_PORT}:${USER_SERVICE_SERVER_PORT}"
+    depends_on:
+      user-postgres:
+        condition: service_healthy
+      user-liquibase:
+        condition: service_completed_successfully
+      user-seaweedfs-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:${USER_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-fast
+
+  # ═══ learning_service ═══════════════════════════════════════════════════
+  learning-postgres:
+    <<: *default
+    container_name: learning-service-postgres
+    hostname: learning-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      POSTGRES_DB: ${LEARNING_SERVICE_POSTGRES_DB}
+      POSTGRES_USER: ${LEARNING_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LEARNING_SERVICE_POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${LEARNING_SERVICE_POSTGRES_EXTERNAL_PORT}:${LEARNING_SERVICE_POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LEARNING_SERVICE_POSTGRES_USER} -d ${LEARNING_SERVICE_POSTGRES_DB}"]
+      <<: *hc-fast
+    volumes:
+      - learning-service-postgres.data:/var/lib/postgresql/data
+
+  learning-liquibase:
+    <<: *default
+    container_name: learning-service-liquibase
+    image: liquibase/liquibase:4.31-alpine
+    restart: "no"
+    depends_on:
+      learning-postgres:
+        condition: service_healthy
+    volumes:
+      - ./learning_service/deploy/liquibase/changelog:/liquibase/migrations
+    command: >
+      --search-path=/liquibase
+      --changelog-file=migrations/${LEARNING_SERVICE_LIQUIBASE_CHANGELOG}
+      --url=jdbc:postgresql://learning-service-postgres:${LEARNING_SERVICE_POSTGRES_PORT}/${LEARNING_SERVICE_POSTGRES_DB}
+      --username=${LEARNING_SERVICE_POSTGRES_USER}
+      --password=${LEARNING_SERVICE_POSTGRES_PASSWORD}
+      update
+
+  learning-app:
+    <<: *default
+    container_name: learning-service-app
+    hostname: learning-service-app
+    build:
+      context: ./learning_service
+      dockerfile: deploy/learning_service/Dockerfile
+    environment:
+      LEARNING_SERVICE_SERVER_PORT: ${LEARNING_SERVICE_SERVER_PORT}
+      LEARNING_SERVICE_POSTGRES_HOST: ${LEARNING_SERVICE_POSTGRES_HOST}
+      LEARNING_SERVICE_POSTGRES_PORT: ${LEARNING_SERVICE_POSTGRES_PORT}
+      LEARNING_SERVICE_POSTGRES_DB: ${LEARNING_SERVICE_POSTGRES_DB}
+      LEARNING_SERVICE_POSTGRES_USER: ${LEARNING_SERVICE_POSTGRES_USER}
+      LEARNING_SERVICE_POSTGRES_PASSWORD: ${LEARNING_SERVICE_POSTGRES_PASSWORD}
+      JAVA_TOOL_OPTIONS: ${LEARNING_SERVICE_JVM_OPTS}
+    ports:
+      - "127.0.0.1:${LEARNING_SERVICE_SERVER_PORT}:${LEARNING_SERVICE_SERVER_PORT}"
+    depends_on:
+      learning-postgres:
+        condition: service_healthy
+      learning-liquibase:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:${LEARNING_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-fast
+
+  # ═══ course_service ═════════════════════════════════════════════════════
+  course-postgres:
+    <<: *default
+    container_name: course-service-postgres
+    hostname: course-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      POSTGRES_DB: ${COURSE_SERVICE_POSTGRES_DB}
+      POSTGRES_USER: ${COURSE_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${COURSE_SERVICE_POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${COURSE_SERVICE_POSTGRES_EXTERNAL_PORT}:${COURSE_SERVICE_POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${COURSE_SERVICE_POSTGRES_USER} -d ${COURSE_SERVICE_POSTGRES_DB}"]
+      <<: *hc-fast
+    volumes:
+      - course-service-postgres.data:/var/lib/postgresql/data
+
+  course-liquibase:
+    <<: *default
+    container_name: course-service-liquibase
+    image: liquibase/liquibase:4.31-alpine
+    restart: "no"
+    depends_on:
+      course-postgres:
+        condition: service_healthy
+    volumes:
+      - ./course_service/deploy/liquibase/changelog:/liquibase/migrations
+    command: >
+      --search-path=/liquibase
+      --changelog-file=migrations/${COURSE_SERVICE_LIQUIBASE_CHANGELOG}
+      --url=jdbc:postgresql://course-service-postgres:${COURSE_SERVICE_POSTGRES_PORT}/${COURSE_SERVICE_POSTGRES_DB}
+      --username=${COURSE_SERVICE_POSTGRES_USER}
+      --password=${COURSE_SERVICE_POSTGRES_PASSWORD}
+      update
+
+  # Provisions the `course-service-local` bucket on the shared SeaweedFS.
+  course-seaweedfs-init:
+    <<: *default
+    container_name: course-service-seaweedfs-init
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+    restart: "no"
+    depends_on:
+      user-seaweedfs:
+        condition: service_healthy
+    environment:
+      MC_HOST_seaweed: http://${COURSE_SERVICE_S3_ACCESS_KEY}:${COURSE_SERVICE_S3_SECRET_KEY}@user-service-seaweedfs:8333
+      BUCKET: ${COURSE_SERVICE_S3_BUCKET}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        attempts=0
+        until mc ls seaweed >/dev/null 2>&1; do
+          attempts=$$((attempts + 1))
+          if [ $$attempts -ge 30 ]; then
+            echo "SeaweedFS S3 still not reachable after 30 tries; giving up." >&2
+            exit 1
+          fi
+          echo "Waiting for SeaweedFS S3 ($$attempts/30) ..."
+          sleep 1
+        done
+
+        if mc ls "seaweed/$$BUCKET" >/dev/null 2>&1; then
+          echo "Bucket '$$BUCKET' already exists"
+        else
+          mc mb "seaweed/$$BUCKET"
+        fi
+
+  course-app:
+    <<: *default
+    container_name: course-service-app
+    hostname: course-service-app
+    build:
+      context: ./course_service
+      dockerfile: deploy/course_service/Dockerfile
+    environment:
+      COURSE_SERVICE_SERVER_PORT: ${COURSE_SERVICE_SERVER_PORT}
+      COURSE_SERVICE_MULTIPART_MAX_FILE_SIZE: ${COURSE_SERVICE_MULTIPART_MAX_FILE_SIZE}
+      COURSE_SERVICE_MULTIPART_MAX_REQUEST_SIZE: ${COURSE_SERVICE_MULTIPART_MAX_REQUEST_SIZE}
+      COURSE_SERVICE_POSTGRES_HOST: ${COURSE_SERVICE_POSTGRES_HOST}
+      COURSE_SERVICE_POSTGRES_PORT: ${COURSE_SERVICE_POSTGRES_PORT}
+      COURSE_SERVICE_POSTGRES_DB: ${COURSE_SERVICE_POSTGRES_DB}
+      COURSE_SERVICE_POSTGRES_USER: ${COURSE_SERVICE_POSTGRES_USER}
+      COURSE_SERVICE_POSTGRES_PASSWORD: ${COURSE_SERVICE_POSTGRES_PASSWORD}
+      COURSE_SERVICE_S3_ENABLED: ${COURSE_SERVICE_S3_ENABLED}
+      COURSE_SERVICE_S3_BUCKET: ${COURSE_SERVICE_S3_BUCKET}
+      COURSE_SERVICE_S3_REGION: ${COURSE_SERVICE_S3_REGION}
+      COURSE_SERVICE_S3_ACCESS_KEY: ${COURSE_SERVICE_S3_ACCESS_KEY}
+      COURSE_SERVICE_S3_SECRET_KEY: ${COURSE_SERVICE_S3_SECRET_KEY}
+      COURSE_SERVICE_S3_ENDPOINT: ${COURSE_SERVICE_S3_ENDPOINT}
+      COURSE_SERVICE_S3_PATH_STYLE_ACCESS: ${COURSE_SERVICE_S3_PATH_STYLE_ACCESS}
+      COURSE_SERVICE_S3_PUBLIC_BASE_URL: ${COURSE_SERVICE_S3_PUBLIC_BASE_URL}
+      COURSE_SERVICE_RABBITMQ_HOST: ${COURSE_SERVICE_RABBITMQ_HOST}
+      COURSE_SERVICE_RABBITMQ_PORT: ${COURSE_SERVICE_RABBITMQ_PORT}
+      COURSE_SERVICE_RABBITMQ_USER: ${COURSE_SERVICE_RABBITMQ_USER}
+      COURSE_SERVICE_RABBITMQ_PASSWORD: ${COURSE_SERVICE_RABBITMQ_PASSWORD}
+      JAVA_TOOL_OPTIONS: ${COURSE_SERVICE_JVM_OPTS}
+    ports:
+      - "127.0.0.1:${COURSE_SERVICE_SERVER_PORT}:${COURSE_SERVICE_SERVER_PORT}"
+    depends_on:
+      course-postgres:
+        condition: service_healthy
+      course-liquibase:
+        condition: service_completed_successfully
+      course-seaweedfs-init:
+        condition: service_completed_successfully
+      answer-rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:${COURSE_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-fast
+
+  # ═══ answer_service ═════════════════════════════════════════════════════
+  answer-postgres:
+    <<: *default
+    container_name: answer-service-postgres
+    hostname: answer-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      <<: *x-answer-db
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      <<: *hc-slow
+    volumes:
+      - answer-service-postgres.data:/var/lib/postgresql/data
+      - ./answer_service/deploy/dev/postgres/postgresql.conf:/etc/postgresql.conf
+      - ./answer_service/deploy/dev/postgres/pg_hba.conf:/etc/pg_hba.conf
+
+  answer-redis:
+    <<: *default
+    container_name: answer-service-redis
+    hostname: answer-service-redis
+    image: redis:8.0.2-alpine
+    environment:
+      <<: *x-answer-redis
+    command: /bin/sh -cx "/usr/local/bin/redis_entrypoint.sh"
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - answer-service-redis.data:/data
+      - ./answer_service/deploy/prod/redis/redis_entrypoint.sh:/usr/local/bin/redis_entrypoint.sh
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      <<: *hc-slow
+
+  answer-chromadb:
+    <<: *default
+    container_name: answer-service-chromadb
+    hostname: answer-service-chromadb
+    image: chromadb/chroma:1.0.9
+    environment:
+      IS_PERSISTENT: 'TRUE'
+      PERSIST_DIRECTORY: /chroma/chroma
+      ANONYMIZED_TELEMETRY: 'FALSE'
+      CHROMA_SERVER_HOST: '0.0.0.0'
+      CHROMA_SERVER_HTTP_PORT: ${CHROMA_PORT}
+    ports:
+      - "127.0.0.1:${CHROMA_PORT}:${CHROMA_PORT}"
+    volumes:
+      - answer-service-chroma.data:/chroma/chroma
+
+  answer-rabbitmq:
+    <<: *default
+    container_name: answer-service-rabbitmq
+    hostname: answer-service-rabbitmq
+    image: rabbitmq:4.0-management-alpine
+    environment:
+      <<: *x-answer-rabbit
+    ports:
+      - "127.0.0.1:${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "127.0.0.1:${RABBITMQ_UI_PORT}:${RABBITMQ_UI_PORT}"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      <<: *hc-slow
+    volumes:
+      - answer-service-rabbitmq.data:/var/lib/rabbitmq/:rw
+
+  answer-api:
+    <<: *default
+    container_name: answer-service-api
+    hostname: answer-service-api
+    build:
+      context: ./answer_service
+      dockerfile: deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-answer-db,
+        *x-answer-sqla,
+        *x-answer-redis,
+        *x-answer-rabbit,
+        *x-answer-chroma,
+        *x-answer-api,
+        *x-answer-llm,
+      ]
+      POSTGRES_HOST: answer-service-postgres
+      REDIS_HOST: answer-service-redis
+      RABBITMQ_HOST: answer-service-rabbitmq
+      CHROMA_HOST: answer-service-chromadb
+    command: /bin/sh -cx "./api_entrypoint.sh"
+    ports:
+      - "127.0.0.1:${UVICORN_PORT}:${UVICORN_PORT}"
+    depends_on:
+      answer-postgres:
+        condition: service_healthy
+      answer-redis:
+        condition: service_healthy
+      answer-rabbitmq:
+        condition: service_healthy
+      answer-chromadb:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:${UVICORN_PORT}/healthcheck/"]
+      <<: *hc-slow
+
+  answer-consumer:
+    <<: *default
+    container_name: answer-service-consumer
+    hostname: answer-service-consumer
+    build:
+      context: ./answer_service
+      dockerfile: deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-answer-db,
+        *x-answer-sqla,
+        *x-answer-redis,
+        *x-answer-rabbit,
+        *x-answer-chroma,
+        *x-answer-llm,
+      ]
+      POSTGRES_HOST: answer-service-postgres
+      REDIS_HOST: answer-service-redis
+      RABBITMQ_HOST: answer-service-rabbitmq
+      CHROMA_HOST: answer-service-chromadb
+    command: /bin/sh -cx "./broker_entrypoint.sh"
+    depends_on:
+      answer-postgres:
+        condition: service_healthy
+      answer-redis:
+        condition: service_healthy
+      answer-rabbitmq:
+        condition: service_healthy
+      answer-chromadb:
+        condition: service_started
+
+  answer-worker:
+    <<: *default
+    container_name: answer-service-worker
+    hostname: answer-service-worker
+    build:
+      context: ./answer_service
+      dockerfile: deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-answer-db,
+        *x-answer-sqla,
+        *x-answer-redis,
+        *x-answer-rabbit,
+        *x-answer-chroma,
+        *x-answer-llm,
+      ]
+      POSTGRES_HOST: answer-service-postgres
+      REDIS_HOST: answer-service-redis
+      RABBITMQ_HOST: answer-service-rabbitmq
+      CHROMA_HOST: answer-service-chromadb
+    command: /bin/sh -cx "./worker_entrypoint.sh"
+    depends_on:
+      answer-postgres:
+        condition: service_healthy
+      answer-redis:
+        condition: service_healthy
+      answer-rabbitmq:
+        condition: service_healthy
+      answer-chromadb:
+        condition: service_started
+
+  answer-scheduler:
+    <<: *default
+    container_name: answer-service-scheduler
+    hostname: answer-service-scheduler
+    build:
+      context: ./answer_service
+      dockerfile: deploy/prod/answer_service/Dockerfile
+    environment:
+      <<: [
+        *x-answer-db,
+        *x-answer-sqla,
+        *x-answer-redis,
+        *x-answer-rabbit,
+        *x-answer-chroma,
+        *x-answer-llm,
+      ]
+      POSTGRES_HOST: answer-service-postgres
+      REDIS_HOST: answer-service-redis
+      RABBITMQ_HOST: answer-service-rabbitmq
+      CHROMA_HOST: answer-service-chromadb
+    command: /bin/sh -cx "./scheduler_entrypoint.sh"
+    depends_on:
+      answer-postgres:
+        condition: service_healthy
+      answer-redis:
+        condition: service_healthy
+      answer-rabbitmq:
+        condition: service_started
+
+  # ═══ api_gateway ════════════════════════════════════════════════════════
+  gateway-app:
+    <<: *default
+    container_name: api-gateway-app
+    hostname: api-gateway-app
+    build:
+      context: ./api_gateway
+      dockerfile: deploy/api_gateway/Dockerfile
+    environment:
+      API_GATEWAY_SERVER_PORT: ${API_GATEWAY_SERVER_PORT}
+      API_GATEWAY_ENTRY_PATH_PREFIX: ${API_GATEWAY_ENTRY_PATH_PREFIX}
+      API_GATEWAY_JWT_SECRET: ${API_GATEWAY_JWT_SECRET}
+      API_GATEWAY_JWT_TTL: ${API_GATEWAY_JWT_TTL}
+      API_GATEWAY_USER_SERVICE_URI: ${API_GATEWAY_USER_SERVICE_URI}
+      API_GATEWAY_COURSE_SERVICE_URI: ${API_GATEWAY_COURSE_SERVICE_URI}
+      API_GATEWAY_LEARNING_SERVICE_URI: ${API_GATEWAY_LEARNING_SERVICE_URI}
+      JAVA_TOOL_OPTIONS: ${API_GATEWAY_JVM_OPTS}
+    ports:
+      - "127.0.0.1:${API_GATEWAY_SERVER_PORT}:${API_GATEWAY_SERVER_PORT}"
+    depends_on:
+      user-app:
+        condition: service_started
+      learning-app:
+        condition: service_started
+      course-app:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:${API_GATEWAY_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-fast
+
+  # ═══ frontend ═══════════════════════════════════════════════════════════
+  frontend-app:
+    <<: *default
+    container_name: frontend-app
+    hostname: frontend-app
+    build:
+      context: ./frontend
+      dockerfile: deploy/frontend/Dockerfile
+      args:
+        VITE_API_GATEWAY_URL: ${VITE_API_GATEWAY_URL:-/}
+        VITE_AUTH_API_BASE_URL: ${VITE_AUTH_API_BASE_URL:-/auth}
+        VITE_USER_SERVICE_API_BASE_URL: ${VITE_USER_SERVICE_API_BASE_URL:-/api/user}
+        VITE_USER_SERVICE_DEMO_USER_ID: ${VITE_USER_SERVICE_DEMO_USER_ID:-}
+        VITE_LEARNING_SERVICE_API_BASE_URL: ${VITE_LEARNING_SERVICE_API_BASE_URL:-/api/learning}
+        VITE_COURSE_SERVICE_API_BASE_URL: ${VITE_COURSE_SERVICE_API_BASE_URL:-/api/course}
+    environment:
+      FRONTEND_SERVER_PORT: ${FRONTEND_SERVER_PORT}
+      FRONTEND_GATEWAY_HOST: ${FRONTEND_GATEWAY_HOST}
+      FRONTEND_GATEWAY_PORT: ${FRONTEND_GATEWAY_PORT}
+    ports:
+      - "127.0.0.1:${FRONTEND_EXTERNAL_PORT}:${FRONTEND_SERVER_PORT}"
+    depends_on:
+      gateway-app:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider --tries=1 http://localhost:${FRONTEND_SERVER_PORT}/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  user-service-postgres.data: {}
+  user-service-seaweedfs.data: {}
+  learning-service-postgres.data: {}
+  course-service-postgres.data: {}
+  answer-service-postgres.data: {}
+  answer-service-redis.data: {}
+  answer-service-rabbitmq.data: {}
+  answer-service-chroma.data: {}
+
+networks:
+  overlay:
+    driver: bridge

@@ -5,14 +5,14 @@ spring:
   application:
     name: user_service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_EXTERNAL_PORT:5435}/${POSTGRES_DB:user_service_db}
-    username: ${POSTGRES_USER:morrs}
-    password: ${POSTGRES_PASSWORD:123}
+    url: jdbc:postgresql://${USER_SERVICE_POSTGRES_HOST:localhost}:${USER_SERVICE_POSTGRES_PORT:5432}/${USER_SERVICE_POSTGRES_DB:user_service_db}
+    username: ${USER_SERVICE_POSTGRES_USER:morrs}
+    password: ${USER_SERVICE_POSTGRES_PASSWORD:123}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: ${USER_SERVICE_MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${USER_SERVICE_MULTIPART_MAX_REQUEST_SIZE:10MB}
 
 springdoc:
   api-docs:
@@ -22,15 +22,17 @@ springdoc:
     operationsSorter: method
     tagsSorter: alpha
 
+# Property prefix `temp.s3.*` is referenced from Java @Value — do not rename.
 temp:
   s3:
-    enabled: ${TEMP_S3_ENABLED:false}
-    region: ${TEMP_S3_REGION:eu-central-1}
-    bucket: ${TEMP_S3_BUCKET:}
-    endpoint: ${TEMP_S3_ENDPOINT:}
-    access-key: ${TEMP_S3_ACCESS_KEY:}
-    secret-key: ${TEMP_S3_SECRET_KEY:}
-    public-base-url: ${TEMP_S3_PUBLIC_BASE_URL:}
-    path-style-access: ${TEMP_S3_PATH_STYLE_ACCESS:false}
+    enabled: ${USER_SERVICE_S3_ENABLED:false}
+    region: ${USER_SERVICE_S3_REGION:eu-central-1}
+    bucket: ${USER_SERVICE_S3_BUCKET:}
+    endpoint: ${USER_SERVICE_S3_ENDPOINT:}
+    access-key: ${USER_SERVICE_S3_ACCESS_KEY:}
+    secret-key: ${USER_SERVICE_S3_SECRET_KEY:}
+    public-base-url: ${USER_SERVICE_S3_PUBLIC_BASE_URL:}
+    path-style-access: ${USER_SERVICE_S3_PATH_STYLE_ACCESS:false}
+
 server:
-  port: 8080
+  port: ${USER_SERVICE_SERVER_PORT:8080}

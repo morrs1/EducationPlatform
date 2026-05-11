@@ -1,0 +1,108 @@
+x-default: &default
+  restart: unless-stopped
+  networks:
+    - overlay
+
+x-healthcheck-interval: &hc-interval
+  interval: 30s
+  timeout: 10s
+  retries: 5
+  start_period: 15s
+
+x-db-environment: &x-db-environment
+  LEARNING_SERVICE_POSTGRES_HOST: ${LEARNING_SERVICE_POSTGRES_HOST}
+  LEARNING_SERVICE_POSTGRES_PORT: ${LEARNING_SERVICE_POSTGRES_PORT}
+  LEARNING_SERVICE_POSTGRES_DB: ${LEARNING_SERVICE_POSTGRES_DB}
+  LEARNING_SERVICE_POSTGRES_USER: ${LEARNING_SERVICE_POSTGRES_USER}
+  LEARNING_SERVICE_POSTGRES_PASSWORD: ${LEARNING_SERVICE_POSTGRES_PASSWORD}
+
+x-app-environment: &x-app-environment
+  LEARNING_SERVICE_SERVER_PORT: ${LEARNING_SERVICE_SERVER_PORT}
+  JAVA_TOOL_OPTIONS: ${LEARNING_SERVICE_JVM_OPTS}
+
+services:
+  postgres:
+    <<: *default
+    container_name: learning-service-postgres
+    hostname: learning-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      POSTGRES_DB: ${LEARNING_SERVICE_POSTGRES_DB}
+      POSTGRES_USER: ${LEARNING_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LEARNING_SERVICE_POSTGRES_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    ports:
+      - "127.0.0.1:${LEARNING_SERVICE_POSTGRES_EXTERNAL_PORT}:${LEARNING_SERVICE_POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LEARNING_SERVICE_POSTGRES_USER} -d ${LEARNING_SERVICE_POSTGRES_DB}"]
+      <<: *hc-interval
+    volumes:
+      - learning-service-postgres.data:/var/lib/postgresql/data
+
+  liquibase:
+    <<: *default
+    container_name: learning-service-liquibase
+    image: liquibase/liquibase:4.31-alpine
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *x-db-environment
+    volumes:
+      # Mount as /liquibase/migrations so the `migrations/...` include paths
+      # in db.changelog-master.yaml resolve against search-path /liquibase.
+      - ./deploy/liquibase/changelog:/liquibase/migrations
+    command: >
+      --search-path=/liquibase
+      --changelog-file=migrations/${LEARNING_SERVICE_LIQUIBASE_CHANGELOG}
+      --url=jdbc:postgresql://learning-service-postgres:${LEARNING_SERVICE_POSTGRES_PORT}/${LEARNING_SERVICE_POSTGRES_DB}
+      --username=${LEARNING_SERVICE_POSTGRES_USER}
+      --password=${LEARNING_SERVICE_POSTGRES_PASSWORD}
+      update
+
+  app:
+    <<: *default
+    container_name: learning-service-app
+    hostname: learning-service-app
+    build:
+      context: .
+      dockerfile: ./deploy/learning_service/Dockerfile
+    environment:
+      <<: [
+        *x-db-environment,
+        *x-app-environment,
+      ]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    ports:
+      - "127.0.0.1:${LEARNING_SERVICE_SERVER_PORT}:${LEARNING_SERVICE_SERVER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fsSL http://localhost:${LEARNING_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-interval
+
+volumes:
+  learning-service-postgres.data: {}
+
+networks:
+  overlay:
+    driver: bridge

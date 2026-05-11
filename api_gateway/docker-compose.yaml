@@ -1,0 +1,46 @@
+# Standalone compose for the gateway only. Downstream services
+# (user_service, course_service, learning_service) are NOT defined here —
+# the gateway is expected to reach them via API_GATEWAY_*_URI on an
+# external network. For a full stack including the downstreams, use the
+# repository-root docker-compose.yaml.
+
+services:
+  app:
+    container_name: api-gateway-app
+    hostname: api-gateway-app
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./deploy/api_gateway/Dockerfile
+    environment:
+      API_GATEWAY_SERVER_PORT: ${API_GATEWAY_SERVER_PORT}
+      API_GATEWAY_ENTRY_PATH_PREFIX: ${API_GATEWAY_ENTRY_PATH_PREFIX}
+      API_GATEWAY_JWT_SECRET: ${API_GATEWAY_JWT_SECRET}
+      API_GATEWAY_JWT_TTL: ${API_GATEWAY_JWT_TTL}
+      API_GATEWAY_USER_SERVICE_URI: ${API_GATEWAY_USER_SERVICE_URI}
+      API_GATEWAY_COURSE_SERVICE_URI: ${API_GATEWAY_COURSE_SERVICE_URI}
+      API_GATEWAY_LEARNING_SERVICE_URI: ${API_GATEWAY_LEARNING_SERVICE_URI}
+      JAVA_TOOL_OPTIONS: ${API_GATEWAY_JVM_OPTS}
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    ports:
+      - "127.0.0.1:${API_GATEWAY_SERVER_PORT}:${API_GATEWAY_SERVER_PORT}"
+    networks:
+      - overlay
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fsSL http://localhost:${API_GATEWAY_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+
+networks:
+  overlay:
+    driver: bridge

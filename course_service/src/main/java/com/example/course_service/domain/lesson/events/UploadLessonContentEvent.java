@@ -11,7 +11,7 @@ import java.util.UUID;
 public class UploadLessonContentEvent extends BaseDomainEvent {
 
     private final UUID lessonId;
-    private final String title;
-    private final String content;
+    private final String newTitle;
+    private final String newContent;
 
 }

@@ -1,0 +1,118 @@
+x-default: &default
+  restart: unless-stopped
+  networks:
+    - overlay
+
+x-healthcheck-interval: &hc-interval
+  interval: 30s
+  timeout: 10s
+  retries: 5
+  start_period: 15s
+
+x-db-environment: &x-db-environment
+  COURSE_SERVICE_POSTGRES_HOST: ${COURSE_SERVICE_POSTGRES_HOST}
+  COURSE_SERVICE_POSTGRES_PORT: ${COURSE_SERVICE_POSTGRES_PORT}
+  COURSE_SERVICE_POSTGRES_DB: ${COURSE_SERVICE_POSTGRES_DB}
+  COURSE_SERVICE_POSTGRES_USER: ${COURSE_SERVICE_POSTGRES_USER}
+  COURSE_SERVICE_POSTGRES_PASSWORD: ${COURSE_SERVICE_POSTGRES_PASSWORD}
+
+x-s3-environment: &x-s3-environment
+  COURSE_SERVICE_S3_ENABLED: ${COURSE_SERVICE_S3_ENABLED}
+  COURSE_SERVICE_S3_BUCKET: ${COURSE_SERVICE_S3_BUCKET}
+  COURSE_SERVICE_S3_REGION: ${COURSE_SERVICE_S3_REGION}
+  COURSE_SERVICE_S3_ACCESS_KEY: ${COURSE_SERVICE_S3_ACCESS_KEY}
+  COURSE_SERVICE_S3_SECRET_KEY: ${COURSE_SERVICE_S3_SECRET_KEY}
+  COURSE_SERVICE_S3_ENDPOINT: ${COURSE_SERVICE_S3_ENDPOINT}
+  COURSE_SERVICE_S3_PATH_STYLE_ACCESS: ${COURSE_SERVICE_S3_PATH_STYLE_ACCESS}
+  COURSE_SERVICE_S3_PUBLIC_BASE_URL: ${COURSE_SERVICE_S3_PUBLIC_BASE_URL}
+
+x-rabbit-environment: &x-rabbit-environment
+  COURSE_SERVICE_RABBITMQ_HOST: ${COURSE_SERVICE_RABBITMQ_HOST}
+  COURSE_SERVICE_RABBITMQ_PORT: ${COURSE_SERVICE_RABBITMQ_PORT}
+  COURSE_SERVICE_RABBITMQ_USER: ${COURSE_SERVICE_RABBITMQ_USER}
+  COURSE_SERVICE_RABBITMQ_PASSWORD: ${COURSE_SERVICE_RABBITMQ_PASSWORD}
+
+x-app-environment: &x-app-environment
+  COURSE_SERVICE_SERVER_PORT: ${COURSE_SERVICE_SERVER_PORT}
+  COURSE_SERVICE_MULTIPART_MAX_FILE_SIZE: ${COURSE_SERVICE_MULTIPART_MAX_FILE_SIZE}
+  COURSE_SERVICE_MULTIPART_MAX_REQUEST_SIZE: ${COURSE_SERVICE_MULTIPART_MAX_REQUEST_SIZE}
+  JAVA_TOOL_OPTIONS: ${COURSE_SERVICE_JVM_OPTS}
+
+services:
+  postgres:
+    <<: *default
+    container_name: course-service-postgres
+    hostname: course-service-postgres
+    image: postgres:16.10-alpine3.22
+    environment:
+      POSTGRES_DB: ${COURSE_SERVICE_POSTGRES_DB}
+      POSTGRES_USER: ${COURSE_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${COURSE_SERVICE_POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${COURSE_SERVICE_POSTGRES_EXTERNAL_PORT}:${COURSE_SERVICE_POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${COURSE_SERVICE_POSTGRES_USER} -d ${COURSE_SERVICE_POSTGRES_DB}"]
+      <<: *hc-interval
+    volumes:
+      - course-service-postgres.data:/var/lib/postgresql/data
+
+  liquibase:
+    <<: *default
+    container_name: course-service-liquibase
+    image: liquibase/liquibase:4.31-alpine
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      # Mount as /liquibase/migrations so the `migrations/...` include paths
+      # in db.changelog-master.yaml resolve against search-path /liquibase.
+      - ./deploy/liquibase/changelog:/liquibase/migrations
+    command: >
+      --search-path=/liquibase
+      --changelog-file=migrations/${COURSE_SERVICE_LIQUIBASE_CHANGELOG}
+      --url=jdbc:postgresql://course-service-postgres:${COURSE_SERVICE_POSTGRES_PORT}/${COURSE_SERVICE_POSTGRES_DB}
+      --username=${COURSE_SERVICE_POSTGRES_USER}
+      --password=${COURSE_SERVICE_POSTGRES_PASSWORD}
+      update
+
+  app:
+    <<: *default
+    container_name: course-service-app
+    hostname: course-service-app
+    build:
+      context: .
+      dockerfile: ./deploy/course_service/Dockerfile
+    environment:
+      <<: [
+        *x-db-environment,
+        *x-s3-environment,
+        *x-rabbit-environment,
+        *x-app-environment,
+      ]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    ports:
+      - "127.0.0.1:${COURSE_SERVICE_SERVER_PORT}:${COURSE_SERVICE_SERVER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fsSL http://localhost:${COURSE_SERVICE_SERVER_PORT}/v3/api-docs >/dev/null || exit 1"]
+      <<: *hc-interval
+
+volumes:
+  course-service-postgres.data: {}
+
+networks:
+  overlay:
+    driver: bridge

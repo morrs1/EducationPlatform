@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!-- Lightweight ruleset; Spotless handles whitespace and imports separately. -->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <module name="SuppressWarningsFilter"/>
+
+    <!-- File-level checks -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf_cr_crlf"/>
+    </module>
+    <module name="LineLength">
+        <property name="max" value="160"/>
+        <property name="ignorePattern" value="^\s*(\*|//)|^import "/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+
+        <!-- Naming -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z_][a-z0-9_]*)*$"/>
+        </module>
+        <module name="TypeName"/>
+        <module name="ConstantName"/>
+        <module name="StaticVariableName"/>
+        <module name="MemberName"/>
+        <module name="LocalVariableName"/>
+        <module name="LocalFinalVariableName"/>
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+            <message key="name.invalidPattern" value="Method name ''{0}'' must match pattern ''{1}''."/>
+        </module>
+        <module name="ParameterName"/>
+
+        <!-- Imports -->
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports">
+            <property name="processJavadoc" value="true"/>
+        </module>
+
+        <!-- Code -->
+        <module name="EmptyBlock">
+            <property name="option" value="text"/>
+            <property name="tokens" value="LITERAL_TRY,LITERAL_CATCH,LITERAL_FINALLY,LITERAL_IF,LITERAL_ELSE,LITERAL_FOR,LITERAL_WHILE,LITERAL_DO,LITERAL_SWITCH"/>
+        </module>
+        <module name="LeftCurly"/>
+        <module name="NeedBraces">
+            <property name="tokens" value="LITERAL_DO,LITERAL_ELSE,LITERAL_FOR,LITERAL_WHILE"/>
+        </module>
+        <module name="MissingOverride"/>
+        <module name="ModifierOrder"/>
+        <module name="StringLiteralEquality"/>
+        <module name="ArrayTypeStyle"/>
+        <module name="UpperEll"/>
+        <module name="EqualsHashCode"/>
+        <module name="OneStatementPerLine"/>
+        <module name="EmptyStatement"/>
+        <module name="FallThrough"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="MissingSwitchDefault"/>
+        <module name="DefaultComesLast"/>
+
+        <!-- Test/Production smells -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs"
+                      value="sun, com.sun, org.springframework.util.Assert, junit.framework"/>
+            <message key="import.illegal"
+                     value="Import from forbidden package ''{0}'' — use a public, stable API."/>
+        </module>
+    </module>
+</module>

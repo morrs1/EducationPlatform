@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+        physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+  liquibase:
+    enabled: false
+
+logging:
+  level:
+    root: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.test: WARN
+    org.testcontainers: WARN
