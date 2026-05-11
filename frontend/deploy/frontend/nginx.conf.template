@@ -25,6 +25,59 @@ server {
         text/javascript
         text/plain;
 
+    # Profile photo upload bypasses api_gateway (multipart).
+    location = /api/user/add_photo {
+        client_max_body_size 12m;
+        set $user_upstream "${FRONTEND_USER_SERVICE_HOST}:${FRONTEND_USER_SERVICE_PORT}";
+        proxy_pass http://$user_upstream/user/add_photo;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_request_buffering off;
+    }
+
+    # Profile photos are stored in SeaweedFS/S3, but the app uses same-origin
+    # URLs so the browser never needs Docker DNS names or S3 credentials.
+    location ^~ /api/user-service-media/ {
+        set $user_s3_upstream "${FRONTEND_USER_SERVICE_S3_HOST}:${FRONTEND_USER_SERVICE_S3_FILER_PORT}";
+        rewrite ^/api/user-service-media/(.*)$ /buckets/$1 break;
+        proxy_pass http://$user_s3_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Course lesson assets are stored in SeaweedFS/S3. Keep reads same-origin
+    # and route them before static asset regex locations match .png/.mp4 paths.
+    location ^~ /api/course-service-media/ {
+        set $course_s3_upstream "${FRONTEND_COURSE_SERVICE_S3_HOST}:${FRONTEND_COURSE_SERVICE_S3_FILER_PORT}";
+        rewrite ^/api/course-service-media/(.*)$ /buckets/${FRONTEND_COURSE_SERVICE_S3_BUCKET}/$1 break;
+        proxy_pass http://$course_s3_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Lesson asset upload bypasses api_gateway (multipart).
+    location ~ ^/api/course/lesson/([^/]+)/asset/?$ {
+        client_max_body_size 200m;
+        set $course_upstream "${FRONTEND_COURSE_SERVICE_HOST}:${FRONTEND_COURSE_SERVICE_PORT}";
+        rewrite ^/api/course/(.*)$ /course/$1 break;
+        proxy_pass http://$course_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_request_buffering off;
+    }
+
     location ~* \.(?:js|css|woff2?|ttf|otf|eot|png|jpg|jpeg|gif|webp|svg|ico)$ {
         try_files $uri =404;
         expires 30d;

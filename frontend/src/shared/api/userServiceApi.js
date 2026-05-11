@@ -8,6 +8,11 @@ import { withGatewayAuth } from "./gatewayFetch";
 
 const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
+const USER_SERVICE_STORAGE_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "user-service-seaweedfs",
+]);
 const viewerProfileRequestCache = new Map();
 
 function buildUserServiceUrl(pathname = "") {
@@ -59,6 +64,14 @@ function getUserServiceApiBaseUrl() {
   return configuredBaseUrl || DEFAULT_USER_SERVICE_API_BASE_URL;
 }
 
+function encodePathSegments(path) {
+  return path
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
 export function buildUserServiceMediaProxyUrl(bucket, key) {
   const normalizedBucket = normalizeText(bucket);
   const normalizedKey = normalizeText(key);
@@ -69,11 +82,17 @@ export function buildUserServiceMediaProxyUrl(bucket, key) {
 
   return `${USER_SERVICE_MEDIA_PROXY_PATH}/${encodeURIComponent(
     normalizedBucket,
-  )}/${normalizedKey
-    .split("/")
-    .filter(Boolean)
-    .map((segment) => encodeURIComponent(segment))
-    .join("/")}`;
+  )}/${encodePathSegments(normalizedKey)}`;
+}
+
+function buildUserProfilePhotoUploadUrl() {
+  const direct = normalizeText(import.meta.env.VITE_USER_SERVICE_DIRECT_URL);
+
+  if (direct) {
+    return new URL("/user/add_photo", direct.endsWith("/") ? direct : `${direct}/`);
+  }
+
+  return buildUserServiceUrl("/add_photo");
 }
 
 function parseUserServiceStorageReference(value) {
@@ -112,10 +131,12 @@ function parseUserServiceStorageReference(value) {
       .filter(Boolean)
       .map((segment) => decodeURIComponent(segment));
 
-    const isLocalStorageHost =
-      sourceUrl.hostname === "localhost" || sourceUrl.hostname === "127.0.0.1";
+    const normalizedHostname = sourceUrl.hostname.toLowerCase();
+    const isStorageHost =
+      USER_SERVICE_STORAGE_HOSTS.has(normalizedHostname) ||
+      normalizedHostname.endsWith("-seaweedfs");
 
-    if (!isLocalStorageHost) {
+    if (!isStorageHost) {
       return null;
     }
 
@@ -311,7 +332,7 @@ export async function uploadViewerProfilePhoto(viewerId, file) {
   formData.set("user_id", viewerId);
   formData.set("file", file);
 
-  return requestUserService(buildUserServiceUrl("/add_photo"), {
+  return requestUserService(buildUserProfilePhotoUploadUrl(), {
     method: "POST",
     body: formData,
   });
