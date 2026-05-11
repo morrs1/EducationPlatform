@@ -3,8 +3,12 @@ package org.example.user_service.presentation.http.v1.user.update_user;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.example.user_service.application.interactors.user.change_email.ChangeEmailInteractor;
+import org.example.user_service.application.interactors.user.change_password.ChangePasswordInteractor;
 import org.example.user_service.application.interactors.user.update_user.ChangePersonalDataUserInteractor;
 import org.example.user_service.presentation.http.v1.mappers.UserMapperCommand;
+import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeEmailRequest;
+import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangePasswordRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserNameRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserPatronymicRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserStatusRequest;
@@ -25,6 +29,8 @@ import java.util.UUID;
 public class UpdateUserHandler {
 
     private final ChangePersonalDataUserInteractor interactor;
+    private final ChangePasswordInteractor changePasswordInteractor;
+    private final ChangeEmailInteractor changeEmailInteractor;
     private final UserMapperCommand mapper;
 
     @PatchMapping("/{id}/change_name")
@@ -56,6 +62,22 @@ public class UpdateUserHandler {
     public ResponseEntity<String> updateStatus(@PathVariable UUID id,
                                                @RequestBody ChangeUserStatusRequest changeUserStatusRequest) {
         interactor.updateStatus(mapper.toChangeUserStatusCommand(id, changeUserStatusRequest));
+        return ResponseEntity.status(200).body("Update was successful");
+    }
+
+    @PatchMapping("/{id}/change_password")
+    @Operation(summary = "Change user password")
+    public ResponseEntity<String> changePassword(@PathVariable UUID id,
+                                                 @RequestBody ChangePasswordRequest request) {
+        changePasswordInteractor.change(mapper.toChangePasswordCommand(id, request));
+        return ResponseEntity.status(200).body("Update was successful");
+    }
+
+    @PatchMapping("/{id}/change_email")
+    @Operation(summary = "Change user email")
+    public ResponseEntity<String> changeEmail(@PathVariable UUID id,
+                                              @RequestBody ChangeEmailRequest request) {
+        changeEmailInteractor.change(mapper.toChangeEmailCommand(id, request));
         return ResponseEntity.status(200).body("Update was successful");
     }
 }

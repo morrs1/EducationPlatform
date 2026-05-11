@@ -6,13 +6,10 @@ import {
   updateAccountPassword,
 } from "./authSlice";
 import {
-  findAccountByEmail,
-  getAccountByViewerId,
-  upsertAccount,
-} from "./persistence";
-import {
   requestGatewayLogin,
   requestGatewayRegister,
+  requestViewerEmailUpdate,
+  requestViewerPasswordUpdate,
 } from "../../../shared/api";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -187,75 +184,77 @@ export function submitRegister({ fullName, email, password, status, avatarUrl })
   };
 }
 
-export function submitEmailChange({ nextEmail, currentPassword }) {
-  return (dispatch, getState) => {
+export function submitEmailChange({ nextEmail, oldEmail }) {
+  return async (dispatch, getState) => {
     const state = getState();
-    const normalizedEmail = nextEmail?.trim().toLowerCase() ?? "";
+    const viewerId = state.auth?.currentViewerId ?? state.auth?.accountViewerId;
 
-    if (!normalizedEmail) {
+    const normalizedNewEmail = nextEmail?.trim().toLowerCase() ?? "";
+    const normalizedOldEmail =
+      oldEmail?.trim().toLowerCase() ??
+      state.auth?.accountEmail?.trim().toLowerCase();
+
+    if (!viewerId) {
+      return {
+        ok: false,
+        error: "Не удалось определить пользователя.",
+      };
+    }
+
+    if (!normalizedOldEmail) {
+      return {
+        ok: false,
+        error: "Не удалось определить текущий email.",
+      };
+    }
+
+    if (!normalizedNewEmail) {
       return {
         ok: false,
         error: "Введите новый email.",
       };
     }
 
-    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+    if (!EMAIL_PATTERN.test(normalizedNewEmail)) {
       return {
         ok: false,
         error: "Введите корректный email-адрес.",
       };
     }
 
-    if (normalizedEmail === state.auth.accountEmail.toLowerCase()) {
+    if (normalizedNewEmail === normalizedOldEmail) {
       return {
         ok: false,
         error: "Укажите другой email, отличный от текущего.",
       };
     }
 
-    const existingAccount = findAccountByEmail(normalizedEmail);
+    try {
+      await requestViewerEmailUpdate(
+        viewerId,
+        normalizedOldEmail,
+        normalizedNewEmail,
+      );
 
-    if (
-      existingAccount &&
-      existingAccount.viewerId !== state.auth.accountViewerId
-    ) {
+      dispatch(updateAccountEmail(normalizedNewEmail));
+
+      return {
+        ok: true,
+        nextEmail: normalizedNewEmail,
+        message:
+          "Почта обновлена. Используйте новый адрес для входа и уведомлений.",
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Не удалось изменить почту. Попробуйте позже.";
+
       return {
         ok: false,
-        error: "Этот email уже используется другим аккаунтом.",
+        error: message,
       };
     }
-
-    if (!currentPassword) {
-      return {
-        ok: false,
-        error: "Введите текущий пароль для подтверждения.",
-      };
-    }
-
-    if (currentPassword !== state.auth.accountPassword) {
-      return {
-        ok: false,
-        error: "Неверный текущий пароль.",
-      };
-    }
-
-    const currentAccount = getAccountByViewerId(state.auth.accountViewerId);
-
-    upsertAccount({
-      ...currentAccount,
-      viewerId: state.auth.accountViewerId,
-      email: normalizedEmail,
-      password: state.auth.accountPassword,
-    });
-
-    dispatch(updateAccountEmail(normalizedEmail));
-
-    return {
-      ok: true,
-      nextEmail: normalizedEmail,
-      message:
-        "Почта обновлена. Используйте новый адрес для входа и уведомлений.",
-    };
   };
 }
 
@@ -264,7 +263,7 @@ export function submitPasswordChange({
   nextPassword,
   confirmPassword,
 }) {
-  return (dispatch, getState) => {
+  return async (dispatch, getState) => {
     const state = getState();
     const normalizedCurrentPassword = currentPassword?.trim() ?? "";
     const normalizedNextPassword = nextPassword?.trim() ?? "";
@@ -274,13 +273,6 @@ export function submitPasswordChange({
       return {
         ok: false,
         error: "Введите текущий пароль.",
-      };
-    }
-
-    if (normalizedCurrentPassword !== state.auth.accountPassword) {
-      return {
-        ok: false,
-        error: "Текущий пароль введен неверно.",
       };
     }
 
@@ -304,21 +296,38 @@ export function submitPasswordChange({
         error: "Подтверждение пароля не совпадает с новым паролем.",
       };
     }
+    const viewerId = state.auth?.currentViewerId ?? state.auth?.accountViewerId;
 
-    const currentAccount = getAccountByViewerId(state.auth.accountViewerId);
+    if (!viewerId) {
+      return {
+        ok: false,
+        error: "Не удалось определить пользователя.",
+      };
+    }
 
-    upsertAccount({
-      ...currentAccount,
-      viewerId: state.auth.accountViewerId,
-      email: state.auth.accountEmail,
-      password: normalizedNextPassword,
-    });
+    try {
+      await requestViewerPasswordUpdate(
+        viewerId,
+        normalizedCurrentPassword,
+        normalizedNextPassword,
+      );
 
-    dispatch(updateAccountPassword(normalizedNextPassword));
+      dispatch(updateAccountPassword(normalizedNextPassword));
 
-    return {
-      ok: true,
-      message: "Пароль обновлен. Используйте его при следующем входе.",
-    };
+      return {
+        ok: true,
+        message: "Пароль обновлен. Используйте его при следующем входе.",
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Не удалось обновить пароль. Попробуйте позже.";
+
+      return {
+        ok: false,
+        error: message,
+      };
+    }
   };
 }
