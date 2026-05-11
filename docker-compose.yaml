@@ -641,12 +641,16 @@ services:
       FRONTEND_COURSE_SERVICE_S3_HOST: ${FRONTEND_COURSE_SERVICE_S3_HOST:-user-service-seaweedfs}
       FRONTEND_COURSE_SERVICE_S3_FILER_PORT: ${FRONTEND_COURSE_SERVICE_S3_FILER_PORT:-8888}
       FRONTEND_COURSE_SERVICE_S3_BUCKET: ${FRONTEND_COURSE_SERVICE_S3_BUCKET:-course-service-local}
+      FRONTEND_ANSWER_SERVICE_HOST: ${FRONTEND_ANSWER_SERVICE_HOST:-answer-service-api}
+      FRONTEND_ANSWER_SERVICE_PORT: ${FRONTEND_ANSWER_SERVICE_PORT:-8085}
     ports:
       - "127.0.0.1:${FRONTEND_EXTERNAL_PORT}:${FRONTEND_SERVER_PORT}"
     depends_on:
       gateway-app:
         condition: service_started
       user-app:
+        condition: service_started
+      answer-api:
         condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --spider --tries=1 http://localhost:${FRONTEND_SERVER_PORT}/ || exit 1"]
