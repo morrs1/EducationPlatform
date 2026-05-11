@@ -4,9 +4,9 @@ import {
   unwrapInteger,
   unwrapString,
 } from "../lib/gatewayValues";
+import { buildUserServiceMediaProxyUrl } from "./userServiceApi";
 
 const COURSE_SERVICE_MEDIA_PROXY_PATH = "/api/course-service-media";
-const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 
 function buildCourseServiceMediaProxyUrl(storageKey) {
   const normalizedStorageKey = normalizeText(storageKey);
@@ -36,20 +36,7 @@ function appendCacheKey(url, cacheKey) {
 }
 
 function buildBucketMediaProxyUrl(bucket, key) {
-  const normalizedBucket = normalizeText(bucket);
-  const normalizedKey = normalizeText(key);
-
-  if (!normalizedBucket || !normalizedKey) {
-    return "";
-  }
-
-  return `${USER_SERVICE_MEDIA_PROXY_PATH}/${encodeURIComponent(
-    normalizedBucket,
-  )}/${normalizedKey
-    .split("/")
-    .filter(Boolean)
-    .map((segment) => encodeURIComponent(segment))
-    .join("/")}`;
+  return buildUserServiceMediaProxyUrl(bucket, key);
 }
 
 function parseStorageReference(value) {
@@ -62,7 +49,11 @@ function parseStorageReference(value) {
   try {
     const parsedUrl = new URL(normalizedValue, window.location.origin);
 
-    if (parsedUrl.pathname.startsWith(USER_SERVICE_MEDIA_PROXY_PATH)) {
+    if (parsedUrl.pathname.startsWith("/api/course-service-media")) {
+      return null;
+    }
+
+    if (parsedUrl.pathname.startsWith("/api/user-service-media")) {
       return null;
     }
 
