@@ -1,11 +1,15 @@
 package org.example.user_service.presentation.http.v1.mappers;
 
 import org.example.user_service.application.interactors.user.create_user.CreateUserCommand;
+import org.example.user_service.application.interactors.user.change_email.ChangeEmailCommand;
+import org.example.user_service.application.interactors.user.change_password.ChangePasswordCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserPatronymicCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserNameCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserStatusCommand;
 import org.example.user_service.application.interactors.user.update_user.ChangeUserSurnameCommand;
 import org.example.user_service.presentation.http.v1.user.create.dto.CreateUserRequest;
+import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeEmailRequest;
+import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangePasswordRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserPatronymicRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserNameRequest;
 import org.example.user_service.presentation.http.v1.user.update_user.dto.ChangeUserStatusRequest;
@@ -31,4 +35,10 @@ public interface UserMapperCommand {
 
     @Mapping(target = "id", source = "id")
     ChangeUserStatusCommand toChangeUserStatusCommand(UUID id, ChangeUserStatusRequest userRequest);
+
+    @Mapping(target = "id", source = "id")
+    ChangePasswordCommand toChangePasswordCommand(UUID id, ChangePasswordRequest request);
+
+    @Mapping(target = "id", source = "id")
+    ChangeEmailCommand toChangeEmailCommand(UUID id, ChangeEmailRequest request);
 }

@@ -66,4 +66,12 @@ public class UserDomainService extends BaseDomainService {
     public void assignAdminRole(User user) {
         user.setRole(new UserRole(UserRole.ADMIN));
     }
+
+    public void updatePassword(User user, String rawNewPassword) {
+        user.setPassword(new UserPassword(passwordHasher.hash(rawNewPassword)));
+    }
+
+    public void updateEmail(User user, String newEmail) {
+        user.setEmail(new UserEmail(newEmail));
+    }
 }

@@ -27,6 +27,10 @@ public class AuthorizationPolicy {
             Pattern.compile("^/api/course/lesson/([^/]+)(/asset)?/?$");
     private static final Pattern ASSIGN_ROLE_PATH =
             Pattern.compile("^/api/user/[^/]+/assign_(author|admin)/?$");
+    private static final Pattern CHANGE_PASSWORD_PATH =
+            Pattern.compile("^/api/user/([^/]+)/change_password/?$");
+    private static final Pattern CHANGE_EMAIL_PATH =
+            Pattern.compile("^/api/user/([^/]+)/change_email/?$");
 
     private final ObjectMapper objectMapper;
     private final CourseOwnershipVerifier courseOwnershipVerifier;
@@ -42,6 +46,17 @@ public class AuthorizationPolicy {
             AuthenticatedPrincipal principal,
             URI targetUri,
             byte[] requestBody) {
+        if (enforceSelfOnlyUserPatch(
+                method, path, principal, CHANGE_PASSWORD_PATH,
+                "Password can be changed only for your own account")) {
+            return;
+        }
+        if (enforceSelfOnlyUserPatch(
+                method, path, principal, CHANGE_EMAIL_PATH,
+                "Email can be changed only for your own account")) {
+            return;
+        }
+
         if (principal.role() == UserRole.ADMIN) {
             return;
         }
@@ -68,6 +83,34 @@ public class AuthorizationPolicy {
 
     private static boolean isAssignRole(HttpMethod method, String path) {
         return HttpMethod.PATCH.equals(method) && ASSIGN_ROLE_PATH.matcher(path).matches();
+    }
+
+    /**
+     * These user_service PATCH routes must target the authenticated user only (even for ADMIN).
+     */
+    private static boolean enforceSelfOnlyUserPatch(
+            HttpMethod method,
+            String path,
+            AuthenticatedPrincipal principal,
+            Pattern pathPattern,
+            String denyMessageIfForeignUser) {
+        if (!HttpMethod.PATCH.equals(method)) {
+            return false;
+        }
+        Matcher matcher = pathPattern.matcher(path);
+        if (!matcher.matches()) {
+            return false;
+        }
+        UUID targetUserId;
+        try {
+            targetUserId = UUID.fromString(matcher.group(1));
+        } catch (IllegalArgumentException ex) {
+            throw new AuthorizationDeniedException("Invalid user id");
+        }
+        if (!principal.id().equals(targetUserId)) {
+            deny(denyMessageIfForeignUser);
+        }
+        return true;
     }
 
     private void authorizeAuthorCourseWrite(
