@@ -44,13 +44,13 @@ class LessonUpdatedMessage(BaseModel):
         Field(
             default=None,
             description="Updated lesson title.",
-            validation_alias=AliasChoices("new_title", "newTitle"),
+            validation_alias=AliasChoices("new_title", "newTitle", "title"),
         ),
     ]
     new_content: Annotated[
         NonEmptyStr,
         Field(
             description="Updated lesson content to be re-indexed.",
-            validation_alias=AliasChoices("new_content", "newContent"),
+            validation_alias=AliasChoices("new_content", "newContent", "content"),
         ),
     ]
