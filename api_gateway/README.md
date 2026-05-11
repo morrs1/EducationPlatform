@@ -46,6 +46,8 @@ ProxyController (/api/**)
 - `AuthorizationPolicy` enforces role-based and ownership-based rules on every proxied request. `UserRole` is one of `USER`, `AUTHOR`, `ADMIN`.
 - Admins bypass all checks.
 - Only `ADMIN` can `PATCH /api/user/{id}/assign_(author|admin)`.
+- `PATCH /api/user/{id}/change_password` is allowed only when `{id}` equals the authenticated user’s id (including for `ADMIN`).
+- `PATCH /api/user/{id}/change_email` follows the same self-only rule.
 - Author drafts (`GET /api/course/by-author/{authorId}/drafts`) are readable only by the author with the matching id, or by admin.
 - Course write paths (`POST /api/course`, `PATCH /api/course/{id}/publish`, `POST /api/course/{id}/module`, `POST /api/course/lesson`, `PATCH/POST /api/course/lesson/{id}[/asset]`) require `AUTHOR` role and verified ownership of the target course or lesson.
 - Ownership lookups go through `CourseOwnershipVerifier`, implemented by `CourseServiceOwnershipClient`, which queries `course_service` for the course's `authorId` and resolves lesson ownership via the lesson's `courseId`.

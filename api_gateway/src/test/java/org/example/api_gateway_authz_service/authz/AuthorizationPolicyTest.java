@@ -177,6 +177,81 @@ class AuthorizationPolicyTest {
     }
 
     @Test
+    void allowsSelfPasswordChangeForAnyRole() {
+        UUID userId = UUID.randomUUID();
+        AuthenticatedPrincipal user = principal(userId, UserRole.USER);
+
+        assertDoesNotThrow(() -> policy.authorize(
+                HttpMethod.PATCH,
+                "/api/user/%s/change_password".formatted(userId),
+                user,
+                targetUri,
+                null
+        ));
+    }
+
+    @Test
+    void allowsSelfEmailChangeForAnyRole() {
+        UUID userId = UUID.randomUUID();
+        AuthenticatedPrincipal user = principal(userId, UserRole.USER);
+
+        assertDoesNotThrow(() -> policy.authorize(
+                HttpMethod.PATCH,
+                "/api/user/%s/change_email".formatted(userId),
+                user,
+                targetUri,
+                null
+        ));
+    }
+
+    @Test
+    void deniesPasswordOrEmailChangeForAnotherUser() {
+        UUID selfId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+
+        assertThrows(
+                AuthorizationDeniedException.class,
+                () -> policy.authorize(
+                        HttpMethod.PATCH,
+                        "/api/user/%s/change_password".formatted(otherId),
+                        principal(selfId, UserRole.USER),
+                        targetUri,
+                        null
+                )
+        );
+        assertThrows(
+                AuthorizationDeniedException.class,
+                () -> policy.authorize(
+                        HttpMethod.PATCH,
+                        "/api/user/%s/change_password".formatted(otherId),
+                        principal(selfId, UserRole.ADMIN),
+                        targetUri,
+                        null
+                )
+        );
+        assertThrows(
+                AuthorizationDeniedException.class,
+                () -> policy.authorize(
+                        HttpMethod.PATCH,
+                        "/api/user/%s/change_email".formatted(otherId),
+                        principal(selfId, UserRole.USER),
+                        targetUri,
+                        null
+                )
+        );
+        assertThrows(
+                AuthorizationDeniedException.class,
+                () -> policy.authorize(
+                        HttpMethod.PATCH,
+                        "/api/user/%s/change_email".formatted(otherId),
+                        principal(selfId, UserRole.ADMIN),
+                        targetUri,
+                        null
+                )
+        );
+    }
+
+    @Test
     void allowsAdminEverywhere() {
         AuthenticatedPrincipal admin = principal(UserRole.ADMIN);
 

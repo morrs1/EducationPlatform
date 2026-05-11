@@ -4,6 +4,8 @@ import org.example.user_service.application.interactors.mappers.UserViewMapper;
 import org.example.user_service.application.interactors.user.add_profile_photo.AddProfilePhotoInteractor;
 import org.example.user_service.application.interactors.user.assign_role.AssignUserRoleInteractor;
 import org.example.user_service.application.interactors.user.authenticate_user.AuthenticateUserInteractor;
+import org.example.user_service.application.interactors.user.change_email.ChangeEmailInteractor;
+import org.example.user_service.application.interactors.user.change_password.ChangePasswordInteractor;
 import org.example.user_service.application.interactors.user.create_user.CreateUserInteractor;
 import org.example.user_service.application.interactors.user.read_user_by_id.ReadUserByIdInteractor;
 import org.example.user_service.application.interactors.user.update_user.ChangePersonalDataUserInteractor;
@@ -71,6 +73,25 @@ public class UserBeansConfig {
                 transactionManager,
                 userDomainService
         );
+    }
+
+    @Bean
+    public ChangePasswordInteractor changePasswordInteractor(
+            TransactionManager transactionManager,
+            UserRepo userRepo,
+            UserDomainService userDomainService,
+            PasswordHasher passwordHasher
+    ) {
+        return new ChangePasswordInteractor(userRepo, transactionManager, userDomainService, passwordHasher);
+    }
+
+    @Bean
+    public ChangeEmailInteractor changeEmailInteractor(
+            TransactionManager transactionManager,
+            UserRepo userRepo,
+            UserDomainService userDomainService
+    ) {
+        return new ChangeEmailInteractor(userRepo, transactionManager, userDomainService);
     }
 
     @Bean

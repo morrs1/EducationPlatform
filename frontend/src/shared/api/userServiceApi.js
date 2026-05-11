@@ -31,13 +31,35 @@ async function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function extractErrorMessage(response, context = "") {
+function extractErrorMessage(response, responseBody, context = "") {
+  if (responseBody && typeof responseBody === "object") {
+    const message =
+      responseBody.message ??
+      responseBody.error ??
+      responseBody.detail ??
+      responseBody.title ??
+      responseBody.msg;
+
+    if (typeof message === "string" && message.trim()) {
+      return message.trim();
+    }
+  }
+
   if (response.status === 404) {
     return "Данные не найдены.";
   }
 
   if (response.status === 401 || response.status === 403) {
-    return "Для этого действия нужно войти в аккаунт.";
+    return context
+      ? "Для этого действия нужно войти в аккаунт."
+      : "Для этого действия нужно войти в аккаунт.";
+  }
+
+  if (response.status === 409) {
+    // Used by "change_email" to report duplicate email.
+    if (typeof context === "string" && context.toLowerCase().includes("email")) {
+      return "Этот email уже используется другим аккаунтом.";
+    }
   }
 
   return context
@@ -50,7 +72,7 @@ async function requestUserService(url, options = {}, context = "") {
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response, context));
+    throw new Error(extractErrorMessage(response, responseBody, context));
   }
 
   return responseBody;
@@ -285,6 +307,53 @@ function createJsonRequestOptions(payload) {
     },
     body: JSON.stringify(payload),
   };
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+export async function requestViewerEmailUpdate(viewerId, oldEmail, newEmail) {
+  const normalizedViewerId = normalizeText(viewerId);
+
+  const normalizedOldEmail = normalizeEmail(oldEmail);
+  const normalizedNewEmail = normalizeEmail(newEmail);
+
+  if (!isUuid(normalizedViewerId)) {
+    throw new Error("Не удалось определить пользователя.");
+  }
+
+  return requestUserService(
+    buildUserServiceUrl(`/${normalizedViewerId}/change_email`),
+    createJsonRequestOptions({
+      oldEmail: normalizedOldEmail,
+      newEmail: normalizedNewEmail,
+    }),
+    "изменение email",
+  );
+}
+
+export async function requestViewerPasswordUpdate(
+  viewerId,
+  oldPassword,
+  newPassword,
+) {
+  const normalizedViewerId = normalizeText(viewerId);
+  const normalizedOldPassword = normalizeText(oldPassword);
+  const normalizedNewPassword = normalizeText(newPassword);
+
+  if (!isUuid(normalizedViewerId)) {
+    throw new Error("Не удалось определить пользователя.");
+  }
+
+  return requestUserService(
+    buildUserServiceUrl(`/${normalizedViewerId}/change_password`),
+    createJsonRequestOptions({
+      oldPassword: normalizedOldPassword,
+      newPassword: normalizedNewPassword,
+    }),
+    "изменение пароля",
+  );
 }
 
 export async function requestViewerNameUpdate(viewerId, nextFirstName) {

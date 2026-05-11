@@ -2,7 +2,6 @@ import { useState } from "react";
 
 function ChangeEmailForm({ currentEmail, onSubmit }) {
   const [nextEmail, setNextEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +19,7 @@ function ChangeEmailForm({ currentEmail, onSubmit }) {
 
     const result = await onSubmit({
       nextEmail,
-      currentPassword: password,
+      oldEmail: currentEmail,
     });
 
     if (!result?.ok) {
@@ -30,7 +29,6 @@ function ChangeEmailForm({ currentEmail, onSubmit }) {
     }
 
     setNextEmail("");
-    setPassword("");
     setSubmitSuccess(result.message ?? "Почта обновлена.");
     setIsSubmitting(false);
   }
@@ -56,20 +54,6 @@ function ChangeEmailForm({ currentEmail, onSubmit }) {
           onChange={(event) => {
             clearFeedback();
             setNextEmail(event.target.value);
-          }}
-        />
-      </label>
-
-      <label className="settings-field">
-        <span className="settings-label">Пароль для подтверждения</span>
-        <input
-          type="password"
-          className="settings-input"
-          placeholder="Введите текущий пароль"
-          value={password}
-          onChange={(event) => {
-            clearFeedback();
-            setPassword(event.target.value);
           }}
         />
       </label>
