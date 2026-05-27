@@ -4,7 +4,12 @@ import {
   CurrentCoursesList,
   filterCoursesByQuery,
 } from "../../../entities/course";
-import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
+import {
+  selectCurrentViewerId,
+  selectIsLogged,
+  openLoginModal,
+  setPostLoginRedirect,
+} from "../../../features/auth";
 import {
   hydrateViewerLearningFromLearningService,
   leaveViewerCourseWithLearningService,
@@ -98,6 +103,11 @@ function CurrentCoursesSection() {
         emptyMessage={isSearchApplied ? emptyMessage : undefined}
         leavingCourseId={leavingCourseId}
         onLeaveCourse={handleLeaveCourse}
+        viewerCanOpenAuthorProfile={isLogged}
+        onAuthorProfileAuthRequired={(requestedAuthorId) => {
+          dispatch(setPostLoginRedirect(`/users/${requestedAuthorId}`));
+          dispatch(openLoginModal());
+        }}
       />
     </section>
   );

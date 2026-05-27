@@ -2,14 +2,6 @@ import { getMockCourses } from "./mockCourses";
 import { getCourseCoverSrc } from "./getCourseCoverSrc";
 import { mockUsersById } from "../../user/@x/course";
 
-function sortByPopularity(courseA, courseB) {
-  if (courseB.studentsCount !== courseA.studentsCount) {
-    return courseB.studentsCount - courseA.studentsCount;
-  }
-
-  return courseB.rating - courseA.rating;
-}
-
 export function getCourseById(courseId) {
   return getMockCourses().find((course) => course.id === courseId) ?? null;
 }
@@ -49,7 +41,6 @@ export function mapCourseToPreview(course) {
     authorId: enrichedCourse.authorId,
     authorName: enrichedCourse.authorName,
     imageUrl: enrichedCourse.imageUrl,
-    rating: enrichedCourse.rating,
     studentsCount: enrichedCourse.studentsCount,
     durationLabel: enrichedCourse.durationLabel,
     categoryId: enrichedCourse.categoryId,
@@ -94,11 +85,4 @@ export function getCoursesByCategory() {
     acc[course.categoryId].push(mapCourseToPreview(course));
     return acc;
   }, {});
-}
-
-export function getPopularCourses(limit = 18) {
-  return [...getMockCourses()]
-    .sort(sortByPopularity)
-    .slice(0, limit)
-    .map(mapCourseToPreview);
 }

@@ -1,3 +1,62 @@
+function getUnorderedListItem(line) {
+  const match = line.trim().match(/^[-*+]\s+(.+)$/);
+
+  return match ? match[1].trim() : null;
+}
+
+function getOrderedListItem(line) {
+  const match = line.trim().match(/^\d+[.)]\s+(.+)$/);
+
+  return match ? match[1].trim() : null;
+}
+
+function findNextContentLineIndex(lines, index) {
+  let nextIndex = index;
+
+  while (nextIndex < lines.length && !lines[nextIndex].trim()) {
+    nextIndex += 1;
+  }
+
+  return nextIndex;
+}
+
+function collectUnorderedList(lines, startIndex) {
+  const items = [];
+  let index = startIndex;
+
+  while (index < lines.length) {
+    const item = getUnorderedListItem(lines[index]);
+
+    if (item !== null) {
+      items.push(item);
+      index += 1;
+      continue;
+    }
+
+    if (!lines[index].trim()) {
+      const nextContentIndex = findNextContentLineIndex(lines, index);
+
+      if (
+        nextContentIndex < lines.length &&
+        getUnorderedListItem(lines[nextContentIndex]) !== null
+      ) {
+        index = nextContentIndex;
+        continue;
+      }
+    }
+
+    break;
+  }
+
+  return {
+    block: {
+      type: "unordered-list",
+      items,
+    },
+    nextIndex: index,
+  };
+}
+
 export function parseLessonMarkdown(markdown) {
   if (!markdown.trim()) {
     return [];
@@ -72,46 +131,70 @@ export function parseLessonMarkdown(markdown) {
       continue;
     }
 
-    if (trimmedLine.startsWith("# ")) {
+    const headingMatch = trimmedLine.match(/^(#{1,6})\s+(.+)$/);
+
+    if (headingMatch) {
       blocks.push({
-        type: "heading-1",
-        content: trimmedLine.slice(2).trim(),
+        type: `heading-${Math.min(headingMatch[1].length, 3)}`,
+        content: headingMatch[2].trim(),
       });
       index += 1;
       continue;
     }
 
-    if (trimmedLine.startsWith("## ")) {
-      blocks.push({
-        type: "heading-2",
-        content: trimmedLine.slice(3).trim(),
-      });
-      index += 1;
+    if (getUnorderedListItem(trimmedLine) !== null) {
+      const { block, nextIndex } = collectUnorderedList(lines, index);
+      blocks.push(block);
+      index = nextIndex;
       continue;
     }
 
-    if (/^- /.test(trimmedLine)) {
+    if (getOrderedListItem(trimmedLine) !== null) {
       const items = [];
+      let currentItem = null;
 
-      while (index < lines.length && /^- /.test(lines[index].trim())) {
-        items.push(lines[index].trim().replace(/^- /, "").trim());
-        index += 1;
-      }
+      while (index < lines.length) {
+        const item = getOrderedListItem(lines[index]);
 
-      blocks.push({
-        type: "unordered-list",
-        items,
-      });
+        if (item !== null) {
+          currentItem = {
+            content: item,
+            children: [],
+          };
+          items.push(currentItem);
+          index += 1;
+          continue;
+        }
 
-      continue;
-    }
+        if (getUnorderedListItem(lines[index]) !== null && currentItem) {
+          const { block, nextIndex } = collectUnorderedList(lines, index);
+          currentItem.children.push(block);
+          index = nextIndex;
+          continue;
+        }
 
-    if (/^\d+\.\s/.test(trimmedLine)) {
-      const items = [];
+        if (!lines[index].trim()) {
+          const nextContentIndex = findNextContentLineIndex(lines, index);
 
-      while (index < lines.length && /^\d+\.\s/.test(lines[index].trim())) {
-        items.push(lines[index].trim().replace(/^\d+\.\s/, "").trim());
-        index += 1;
+          if (
+            nextContentIndex < lines.length &&
+            getOrderedListItem(lines[nextContentIndex]) !== null
+          ) {
+            index = nextContentIndex;
+            continue;
+          }
+
+          if (
+            currentItem &&
+            nextContentIndex < lines.length &&
+            getUnorderedListItem(lines[nextContentIndex]) !== null
+          ) {
+            index = nextContentIndex;
+            continue;
+          }
+        }
+
+        break;
       }
 
       blocks.push({
@@ -129,12 +212,11 @@ export function parseLessonMarkdown(markdown) {
 
       if (
         !candidate ||
-        candidate.startsWith("# ") ||
-        candidate.startsWith("## ") ||
+        /^#{1,6}\s+/.test(candidate) ||
         candidate.startsWith("```") ||
         candidate.startsWith("> ") ||
-        /^- /.test(candidate) ||
-        /^\d+\.\s/.test(candidate)
+        getUnorderedListItem(candidate) !== null ||
+        getOrderedListItem(candidate) !== null
       ) {
         break;
       }

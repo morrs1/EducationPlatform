@@ -6,6 +6,7 @@ import {
   selectIsLogged,
   selectUserRole,
   openLoginModal,
+  setPostLoginRedirect,
 } from "../../../features/auth";
 import {
   selectCompletedLessonIds,
@@ -26,7 +27,6 @@ import { CourseTabs } from "../../../widgets/course-tabs";
 import { CourseSidebar } from "../../../widgets/course-sidebar";
 import { CourseDescriptionTab } from "../../../widgets/course-description";
 import { CourseContentTab } from "../../../widgets/course-content";
-import { CourseReviewsTab } from "../../../widgets/course-reviews";
 import { useBackendCoursePageData } from "../model/useBackendCoursePageData";
 import { useCourseDescription } from "../model/useCourseDescription";
 import { useCourseLearningSync } from "../model/useCourseLearningSync";
@@ -39,7 +39,7 @@ import { createViewerCourseSnapshot } from "../../../entities/viewer";
 import CourseHero from "./CourseHero";
 import CoursePageState from "./CoursePageState";
 
-const tabIds = ["description", "content", "reviews"];
+const tabIds = ["description", "content"];
 
 function resolveActiveTab(searchParams) {
   const tab = searchParams.get("tab");
@@ -294,23 +294,9 @@ function CoursePage() {
     retryDescriptionRequest();
   }
 
-  const sidebarCourse = canManageDraftCourse
-    ? {
-        ...course,
-        isReadOnlyCourse: true,
-        isEnrolled: true,
-      }
-    : isAdmin && isBackendCourse && course.isDraft
-      ? {
-          ...course,
-          isReadOnlyCourse: true,
-          isEnrolled: true,
-        }
-    : course;
   const tabs = [
     { id: "description", label: "Описание", isLocked: false },
     { id: "content", label: "Содержание", isLocked: !canUseCourseContent },
-    { id: "reviews", label: "Отзывы", isLocked: false },
   ];
 
   return (
@@ -324,6 +310,11 @@ function CoursePage() {
           course={course}
           error={learningActionError}
           tagLabels={courseTagLabels}
+          viewerCanOpenAuthorProfile={isLogged}
+          onAuthorProfileAuthRequired={(requestedAuthorId) => {
+            dispatch(setPostLoginRedirect(`/users/${requestedAuthorId}`));
+            dispatch(openLoginModal());
+          }}
         />
 
         {activeTab === "description" ? (
@@ -348,17 +339,10 @@ function CoursePage() {
           />
         ) : null}
 
-        {activeTab === "reviews" ? (
-          <CourseReviewsTab reviews={pageData.reviews} />
-        ) : null}
       </div>
 
       <aside className="course-page-sidebar-rail">
-        <CourseSidebar
-          course={sidebarCourse}
-          isLogged={isContentAccessible}
-          onPrimaryAction={handlePrimaryAction}
-        />
+        <CourseSidebar course={course} />
       </aside>
     </div>
   );

@@ -49,7 +49,10 @@ function createUserProfilePhotoUploadDevProxyPlugin(env) {
 
         let upstream;
         try {
-          upstream = new URL("/user/add_photo", targetBase.endsWith("/") ? targetBase : `${targetBase}/`);
+          upstream = new URL(
+            req.url.replace(/^\/api\/user/, "/user"),
+            targetBase.endsWith("/") ? targetBase : `${targetBase}/`,
+          );
         } catch {
           next();
           return;
@@ -86,6 +89,81 @@ function createUserProfilePhotoUploadDevProxyPlugin(env) {
           if (!res.headersSent) {
             res.statusCode = 502;
             res.end("Bad gateway (user-service add_photo proxy)");
+          }
+        });
+
+        req.pipe(proxyReq);
+      });
+    },
+  };
+}
+
+/**
+ * Public author names use the old direct user_service read path. Gateway keeps
+ * /api/user/** protected, so only this same-origin read bypasses it in dev.
+ */
+function createUserPublicDisplayDevProxyPlugin(env) {
+  const targetBase =
+    env.VITE_USER_SERVICE_DIRECT_URL?.trim() || "http://localhost:8080";
+  const publicDisplayPath = /^\/api\/user-service\/user\/?(?:\?.*)?$/;
+
+  return {
+    name: "user-public-display-direct-dev",
+    enforce: "pre",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.method !== "GET" || typeof req.url !== "string") {
+          next();
+          return;
+        }
+        if (!publicDisplayPath.test(req.url)) {
+          next();
+          return;
+        }
+
+        let upstream;
+        try {
+          upstream = new URL(
+            req.url.replace(/^\/api\/user-service/, ""),
+            targetBase.endsWith("/") ? targetBase : `${targetBase}/`,
+          );
+        } catch {
+          next();
+          return;
+        }
+
+        const outgoingHeaders = { ...req.headers };
+        for (const name of Object.keys(outgoingHeaders)) {
+          if (name && HOP_BY_HOP_REQUEST_HEADERS.has(name.toLowerCase())) {
+            delete outgoingHeaders[name];
+          }
+        }
+        delete outgoingHeaders.authorization;
+        outgoingHeaders.host = upstream.host;
+
+        const proxyReq = http.request(
+          {
+            hostname: upstream.hostname,
+            port:
+              upstream.port ||
+              (upstream.protocol === "https:" ? 443 : 80),
+            path: `${upstream.pathname}${upstream.search}`,
+            method: "GET",
+            headers: outgoingHeaders,
+          },
+          (proxyRes) => {
+            res.writeHead(
+              proxyRes.statusCode ?? 502,
+              proxyRes.headers,
+            );
+            proxyRes.pipe(res);
+          },
+        );
+
+        proxyReq.on("error", () => {
+          if (!res.headersSent) {
+            res.statusCode = 502;
+            res.end("Bad gateway (user-service public display proxy)");
           }
         });
 
@@ -360,6 +438,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       createUserServiceMediaDevProxyPlugin(env),
       createCourseServiceMediaDevProxyPlugin(env),
+      createUserPublicDisplayDevProxyPlugin(env),
       createUserProfilePhotoUploadDevProxyPlugin(env),
       createCourseLessonAssetDevProxyPlugin(env),
       react(),

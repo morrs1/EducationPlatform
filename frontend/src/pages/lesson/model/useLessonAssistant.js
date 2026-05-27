@@ -11,21 +11,21 @@ import {
   submitAssistantMessage,
 } from "../../../features/assistant";
 import { selectCurrentViewerId } from "../../../features/auth";
-import { selectViewer } from "../../../features/viewer";
 import { resolveRemoteViewerId } from "../../../shared/api";
 
 export function useLessonAssistant({ course, lesson }) {
   const dispatch = useDispatch();
-  const contextKey = lesson ? lesson.id : null;
   const isOpen = useSelector(selectAssistantIsOpen);
   const currentViewerId = useSelector(selectCurrentViewerId);
-  const viewer = useSelector(selectViewer);
+  const lessonId = lesson?.id ?? null;
+  const userId = useMemo(
+    () => resolveRemoteViewerId(currentViewerId, null),
+    [currentViewerId],
+  );
+  const contextKey =
+    lessonId && userId ? `assistant:${userId}:${lessonId}` : null;
   const thread = useSelector((state) =>
     selectAssistantThreadByContextKey(state, contextKey),
-  );
-  const userId = useMemo(
-    () => resolveRemoteViewerId(currentViewerId, viewer.remoteId),
-    [currentViewerId, viewer.remoteId],
   );
 
   useEffect(() => {
@@ -34,10 +34,10 @@ export function useLessonAssistant({ course, lesson }) {
     }
 
     dispatch(setActiveAssistantContext(contextKey));
-  }, [dispatch, contextKey, lesson]);
+  }, [dispatch, contextKey]);
 
   useEffect(() => {
-    if (!isOpen || !contextKey || !lesson?.id) {
+    if (!isOpen || !contextKey || !lessonId) {
       return;
     }
 
@@ -46,14 +46,14 @@ export function useLessonAssistant({ course, lesson }) {
         contextKey,
         threadId: thread.threadId,
         userId,
-        lessonId: lesson.id,
+        lessonId,
       }),
     );
   }, [
     contextKey,
     dispatch,
     isOpen,
-    lesson?.id,
+    lessonId,
     thread.threadId,
     userId,
   ]);
@@ -81,7 +81,7 @@ export function useLessonAssistant({ course, lesson }) {
         contextKey,
         threadId: thread.threadId,
         userId,
-        lessonId: lesson.id,
+        lessonId,
         userMessage: messageText,
       }),
     );

@@ -12,6 +12,7 @@ import {
   resolveRemoteViewerId,
   uploadViewerProfilePhoto,
 } from "../../../shared/api";
+import { validateRequiredProfileNameParts } from "../../../shared/lib";
 
 function saveViewerProfileLocally(dispatch, viewer, profile) {
   dispatch(
@@ -41,24 +42,16 @@ export function submitViewerProfileUpdate(payload) {
       payload.remoteViewerId ?? viewer.remoteId,
     );
 
-    if (!nextFirstName) {
-      return {
-        ok: false,
-        error: "Введите имя.",
-      };
-    }
+    const nameValidationError = validateRequiredProfileNameParts({
+      firstName: nextFirstName,
+      lastName: nextLastName,
+      patronymic: nextPatronymic,
+    });
 
-    if (!nextLastName) {
+    if (nameValidationError) {
       return {
         ok: false,
-        error: "Введите фамилию.",
-      };
-    }
-
-    if (!nextPatronymic) {
-      return {
-        ok: false,
-        error: "Введите отчество.",
+        error: nameValidationError,
       };
     }
 
@@ -241,4 +234,3 @@ export function hydrateViewerFromUserService(options = {}) {
     }
   };
 }
-

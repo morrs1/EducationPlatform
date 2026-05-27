@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
 import { HomeDiscoveryPanel } from "../../../widgets/home-discovery";
 import { SearchResults } from "../../../widgets/search-results";
+import {
+  openLoginModal,
+  selectIsLogged,
+  setPostLoginRedirect,
+} from "../../../features/auth";
 import {
   enrichCoursePageDataWithAuthorName,
   mapCourseToPreview,
@@ -118,7 +124,9 @@ function SearchDiscoverySection({
 }
 
 function SearchPage() {
+  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isLogged = useSelector(selectIsLogged);
   const appliedSearchQuery = searchParams.get("query") ?? "";
   const appliedLevelFilters = readLevelFiltersFromSearchParams(searchParams);
   const appliedStateKey = [
@@ -211,6 +219,11 @@ function SearchPage() {
           searchQuery={normalizedQuery}
           levelFilters={appliedLevelFilters}
           results={filteredResults}
+          viewerCanOpenAuthorProfile={isLogged}
+          onAuthorProfileAuthRequired={(requestedAuthorId) => {
+            dispatch(setPostLoginRedirect(`/users/${requestedAuthorId}`));
+            dispatch(openLoginModal());
+          }}
         />
       )}
     </div>

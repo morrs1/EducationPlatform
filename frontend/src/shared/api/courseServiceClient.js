@@ -3,6 +3,7 @@ import {
   normalizeText,
   normalizeUuidResponse,
 } from "../lib/gatewayValues";
+import { createApiError, createNetworkApiError } from "./apiErrors";
 import { withGatewayAuth } from "./gatewayFetch";
 
 const DEFAULT_COURSE_SERVICE_API_BASE_URL = "/api/course";
@@ -21,18 +22,6 @@ function readResponseBody(response) {
   }
 
   return response.text().catch(() => "");
-}
-
-function extractErrorMessage(response) {
-  if (response.status === 404) {
-    return "Данные не найдены.";
-  }
-
-  if (response.status === 401 || response.status === 403) {
-    return "Для этого действия нужно войти в аккаунт.";
-  }
-
-  return "Не удалось выполнить действие. Попробуйте позже.";
 }
 
 function getCourseServiceApiBaseUrl() {
@@ -100,14 +89,20 @@ function invalidateLessonCache(lessonId) {
 
 async function requestCourseService(pathname, options = {}) {
   const requestUrl = buildCourseServiceUrl(pathname).toString();
-  const response = await fetch(requestUrl, withGatewayAuth(options));
+  let response;
+
+  try {
+    response = await fetch(requestUrl, withGatewayAuth(options));
+  } catch (error) {
+    throw createNetworkApiError(error, { context: "запрос к курсам" });
+  }
+
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    const error = new Error(extractErrorMessage(response));
-    error.status = response.status;
-    error.responseBody = responseBody;
-    throw error;
+    throw createApiError(response, responseBody, {
+      context: "запрос к курсам",
+    });
   }
 
   return responseBody;
@@ -134,17 +129,22 @@ async function requestCourseServiceJson(pathname, requestCache) {
       const responseBody = await readResponseBody(response);
 
       if (!response.ok) {
-        const error = new Error(extractErrorMessage(response));
-        error.status = response.status;
-        error.responseBody = responseBody;
-        throw error;
+        throw createApiError(response, responseBody, {
+          context: "загрузка данных курса",
+        });
       }
 
       return responseBody;
     })
     .catch((error) => {
       requestCache.delete(requestUrl);
-      throw error;
+      if (error?.status != null) {
+        throw error;
+      }
+
+      throw createNetworkApiError(error, {
+        context: "загрузка данных курса",
+      });
     });
 
   requestCache.set(requestUrl, requestPromise);

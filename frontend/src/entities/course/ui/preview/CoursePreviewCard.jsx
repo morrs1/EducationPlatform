@@ -3,17 +3,18 @@ import {
   formatCourseTagLabel,
   sanitizeCourseDisplayLabel,
 } from "../../model/courseDisplayLabels";
+import { AuthorLink } from "../../../../shared/ui";
 
-function CoursePreviewCard({ course }) {
+function CoursePreviewCard({
+  course,
+  viewerCanOpenAuthorProfile = false,
+  onAuthorProfileAuthRequired,
+}) {
   const levelLabelMap = {
     beginner: "Начальный уровень",
     intermediate: "Продвинутый уровень",
   };
   const levelLabel = levelLabelMap[course.level] ?? "Любой уровень";
-  const ratingLabel =
-    typeof course.rating === "number" && course.rating > 0
-      ? `Рейтинг ${course.rating}`
-      : "Рейтинг появится";
   const studentsLabel =
     typeof course.studentsCount === "number" && course.studentsCount > 0
       ? `${course.studentsCount} студентов`
@@ -52,7 +53,15 @@ function CoursePreviewCard({ course }) {
 
       <div className="course-preview-card-head">
         <div className="course-preview-card-body">
-          <p className="course-preview-card-author">{course.authorName}</p>
+          <p className="course-preview-card-author">
+            <AuthorLink
+              authorId={course.authorId}
+              authorName={course.authorName}
+              className="course-preview-card-author-link"
+              viewerCanOpenAuthorProfile={viewerCanOpenAuthorProfile}
+              onAuthorProfileAuthRequired={onAuthorProfileAuthRequired}
+            />
+          </p>
           <h3 className="course-preview-card-title">{course.title}</h3>
           <p className="course-preview-card-description">
             {course.shortDescription}
@@ -81,7 +90,6 @@ function CoursePreviewCard({ course }) {
       </div>
 
       <div className="course-preview-card-meta">
-        <span className="course-preview-card-meta-pill">{ratingLabel}</span>
         <span className="course-preview-card-meta-pill">{studentsLabel}</span>
         <span className="course-preview-card-meta-pill">
           {course.durationLabel}

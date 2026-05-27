@@ -1,3 +1,4 @@
+export * from "./apiErrors";
 export * from "./authGatewayApi";
 export * from "./courseServiceClient";
 export * from "./courseServiceMedia";

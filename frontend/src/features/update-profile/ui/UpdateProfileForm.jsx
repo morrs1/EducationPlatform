@@ -4,7 +4,6 @@ const avatarInputId = "profile-avatar-upload";
 
 function UpdateProfileForm({ viewer, onSubmit }) {
   const [previewSrc, setPreviewSrc] = useState(viewer.avatarUrl);
-  const [selectedFileName, setSelectedFileName] = useState("Файл не выбран");
   const [formState, setFormState] = useState({
     firstName: viewer.firstName ?? "",
     lastName: viewer.lastName ?? "",
@@ -48,7 +47,6 @@ function UpdateProfileForm({ viewer, onSubmit }) {
 
     setPreviewSrc(nextObjectUrl);
     setAvatarFile(file);
-    setSelectedFileName(file.name);
   }
 
   function handleFieldChange(event) {
@@ -104,7 +102,6 @@ function UpdateProfileForm({ viewer, onSubmit }) {
             onChange={handleAvatarChange}
           />
 
-          <span className="settings-file-name">{selectedFileName}</span>
 
           <label htmlFor={avatarInputId} className="settings-file-trigger">
             Выбрать файл

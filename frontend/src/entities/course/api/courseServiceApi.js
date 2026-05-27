@@ -1,4 +1,4 @@
-import { requestViewerDisplayProfileById } from "../../../shared/api";
+import { requestPublicDisplayProfileById } from "../../../shared/api";
 import { isUuid, normalizeText } from "./courseServiceCommon";
 export {
   requestAddLessonToCourse,
@@ -41,7 +41,7 @@ export async function enrichCoursePageDataWithAuthorName(pageData) {
   }
 
   try {
-    const authorProfile = await requestViewerDisplayProfileById(authorId);
+    const authorProfile = await requestPublicDisplayProfileById(authorId);
     const name = normalizeText(authorProfile?.name);
 
     if (!name) {

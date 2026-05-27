@@ -7,3 +7,5 @@ databaseChangeLog:
       file: migrations/v.1.0.2/fix-demo-users-required-fields.sql
   - include:
       file: migrations/v.1.0.3/delete-spring-demo-user.sql
+  - include:
+      file: migrations/v.1.0.4/restore-spring-demo-user.sql

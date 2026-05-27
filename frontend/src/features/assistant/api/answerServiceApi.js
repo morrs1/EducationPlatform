@@ -1,4 +1,8 @@
-import { withGatewayAuth } from "../../../shared/api";
+import {
+  createApiError,
+  createNetworkApiError,
+  withGatewayAuth,
+} from "../../../shared/api";
 
 const DEFAULT_ANSWER_SERVICE_API_BASE_URL = "/api/answer";
 const UUID_PATTERN =
@@ -16,7 +20,16 @@ function normalizeUuid(value, fieldName) {
   const normalizedValue = normalizeText(value);
 
   if (!isAnswerServiceUuid(normalizedValue)) {
-    throw new Error(`${fieldName} должен быть UUID.`);
+    const fieldLabels = {
+      conversation_id: "диалог",
+      lesson_id: "урок",
+      message_id: "сообщение",
+      user_id: "пользователь",
+    };
+
+    throw new Error(
+      `Не удалось определить ${fieldLabels[fieldName] ?? "данные"}. Обновите страницу и попробуйте снова.`,
+    );
   }
 
   return normalizedValue;
@@ -47,46 +60,34 @@ async function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function extractErrorMessage(response, responseBody) {
-  const detail = normalizeText(responseBody?.detail);
-
-  if (detail) {
-    return detail;
-  }
-
-  if (response.status === 404) {
-    return "Диалог ассистента не найден.";
-  }
-
-  if (response.status === 422) {
-    return "Ассистент не смог обработать этот вопрос.";
-  }
-
-  if (response.status === 503) {
-    return "Ассистент временно недоступен. Попробуйте позже.";
-  }
-
-  return "Не удалось получить ответ ассистента.";
-}
-
 async function requestAnswerService(pathname, options = {}) {
-  const response = await fetch(
-    buildAnswerServiceUrl(pathname).toString(),
-    withGatewayAuth({
-      ...options,
-      headers: {
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
-        ...(options.headers ?? {}),
-      },
-    }),
-  );
+  let response;
+
+  try {
+    response = await fetch(
+      buildAnswerServiceUrl(pathname).toString(),
+      withGatewayAuth({
+        ...options,
+        headers: {
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...(options.headers ?? {}),
+        },
+      }),
+    );
+  } catch (error) {
+    throw createNetworkApiError(error, { context: "запрос к ассистенту" });
+  }
+
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    const error = new Error(extractErrorMessage(response, responseBody));
-    error.status = response.status;
-    error.responseBody = responseBody;
-    throw error;
+    throw createApiError(response, responseBody, {
+      context: "запрос к ассистенту",
+      defaultMessage:
+        response.status === 404
+          ? "Диалог ассистента не найден."
+          : "Не удалось получить ответ ассистента.",
+    });
   }
 
   return responseBody;

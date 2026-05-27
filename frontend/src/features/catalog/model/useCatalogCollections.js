@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { requestViewerDisplayProfileById } from "../../../shared/api";
+import { requestPublicDisplayProfileById } from "../../../shared/api";
 import {
   buildCatalogData,
   getAllCourses,
@@ -105,7 +105,6 @@ function normalizeBackendCatalogCourse(course, authorNameById) {
     tags,
     level: course.level || course.difficulty || "beginner",
     durationLabel: course.durationLabel || "Длительность уточняется",
-    rating: null,
     studentsCount: null,
     lessonsCount: Number(course.lessonsCount) || 0,
     testsCount: Number(course.testsCount) || 0,
@@ -160,7 +159,7 @@ export function useCatalogCollections() {
         const authorEntries = await Promise.all(
           uniqueAuthorIds.map(async (authorId) => {
             try {
-              const authorProfile = await requestViewerDisplayProfileById(
+              const authorProfile = await requestPublicDisplayProfileById(
                 authorId,
               );
 

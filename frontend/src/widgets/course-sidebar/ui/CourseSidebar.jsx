@@ -1,19 +1,8 @@
-import CourseActionsPanel from "./CourseActionsPanel";
 import CourseStatsPanel from "./CourseStatsPanel";
 
-function CourseSidebar({
-  course,
-  isLogged,
-  onPrimaryAction,
-}) {
+function CourseSidebar({ course }) {
   return (
     <div className="course-sidebar">
-      <CourseActionsPanel
-        course={course}
-        isLogged={isLogged}
-        onPrimaryAction={onPrimaryAction}
-      />
-
       <CourseStatsPanel course={course} />
     </div>
   );

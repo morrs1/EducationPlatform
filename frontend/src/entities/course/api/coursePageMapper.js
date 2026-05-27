@@ -158,8 +158,6 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
       lessonsCount: courseStats.lessonsCount,
       testsCount: courseStats.testsCount,
       tasksCount: courseStats.tasksCount,
-      rating: null,
-      studentsCount: null,
       categoryId: null,
       subcategoryId: null,
       categoryIcon: "📘",
@@ -181,6 +179,5 @@ export function mapReadCourseByIdResponseToCoursePageData(response, courseId) {
       courseId,
       modules,
     },
-    reviews: [],
   };
 }

@@ -22,10 +22,9 @@ export {
   getCourseById,
   getCourseCategories,
   getCoursesByCategory,
-  getPopularCourses,
   mapCourseToPreview,
 } from "./model/selectors";
-export { getCourseReviews } from "./model/mockCourseReviews";
+export { mapPageDataCourseToPreview } from "./model/mapPageDataCourseToPreview";
 export { getCourseSyllabus } from "./model/mockCourseSyllabus";
 export { useLessonCoverMap } from "./model/useLessonCoverMap";
 

@@ -8,7 +8,7 @@ export function useAuthModalForm({ clearError, error }) {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerStatus, setRegisterStatus] = useState("");
-  const [registerAvatarDataUrl, setRegisterAvatarDataUrl] = useState("");
+  const [registerAvatarFile, setRegisterAvatarFile] = useState(null);
   const [registerAvatarPreviewSrc, setRegisterAvatarPreviewSrc] = useState("");
   const [registerAvatarFileName, setRegisterAvatarFileName] =
     useState("Фото не выбрано");
@@ -33,7 +33,7 @@ export function useAuthModalForm({ clearError, error }) {
     setRegisterEmail("");
     setRegisterPassword("");
     setRegisterStatus("");
-    setRegisterAvatarDataUrl("");
+    setRegisterAvatarFile(null);
     setRegisterAvatarPreviewSrc("");
     setRegisterAvatarFileName("Фото не выбрано");
   }
@@ -62,14 +62,7 @@ export function useAuthModalForm({ clearError, error }) {
 
     setRegisterAvatarPreviewSrc(nextObjectUrl);
     setRegisterAvatarFileName(file.name);
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setRegisterAvatarDataUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    setRegisterAvatarFile(file);
   }
 
   return {
@@ -86,7 +79,7 @@ export function useAuthModalForm({ clearError, error }) {
       },
     },
     register: {
-      avatarDataUrl: registerAvatarDataUrl,
+      avatarFile: registerAvatarFile,
       avatarFileName: registerAvatarFileName,
       avatarPreviewSrc: registerAvatarPreviewSrc,
       email: registerEmail,

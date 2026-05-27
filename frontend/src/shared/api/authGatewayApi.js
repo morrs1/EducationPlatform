@@ -1,3 +1,5 @@
+import { createApiError, createNetworkApiError } from "./apiErrors";
+
 const DEFAULT_AUTH_API_BASE_URL = "/auth";
 
 function normalizeText(value) {
@@ -27,74 +29,66 @@ async function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function formatGatewayErrorMessage(response, responseBody) {
-  if (typeof responseBody === "string" && responseBody.trim()) {
-    return responseBody.trim();
-  }
-
-  if (responseBody && typeof responseBody === "object") {
-    const message =
-      responseBody.message ??
-      responseBody.error ??
-      responseBody.detail ??
-      responseBody.title;
-
-    if (typeof message === "string" && message.trim()) {
-      return message.trim();
-    }
-  }
-
-  if (response.status === 401 || response.status === 403) {
-    return "Неверная почта или пароль.";
-  }
-
-  if (response.status === 409) {
-    return "Пользователь с такой почтой уже существует.";
-  }
-
-  if (response.status >= 400) {
-    return "Не удалось выполнить запрос. Попробуйте позже.";
-  }
-
-  return "Не удалось выполнить запрос. Попробуйте позже.";
-}
-
 export async function requestGatewayLogin({ email, password }) {
-  const response = await fetch(buildAuthUrl("/login").toString(), {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email: normalizeText(email).toLowerCase(),
-      password: normalizeText(password),
-    }),
-  });
+  let response;
+
+  try {
+    response = await fetch(buildAuthUrl("/login").toString(), {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: normalizeText(email).toLowerCase(),
+        password: normalizeText(password),
+      }),
+    });
+  } catch (error) {
+    throw createNetworkApiError(error, { context: "вход в аккаунт" });
+  }
 
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(formatGatewayErrorMessage(response, responseBody));
+    throw createApiError(response, responseBody, {
+      context: "вход в аккаунт",
+      defaultMessage:
+        response.status === 401 || response.status === 403
+          ? "Неверная почта или пароль."
+          : "Не удалось выполнить вход. Попробуйте позже.",
+    });
   }
 
   return responseBody;
 }
 
 export async function requestGatewayRegister(payload) {
-  const response = await fetch(buildAuthUrl("/register").toString(), {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  let response;
+
+  try {
+    response = await fetch(buildAuthUrl("/register").toString(), {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    throw createNetworkApiError(error, { context: "регистрация" });
+  }
 
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(formatGatewayErrorMessage(response, responseBody));
+    throw createApiError(response, responseBody, {
+      context: "регистрация",
+      defaultMessage:
+        response.status === 409
+          ? "Пользователь с такой почтой уже существует."
+          : "Не удалось зарегистрироваться. Попробуйте позже.",
+    });
   }
 
   return responseBody;

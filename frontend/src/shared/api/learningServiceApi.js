@@ -1,4 +1,5 @@
 import { isUuid, normalizeText } from "../lib/gatewayValues";
+import { createApiError, createNetworkApiError } from "./apiErrors";
 import { withGatewayAuth } from "./gatewayFetch";
 
 const DEFAULT_LEARNING_SERVICE_API_BASE_URL = "/api/learning";
@@ -9,7 +10,15 @@ function normalizeUuid(value, fieldName) {
   const normalizedValue = normalizeText(value);
 
   if (!isUuid(normalizedValue)) {
-    throw new Error(`${fieldName} должен быть UUID.`);
+    const fieldLabels = {
+      courseId: "курс",
+      lessonId: "урок",
+      userId: "пользователь",
+    };
+
+    throw new Error(
+      `Не удалось определить ${fieldLabels[fieldName] ?? "данные"}. Обновите страницу и попробуйте снова.`,
+    );
   }
 
   return normalizedValue;
@@ -48,38 +57,28 @@ async function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function extractErrorMessage(response, context = "") {
-  if (response.status === 404) {
-    return "Данные не найдены.";
-  }
-
-  if (response.status === 401 || response.status === 403) {
-    return "Для этого действия нужно войти в аккаунт.";
-  }
-
-  return context
-    ? "Не удалось выполнить действие. Попробуйте позже."
-    : "Не удалось получить данные. Попробуйте позже.";
-}
-
 async function requestLearningService(pathname, options = {}, context = "") {
-  const response = await fetch(
-    buildLearningServiceUrl(pathname).toString(),
-    withGatewayAuth({
-      ...options,
-      headers: {
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
-        ...(options.headers ?? {}),
-      },
-    }),
-  );
+  let response;
+
+  try {
+    response = await fetch(
+      buildLearningServiceUrl(pathname).toString(),
+      withGatewayAuth({
+        ...options,
+        headers: {
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...(options.headers ?? {}),
+        },
+      }),
+    );
+  } catch (error) {
+    throw createNetworkApiError(error, { context });
+  }
+
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    const error = new Error(extractErrorMessage(response, context));
-    error.status = response.status;
-    error.responseBody = responseBody;
-    throw error;
+    throw createApiError(response, responseBody, { context });
   }
 
   return responseBody;

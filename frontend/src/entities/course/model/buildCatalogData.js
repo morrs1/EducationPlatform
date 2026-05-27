@@ -28,7 +28,6 @@ export function buildCatalogData(courses) {
       title: course.title,
       level: course.level,
       duration: course.durationLabel,
-      rating: course.rating,
       students: course.studentsCount,
     });
   }

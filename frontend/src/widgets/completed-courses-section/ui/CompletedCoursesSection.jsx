@@ -4,7 +4,12 @@ import {
   CompletedCoursesList,
   filterCoursesByQuery,
 } from "../../../entities/course";
-import { selectCurrentViewerId, selectIsLogged } from "../../../features/auth";
+import {
+  selectCurrentViewerId,
+  selectIsLogged,
+  openLoginModal,
+  setPostLoginRedirect,
+} from "../../../features/auth";
 import {
   hydrateViewerLearningFromLearningService,
   selectCompletedCourses,
@@ -72,6 +77,11 @@ function CompletedCoursesSection() {
       <CompletedCoursesList
         courses={filteredCourses}
         emptyMessage={isSearchApplied ? emptyMessage : undefined}
+        viewerCanOpenAuthorProfile={isLogged}
+        onAuthorProfileAuthRequired={(requestedAuthorId) => {
+          dispatch(setPostLoginRedirect(`/users/${requestedAuthorId}`));
+          dispatch(openLoginModal());
+        }}
       />
     </section>
   );

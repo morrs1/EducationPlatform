@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { getCourseCoverSrc } from "../../model/getCourseCoverSrc";
+import { AuthorLink } from "../../../../shared/ui";
 
 function CurrentCourseCard({
   course,
   isLeaving = false,
   onLeaveCourse,
+  viewerCanOpenAuthorProfile = false,
+  onAuthorProfileAuthRequired,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -115,7 +118,13 @@ function CurrentCourseCard({
             </Link>
 
             <p className="current-course-card-author">
-              {course.authorName}
+              <AuthorLink
+                authorId={course.authorId}
+                authorName={course.authorName}
+                className="current-course-card-author-link"
+                viewerCanOpenAuthorProfile={viewerCanOpenAuthorProfile}
+                onAuthorProfileAuthRequired={onAuthorProfileAuthRequired}
+              />
             </p>
           </div>
 
@@ -141,14 +150,6 @@ function CurrentCourseCard({
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-
-              <button
-                type="button"
-                className="current-course-review-btn"
-                onClick={(event) => event.stopPropagation()}
-              >
-                Оставить отзыв
-              </button>
             </div>
           </div>
         </div>

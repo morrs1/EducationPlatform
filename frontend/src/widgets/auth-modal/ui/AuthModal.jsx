@@ -1,25 +1,33 @@
 import { useEffect, useEffectEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router";
 import {
   clearLoginError,
+  clearPostLoginRedirect,
   closeAuthModals,
   openLoginModal,
   openRegisterModal,
   submitLogin,
   submitRegister,
+  selectIsLogged,
   selectIsLoginModalOpen,
   selectIsRegisterModalOpen,
   selectLoginError,
   selectAuthStatus,
+  selectPostLoginRedirect,
 } from "../../../features/auth";
 import { closeCatalog } from "../../../features/catalog";
+import { hydrateViewerFromUserService } from "../../../features/viewer";
 import { useAuthModalForm } from "../model/useAuthModalForm";
 import AuthModalForm from "./AuthModalForm";
 
 function AuthModal() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isLoginModalOpen = useSelector(selectIsLoginModalOpen);
   const isRegisterModalOpen = useSelector(selectIsRegisterModalOpen);
+  const isLogged = useSelector(selectIsLogged);
+  const postLoginRedirect = useSelector(selectPostLoginRedirect);
   const loginError = useSelector(selectLoginError);
   const authStatus = useSelector(selectAuthStatus);
   const form = useAuthModalForm({
@@ -48,11 +56,19 @@ function AuthModal() {
             email: form.register.email,
             password: form.register.password,
             status: form.register.status,
-            avatarUrl: form.register.avatarDataUrl,
+            avatarFile: form.register.avatarFile,
           }),
         ));
 
     if (result?.ok) {
+      if (modalView === "register" && result.viewerId) {
+        dispatch(
+          hydrateViewerFromUserService({
+            remoteViewerId: result.viewerId,
+          }),
+        );
+      }
+
       form.reset();
     }
   }
@@ -108,6 +124,13 @@ function AuthModal() {
       dispatch(closeCatalog());
     }
   }, [dispatch, isOpen]);
+
+  useEffect(() => {
+    if (isLogged && postLoginRedirect) {
+      navigate(postLoginRedirect);
+      dispatch(clearPostLoginRedirect());
+    }
+  }, [dispatch, isLogged, navigate, postLoginRedirect]);
 
   useEffect(() => {
     if (!isOpen) {

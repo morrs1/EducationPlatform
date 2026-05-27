@@ -26,7 +26,6 @@ function CourseActionsPanel({
     <section className="course-side-card">
       <div className="course-side-card-header">
         <p className="course-side-card-label">Действия</p>
-        <h2 className="course-side-card-title">Управление курсом</h2>
       </div>
 
       <div className="course-actions">

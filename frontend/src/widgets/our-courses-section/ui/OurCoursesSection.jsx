@@ -1,5 +1,11 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { CoursePreviewCard } from "../../../entities/course";
+import {
+  openLoginModal,
+  selectIsLogged,
+  setPostLoginRedirect,
+} from "../../../features/auth";
 import {
   ALL_TAG_KEY,
   getCatalogCoursesForTagKey,
@@ -8,6 +14,8 @@ import {
 const COURSES_PER_PAGE = 6;
 
 function OurCoursesSection({ allCourses, catalogTagModel }) {
+  const dispatch = useDispatch();
+  const isLogged = useSelector(selectIsLogged);
   const [activeTagKey, setActiveTagKey] = useState(ALL_TAG_KEY);
   const [currentPage, setCurrentPage] = useState(0);
   const [animationDirection, setAnimationDirection] = useState("reset");
@@ -139,7 +147,15 @@ function OurCoursesSection({ allCourses, catalogTagModel }) {
           className={`home-courses-grid is-${animationDirection}`}
         >
           {visibleCourses.map((course) => (
-            <CoursePreviewCard key={course.id} course={course} />
+            <CoursePreviewCard
+              key={course.id}
+              course={course}
+              viewerCanOpenAuthorProfile={isLogged}
+              onAuthorProfileAuthRequired={(requestedAuthorId) => {
+                dispatch(setPostLoginRedirect(`/users/${requestedAuthorId}`));
+                dispatch(openLoginModal());
+              }}
+            />
           ))}
         </div>
       </div>

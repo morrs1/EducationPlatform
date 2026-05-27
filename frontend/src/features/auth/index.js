@@ -20,6 +20,8 @@ export {
   clearLoginError,
   updateAccountEmail,
   updateAccountPassword,
+  setPostLoginRedirect,
+  clearPostLoginRedirect,
 } from "./model/authSlice";
 
 export {
@@ -43,4 +45,7 @@ export {
   selectAccountEmail,
   selectUserRole,
   selectAccessToken,
+  selectPostLoginRedirect,
+  roleAllowsTeaching,
+  selectCanTeach,
 } from "./model/selectors";

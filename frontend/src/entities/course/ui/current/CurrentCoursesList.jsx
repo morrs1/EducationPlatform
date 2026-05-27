@@ -5,6 +5,8 @@ function CurrentCoursesList({
   emptyMessage,
   leavingCourseId,
   onLeaveCourse,
+  viewerCanOpenAuthorProfile = false,
+  onAuthorProfileAuthRequired,
 }) {
   if (courses.length === 0) {
     return (
@@ -22,6 +24,8 @@ function CurrentCoursesList({
           course={course}
           isLeaving={leavingCourseId === course.id}
           onLeaveCourse={onLeaveCourse}
+          viewerCanOpenAuthorProfile={viewerCanOpenAuthorProfile}
+          onAuthorProfileAuthRequired={onAuthorProfileAuthRequired}
         />
       ))}
     </div>

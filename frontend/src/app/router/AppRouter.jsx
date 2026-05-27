@@ -15,6 +15,7 @@ import { AccountPage } from "../../pages/account";
 import { EditProfilePage } from "../../pages/edit-profile";
 import { LessonPage } from "../../pages/lesson";
 import { TeachPage } from "../../pages/teach";
+import { UserProfilePage } from "../../pages/user-profile";
 import { CourseBuilderPage } from "../../pages/course-builder";
 import { LessonEditorPage } from "../../pages/lesson-editor";
 import { AdminPage } from "../../pages/admin";
@@ -68,6 +69,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "search", element: <SearchPage /> },
+      { path: "users/:userId", element: <UserProfilePage /> },
       { path: "courses/:courseId", element: <CoursePage /> },
       {
         element: <AdminRoute />,

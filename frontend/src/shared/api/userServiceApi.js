@@ -4,9 +4,11 @@ import {
   buildAvatarUrl,
   buildViewerDisplayName,
 } from "../lib/viewerProfile";
+import { createApiError, createNetworkApiError } from "./apiErrors";
 import { withGatewayAuth } from "./gatewayFetch";
 
 const DEFAULT_USER_SERVICE_API_BASE_URL = "/api/user";
+const USER_SERVICE_DIRECT_API_PROXY_PATH = "/api/user-service";
 const USER_SERVICE_MEDIA_PROXY_PATH = "/api/user-service-media";
 const USER_SERVICE_STORAGE_HOSTS = new Set([
   "localhost",
@@ -21,6 +23,13 @@ function buildUserServiceUrl(pathname = "") {
   return new URL(`${apiBaseUrl}${pathname}`, window.location.origin);
 }
 
+function buildPublicUserServiceUrl(pathname = "/user") {
+  return new URL(
+    `${USER_SERVICE_DIRECT_API_PROXY_PATH}${pathname}`,
+    window.location.origin,
+  );
+}
+
 async function readResponseBody(response) {
   const contentType = response.headers.get("content-type") ?? "";
 
@@ -31,48 +40,43 @@ async function readResponseBody(response) {
   return response.text().catch(() => "");
 }
 
-function extractErrorMessage(response, responseBody, context = "") {
-  if (responseBody && typeof responseBody === "object") {
-    const message =
-      responseBody.message ??
-      responseBody.error ??
-      responseBody.detail ??
-      responseBody.title ??
-      responseBody.msg;
-
-    if (typeof message === "string" && message.trim()) {
-      return message.trim();
-    }
-  }
-
-  if (response.status === 404) {
-    return "Данные не найдены.";
-  }
-
-  if (response.status === 401 || response.status === 403) {
-    return context
-      ? "Для этого действия нужно войти в аккаунт."
-      : "Для этого действия нужно войти в аккаунт.";
-  }
-
-  if (response.status === 409) {
-    // Used by "change_email" to report duplicate email.
-    if (typeof context === "string" && context.toLowerCase().includes("email")) {
-      return "Этот email уже используется другим аккаунтом.";
-    }
-  }
-
-  return context
-    ? "Не удалось выполнить действие. Попробуйте позже."
-    : "Не удалось получить данные. Попробуйте позже.";
-}
-
 async function requestUserService(url, options = {}, context = "") {
-  const response = await fetch(url.toString(), withGatewayAuth(options));
+  let response;
+
+  try {
+    response = await fetch(url.toString(), withGatewayAuth(options));
+  } catch (error) {
+    throw createNetworkApiError(error, { context });
+  }
+
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(response, responseBody, context));
+    throw createApiError(response, responseBody, {
+      context,
+      defaultMessage:
+        response.status === 409 && context.toLowerCase().includes("email")
+          ? "Этот email уже используется другим аккаунтом."
+          : "",
+    });
+  }
+
+  return responseBody;
+}
+
+async function requestPublicUserService(url, options = {}, context = "") {
+  let response;
+
+  try {
+    response = await fetch(url.toString(), options);
+  } catch (error) {
+    throw createNetworkApiError(error, { context });
+  }
+
+  const responseBody = await readResponseBody(response);
+
+  if (!response.ok) {
+    throw createApiError(response, responseBody, { context });
   }
 
   return responseBody;
@@ -108,12 +112,6 @@ export function buildUserServiceMediaProxyUrl(bucket, key) {
 }
 
 function buildUserProfilePhotoUploadUrl() {
-  const direct = normalizeText(import.meta.env.VITE_USER_SERVICE_DIRECT_URL);
-
-  if (direct) {
-    return new URL("/user/add_photo", direct.endsWith("/") ? direct : `${direct}/`);
-  }
-
   return buildUserServiceUrl("/add_photo");
 }
 
@@ -298,6 +296,30 @@ export async function requestViewerDisplayProfileById(viewerId) {
   return mapReadUserByIdResponseToViewerProfile(response, normalizedViewerId);
 }
 
+export async function requestPublicDisplayProfileById(viewerId) {
+  const normalizedViewerId = normalizeText(viewerId);
+
+  if (!isUuid(normalizedViewerId)) {
+    throw new Error("Не удалось определить пользователя.");
+  }
+
+  const url = buildPublicUserServiceUrl("/user");
+  url.searchParams.set("id", normalizedViewerId);
+
+  const response = await requestPublicUserService(
+    url,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    },
+    `loading public display profile ${normalizedViewerId}`,
+  );
+
+  return mapReadUserByIdResponseToViewerProfile(response, normalizedViewerId);
+}
+
 function createJsonRequestOptions(payload) {
   return {
     method: "PATCH",
@@ -396,12 +418,14 @@ export async function requestViewerStatusUpdate(viewerId, nextStatus) {
 }
 
 export async function uploadViewerProfilePhoto(viewerId, file) {
+  const url = buildUserProfilePhotoUploadUrl();
   const formData = new FormData();
 
+  url.searchParams.set("user_id", viewerId);
   formData.set("user_id", viewerId);
   formData.set("file", file);
 
-  return requestUserService(buildUserProfilePhotoUploadUrl(), {
+  return requestUserService(url, {
     method: "POST",
     body: formData,
   });
@@ -411,7 +435,9 @@ export async function requestAssignAuthorRole(viewerId) {
   const normalizedViewerId = normalizeText(viewerId);
 
   if (!isUuid(normalizedViewerId)) {
-    throw new Error("userId должен быть UUID.");
+    throw new Error(
+      "Не удалось определить пользователя. Обновите страницу и попробуйте снова.",
+    );
   }
 
   return requestUserService(
@@ -430,7 +456,9 @@ export async function requestAssignAdminRole(viewerId) {
   const normalizedViewerId = normalizeText(viewerId);
 
   if (!isUuid(normalizedViewerId)) {
-    throw new Error("userId должен быть UUID.");
+    throw new Error(
+      "Не удалось определить пользователя. Обновите страницу и попробуйте снова.",
+    );
   }
 
   return requestUserService(

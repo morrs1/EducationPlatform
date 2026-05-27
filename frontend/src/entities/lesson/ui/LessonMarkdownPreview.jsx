@@ -2,9 +2,15 @@ function renderInlineMarkdown(text) {
   const lines = text.split("\n");
 
   return lines.flatMap((line, lineIndex) => {
-    const parts = line
-    .split(/(`[^`]+`|\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*)/g)
-    .filter(Boolean)
+    const normalizedLine = line
+      .replace(/\\+`/g, "`")
+      .replace(
+        /[`'´‘’ʼ‵ˋ]([A-Za-z_$][\w$]*(?:\[\])?)[`'´‘’ʼ‵ˋ]/g,
+        "`$1`",
+      );
+    const parts = normalizedLine
+      .split(/(`[^`]+`|\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*)/g)
+      .filter(Boolean)
       .map((part, partIndex) => {
         const key = `${lineIndex}-${partIndex}-${part}`;
 
@@ -56,6 +62,34 @@ function renderInlineMarkdown(text) {
   });
 }
 
+function renderListItem(item, itemIndex) {
+  const content = typeof item === "string" ? item : item.content;
+  const children = typeof item === "string" ? [] : (item.children ?? []);
+
+  return (
+    <li key={`${content}-${itemIndex}`}>
+      {renderInlineMarkdown(content)}
+
+      {children.map((child, childIndex) => {
+        if (child.type === "unordered-list") {
+          return (
+            <ul
+              key={`nested-unordered-list-${itemIndex}-${childIndex}`}
+              className="lesson-markdown-list lesson-markdown-nested-list"
+            >
+              {child.items.map((childItem, childItemIndex) =>
+                renderListItem(childItem, childItemIndex),
+              )}
+            </ul>
+          );
+        }
+
+        return null;
+      })}
+    </li>
+  );
+}
+
 function renderMarkdownBlock(block, index) {
   if (block.type === "spacer") {
     return (
@@ -86,12 +120,18 @@ function renderMarkdownBlock(block, index) {
     );
   }
 
+  if (block.type === "heading-3") {
+    return (
+      <h4 key={`heading-3-${index}`} className="lesson-markdown-h3">
+        {renderInlineMarkdown(block.content)}
+      </h4>
+    );
+  }
+
   if (block.type === "unordered-list") {
     return (
       <ul key={`unordered-list-${index}`} className="lesson-markdown-list">
-        {block.items.map((item, itemIndex) => (
-          <li key={`${item}-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
-        ))}
+        {block.items.map((item, itemIndex) => renderListItem(item, itemIndex))}
       </ul>
     );
   }
@@ -102,9 +142,7 @@ function renderMarkdownBlock(block, index) {
         key={`ordered-list-${index}`}
         className="lesson-markdown-list-decimal"
       >
-        {block.items.map((item, itemIndex) => (
-          <li key={`${item}-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
-        ))}
+        {block.items.map((item, itemIndex) => renderListItem(item, itemIndex))}
       </ol>
     );
   }

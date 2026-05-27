@@ -1,5 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import {
+  LessonMarkdownPreview,
+  parseLessonMarkdown,
+} from "../../../entities/lesson";
+
 function formatMessageTime(value) {
   if (!value) {
     return "";
@@ -41,6 +46,8 @@ function AssistantPanel({
       messages.map((message) => ({
         ...message,
         formattedTime: formatMessageTime(message.createdAt),
+        markdownBlocks:
+          message.role === "assistant" ? parseLessonMarkdown(message.text) : [],
       })),
     [messages],
   );
@@ -245,7 +252,14 @@ function AssistantPanel({
                       ) : null}
                     </div>
 
-                    <p className="assistant-message-text">{message.text}</p>
+                    {message.role === "assistant" ? (
+                      <LessonMarkdownPreview
+                        blocks={message.markdownBlocks}
+                        className="lesson-markdown assistant-message-markdown"
+                      />
+                    ) : (
+                      <p className="assistant-message-text">{message.text}</p>
+                    )}
                   </article>
                 </div>
               ))}

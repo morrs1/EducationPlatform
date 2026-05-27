@@ -45,6 +45,7 @@ export function createInitialAuthState({
     accessToken: savedToken,
     userRole: normalizeText(savedSession?.userRole),
     userStatus: normalizeText(savedSession?.userStatus),
+    postLoginRedirect: null,
   };
 }
 
@@ -76,9 +77,20 @@ const authSlice = createSlice({
       state.isLoginModalOpen = false;
       state.isRegisterModalOpen = false;
       state.loginError = null;
+      state.postLoginRedirect = null;
       if (state.authStatus === "error") {
         state.authStatus = "idle";
       }
+    },
+
+    setPostLoginRedirect: (state, action) => {
+      const value = action.payload;
+      state.postLoginRedirect =
+        typeof value === "string" && value.trim() ? value : null;
+    },
+
+    clearPostLoginRedirect: (state) => {
+      state.postLoginRedirect = null;
     },
 
     logIn: (state) => {
@@ -101,6 +113,7 @@ const authSlice = createSlice({
       state.userRole = "";
       state.userStatus = "";
       state.accountPassword = "";
+      state.postLoginRedirect = null;
     },
 
     startLogin: (state) => {
@@ -195,6 +208,8 @@ export const {
   clearLoginError,
   updateAccountEmail,
   updateAccountPassword,
+  setPostLoginRedirect,
+  clearPostLoginRedirect,
 } = authSlice.actions;
 
 export default authSlice.reducer;

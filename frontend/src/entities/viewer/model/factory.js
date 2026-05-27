@@ -166,7 +166,6 @@ export function normalizeViewerCourseSnapshot(value) {
     ),
     level: normalizeText(value?.level) || "beginner",
     durationLabel: normalizeText(value?.durationLabel) || "Длительность уточняется",
-    rating: Number.isFinite(value?.rating) ? value.rating : null,
     studentsCount: Number.isFinite(value?.studentsCount)
       ? value.studentsCount
       : null,
@@ -217,7 +216,6 @@ export function createViewerCourseSnapshot(course, syllabusLessonIds = []) {
     subcategoryName: course?.subcategoryName,
     level: course?.level,
     durationLabel: course?.durationLabel,
-    rating: course?.rating,
     studentsCount: course?.studentsCount,
     lessonsCount: course?.lessonsCount,
     testsCount: course?.testsCount,

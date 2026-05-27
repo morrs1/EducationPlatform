@@ -365,6 +365,18 @@
     backdrop-filter: blur(16px);
   }
 
+  .teach-page--no-teach-access {
+    @apply flex w-full min-h-[min(70vh,36rem)] flex-col items-center justify-center px-4 py-12 md:min-h-full md:py-16;
+  }
+
+  .teach-no-teach-access-card {
+    @apply max-w-md rounded-2xl border border-red-200 bg-red-50 px-6 py-5 text-center shadow-[0_18px_40px_-28px_rgba(185,28,28,0.35)];
+  }
+
+  .teach-no-teach-access-card p {
+    @apply m-0 text-sm font-medium leading-7 text-red-900 sm:text-base;
+  }
+
   .create-course-section {
     @apply flex max-w-2xl flex-col gap-5 px-5 py-5 sm:px-6 sm:py-6;
   }
@@ -2843,6 +2855,57 @@
     @apply flex flex-col gap-6;
   }
 
+  .author-profile-layout {
+    @apply mx-auto w-full max-w-5xl px-4 py-8 md:px-6 md:py-10;
+  }
+
+  .author-profile-layout-main {
+    @apply min-h-[50vh];
+  }
+
+  .author-profile-page {
+    @apply flex flex-col gap-6 rounded-[2rem] border border-gray-200 bg-white/90 p-6 shadow-sm md:p-8;
+  }
+
+  .author-profile-tabs {
+    @apply flex flex-wrap gap-2 border-b border-gray-200 pb-4;
+  }
+
+  .author-profile-tab {
+    @apply rounded-2xl border border-transparent px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-200 hover:bg-slate-50;
+  }
+
+  .author-profile-tab.is-active {
+    border-color: rgba(37, 99, 235, 0.22);
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--app-accent-strong);
+  }
+
+  .author-profile-panel {
+    @apply flex flex-col gap-4;
+  }
+
+  .author-profile-course-grid {
+    @apply grid gap-5 sm:grid-cols-2;
+  }
+
+  .author-profile-loading,
+  .author-profile-empty {
+    @apply text-center text-sm text-slate-600 sm:text-base;
+  }
+
+  .author-profile-error {
+    @apply text-center text-sm text-rose-600 sm:text-base;
+  }
+
+  .author-profile-self-hint {
+    @apply rounded-2xl border border-blue-100 bg-blue-50/90 px-4 py-3 text-sm text-slate-700;
+  }
+
+  .author-profile-self-hint-link {
+    @apply font-semibold text-blue-700 underline-offset-2 hover:underline;
+  }
+
   .profile-menu-wrap {
     @apply absolute top-4 right-4 md:top-6 md:right-6;
   }
@@ -3056,7 +3119,11 @@
   }
 
   .current-course-card-author {
-    @apply text-sm font-medium text-gray-500 transition hover:text-gray-900 hover:underline sm:text-base w-fit;
+    @apply text-sm font-medium text-gray-500 sm:text-base w-fit m-0;
+  }
+
+  .current-course-card-author-link {
+    @apply text-sm font-medium text-inherit no-underline transition hover:text-gray-900 hover:underline w-fit sm:text-base;
   }
 
   .current-course-progress {
@@ -3078,13 +3145,6 @@
   .current-course-progressbar-fill {
     @apply h-full rounded-full transition-all duration-300;
     background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
-  }
-
-  .current-course-review-btn {
-    @apply cursor-pointer rounded-2xl border px-4 py-2.5 text-sm font-semibold transition sm:w-fit sm:text-base;
-    color: var(--app-accent-strong);
-    border-color: var(--app-border-strong);
-    background: rgba(255, 255, 255, 0.72);
   }
 
   .current-course-menu-wrap {
@@ -3237,7 +3297,11 @@
   }
 
   .completed-course-card-author {
-    @apply text-sm font-medium text-gray-500 transition hover:text-gray-900 hover:underline sm:text-base w-fit;
+    @apply text-sm font-medium text-gray-500 sm:text-base w-fit m-0;
+  }
+
+  .completed-course-card-author-link {
+    @apply text-sm font-medium text-inherit no-underline transition hover:text-gray-900 hover:underline w-fit sm:text-base;
   }
 
   .completed-course-progress {
@@ -3259,13 +3323,6 @@
   .completed-course-progressbar-fill {
     @apply h-full rounded-full transition-all duration-300;
     background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%);
-  }
-
-  .completed-course-review-btn {
-    @apply cursor-pointer rounded-2xl border px-4 py-2.5 text-sm font-semibold transition sm:w-fit sm:text-base;
-    color: var(--app-accent-strong);
-    border-color: var(--app-border-strong);
-    background: rgba(255, 255, 255, 0.72);
   }
 
   .completed-course-menu-wrap {
@@ -3617,6 +3674,23 @@
     @apply text-sm font-semibold text-slate-500;
   }
 
+  .course-preview-card-author-link {
+    @apply text-sm font-semibold text-inherit no-underline;
+  }
+
+  button.course-preview-card-author-link,
+  button.course-hero-meta-author-link,
+  button.current-course-card-author-link,
+  button.completed-course-card-author-link {
+    @apply inline max-w-full cursor-pointer border-0 bg-transparent p-0 text-left;
+    font: inherit;
+  }
+
+  .course-preview-card-author-link:hover,
+  .course-preview-card-author-link:focus-visible {
+    @apply text-slate-800 underline outline-none;
+  }
+
   .course-preview-card-title {
     @apply text-xl font-bold leading-tight text-slate-900 sm:text-2xl;
   }
@@ -3737,6 +3811,14 @@
 
   .course-hero-meta {
     @apply flex flex-wrap pt-4 text-sm font-medium text-gray-500 border-t border-gray-200 gap-x-4 gap-y-2;
+  }
+
+  .course-hero-meta-author {
+    @apply inline;
+  }
+
+  .course-hero-meta-author-link {
+    @apply font-semibold text-slate-800 no-underline hover:underline;
   }
 
   .course-tabs {
@@ -3970,54 +4052,6 @@
     @apply text-sm text-gray-500 shrink-0 whitespace-nowrap;
   }
 
-  .course-reviews-list {
-    @apply flex flex-col gap-4 mt-6;
-  }
-
-  .course-review-card {
-    @apply flex flex-col gap-4 rounded-[1.5rem] border p-4 sm:p-5;
-  }
-
-  .course-review-head {
-    @apply flex flex-col gap-3 md:flex-row md:items-start md:justify-between;
-  }
-
-  .course-review-author {
-    @apply flex items-center gap-3;
-  }
-
-  .course-review-avatar {
-    @apply object-cover w-12 h-12 rounded-2xl;
-  }
-
-  .course-review-author-meta {
-    @apply flex flex-col gap-1;
-  }
-
-  .course-review-author-name {
-    @apply text-base font-semibold text-gray-900;
-  }
-
-  .course-review-author-role {
-    @apply text-sm text-gray-500;
-  }
-
-  .course-review-rating-wrap {
-    @apply flex flex-col gap-1 text-left md:text-right;
-  }
-
-  .course-review-rating-stars {
-    @apply text-sm font-semibold tracking-wide text-amber-500;
-  }
-
-  .course-review-date {
-    @apply text-sm text-gray-500;
-  }
-
-  .course-review-text {
-    @apply text-sm leading-7 text-gray-600 sm:text-base;
-  }
-
   .course-not-found {
     @apply flex w-full flex-col gap-3 rounded-[2rem] border p-6 sm:p-8;
   }
@@ -4058,7 +4092,6 @@
   .completed-course-card,
   .certificate-card,
   .course-module-card,
-  .course-review-card,
   .course-lesson-row {
     border-color: var(--app-border);
     background: var(--app-surface-strong);
@@ -4153,8 +4186,6 @@
   .home-section-nav-btn,
   .home-category-tab,
   .course-preview-card-meta-pill,
-  .current-course-review-btn,
-  .completed-course-review-btn,
   .course-secondary-btn,
   .course-inline-btn,
   .catalog-category-btn,
@@ -4299,6 +4330,7 @@
 
   :root[data-theme="dark"] .course-preview-card-cta,
   :root[data-theme="dark"] .course-preview-card-author,
+  :root[data-theme="dark"] .course-preview-card-author-link,
   :root[data-theme="dark"] .site-footer-meta,
   :root[data-theme="dark"] .site-footer-text,
   :root[data-theme="dark"] .auth-modal-avatar-hint,
@@ -4549,9 +4581,7 @@
     accent-color: var(--app-accent);
   }
 
-  :root[data-theme="dark"] .settings-file-trigger,
-  :root[data-theme="dark"] .current-course-review-btn,
-  :root[data-theme="dark"] .completed-course-review-btn {
+  :root[data-theme="dark"] .settings-file-trigger {
     color: var(--app-ink);
     border-color: var(--app-border);
     background: rgba(255, 255, 255, 0.05);
@@ -4618,6 +4648,10 @@
     border-color: var(--app-border);
   }
 
+  :root[data-theme="dark"] .course-hero-meta-author-link {
+    color: var(--app-ink);
+  }
+
   :root[data-theme="dark"] .profile-activity-tooltip-popup {
     border: 1px solid var(--app-border);
     background: rgba(6, 11, 19, 0.96);
@@ -4661,7 +4695,6 @@
   :root[data-theme="dark"] .course-panel-title,
   :root[data-theme="dark"] .course-not-found-title,
   :root[data-theme="dark"] .course-module-title,
-  :root[data-theme="dark"] .course-review-author-name,
   :root[data-theme="dark"] .course-gate-title,
   :root[data-theme="dark"] .course-markdown-h1,
   :root[data-theme="dark"] .course-markdown-h2 {
@@ -4671,8 +4704,6 @@
   :root[data-theme="dark"] .current-course-card-title,
   :root[data-theme="dark"] .completed-course-card-title,
   :root[data-theme="dark"] .certificate-course-title,
-  :root[data-theme="dark"] .current-course-review-btn,
-  :root[data-theme="dark"] .completed-course-review-btn,
   :root[data-theme="dark"] .course-lesson-title,
   :root[data-theme="dark"] .course-stat-value,
   :root[data-theme="dark"] .settings-current-value-text,
@@ -4696,7 +4727,9 @@
   :root[data-theme="dark"] .profile-activity-next-day,
   :root[data-theme="dark"] .profile-activity-metric span,
   :root[data-theme="dark"] .current-course-card-author,
+  :root[data-theme="dark"] .current-course-card-author-link,
   :root[data-theme="dark"] .completed-course-card-author,
+  :root[data-theme="dark"] .completed-course-card-author-link,
   :root[data-theme="dark"] .current-course-progress-head,
   :root[data-theme="dark"] .completed-course-progress-head,
   :root[data-theme="dark"] .search-results-empty-text,
@@ -4714,9 +4747,6 @@
   :root[data-theme="dark"] .course-module-summary-count,
   :root[data-theme="dark"] .course-lesson-duration,
   :root[data-theme="dark"] .course-lesson-steps-count,
-  :root[data-theme="dark"] .course-review-author-role,
-  :root[data-theme="dark"] .course-review-date,
-  :root[data-theme="dark"] .course-review-text,
   :root[data-theme="dark"] .course-not-found-text,
   :root[data-theme="dark"] .auth-modal-avatar-hint,
   :root[data-theme="dark"] .auth-modal-avatar-name {
@@ -4779,6 +4809,56 @@
       radial-gradient(circle at top right, rgba(91, 124, 240, 0.1), transparent 24%),
       linear-gradient(180deg, rgba(13, 19, 30, 0.78), rgba(9, 14, 22, 0.72));
     box-shadow: 0 30px 66px -40px rgba(0, 0, 0, 0.7);
+  }
+
+  :root[data-theme="dark"] .author-profile-page {
+    border-color: var(--app-border);
+    background: var(--app-surface-strong);
+    box-shadow: var(--app-shadow);
+  }
+
+  :root[data-theme="dark"] .author-profile-tabs {
+    border-color: var(--app-border);
+  }
+
+  :root[data-theme="dark"] .author-profile-tab {
+    color: var(--app-muted);
+  }
+
+  :root[data-theme="dark"] .author-profile-tab:hover {
+    border-color: var(--app-border);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--app-ink);
+  }
+
+  :root[data-theme="dark"] .author-profile-tab.is-active {
+    border-color: rgba(142, 165, 255, 0.28);
+    background: rgba(91, 124, 240, 0.14);
+    color: var(--app-ink);
+  }
+
+  :root[data-theme="dark"] .author-profile-self-hint {
+    color: var(--app-ink);
+  }
+
+  :root[data-theme="dark"] .author-profile-loading,
+  :root[data-theme="dark"] .author-profile-empty {
+    color: var(--app-muted);
+  }
+
+  :root[data-theme="dark"] .author-profile-self-hint {
+    border-color: rgba(142, 165, 255, 0.22);
+    background: rgba(91, 124, 240, 0.1);
+  }
+
+  :root[data-theme="dark"] .teach-no-teach-access-card {
+    border-color: rgba(248, 113, 113, 0.45);
+    background: rgba(127, 29, 29, 0.35);
+    box-shadow: 0 22px 48px -32px rgba(0, 0, 0, 0.65);
+  }
+
+  :root[data-theme="dark"] .teach-no-teach-access-card p {
+    color: #fecaca;
   }
 
   :root[data-theme="dark"] .create-course-section-input {
@@ -5244,9 +5324,10 @@
 
   :root[data-theme="dark"] .current-course-card-title:hover,
   :root[data-theme="dark"] .completed-course-card-title:hover,
-  :root[data-theme="dark"] .current-course-card-author:hover,
-  :root[data-theme="dark"] .completed-course-card-author:hover,
-  :root[data-theme="dark"] .completed-course-card-author:hover {
+  :root[data-theme="dark"] .current-course-card-author-link:hover,
+  :root[data-theme="dark"] .current-course-card-author-link:focus-visible,
+  :root[data-theme="dark"] .completed-course-card-author-link:hover,
+  :root[data-theme="dark"] .completed-course-card-author-link:focus-visible {
     color: #dbe8ff;
   }
 
@@ -5266,8 +5347,6 @@
   .home-category-tab:hover,
   .course-inline-btn:hover,
   .course-secondary-btn:hover,
-  .current-course-review-btn:hover,
-  .completed-course-review-btn:hover,
   .settings-file-trigger:hover,
   .catalog-category-btn:hover,
   .catalog-tag-nav-btn:hover,
@@ -5785,8 +5864,14 @@
   word-break: break-word;
 }
 
+.lesson-markdown-h3 {
+  @apply pt-1 text-xl font-bold text-gray-900;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .lesson-markdown-paragraph {
-  @apply text-sm leading-7 text-gray-600 sm:text-base;
+  @apply text-sm leading-7 text-black sm:text-base;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -5812,19 +5897,19 @@
 }
 
 .lesson-markdown-list {
-  @apply flex flex-col gap-2 pl-5 text-sm leading-7 text-gray-600 list-disc sm:text-base;
+  @apply flex flex-col gap-2 pl-5 text-sm leading-7 text-black list-disc sm:text-base;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
 .lesson-markdown-list-decimal {
-  @apply flex flex-col gap-2 pl-5 text-sm leading-7 text-gray-600 list-decimal sm:text-base;
+  @apply flex flex-col gap-2 pl-5 text-sm leading-7 text-black list-decimal sm:text-base;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
 .lesson-markdown-quote {
-  @apply border-l-4 pl-4 text-sm leading-7 italic text-gray-600 sm:text-base;
+  @apply border-l-4 pl-4 text-sm leading-7 italic text-black sm:text-base;
   border-color: rgba(37, 99, 235, 0.24);
   background: linear-gradient(90deg, rgba(37, 99, 235, 0.04), transparent);
   overflow-wrap: anywhere;
@@ -6300,6 +6385,47 @@
   overflow-wrap: anywhere;
 }
 
+.assistant-message-markdown {
+  @apply mt-0 gap-3 text-sm leading-7;
+  color: inherit;
+}
+
+.assistant-message-markdown .lesson-markdown-spacer {
+  height: 0.25rem !important;
+}
+
+.assistant-message-markdown .lesson-markdown-h1,
+.assistant-message-markdown .lesson-markdown-h2,
+.assistant-message-markdown .lesson-markdown-h3 {
+  @apply pt-0 text-base font-bold;
+  color: inherit;
+}
+
+.assistant-message-markdown .lesson-markdown-paragraph,
+.assistant-message-markdown .lesson-markdown-list,
+.assistant-message-markdown .lesson-markdown-list-decimal,
+.assistant-message-markdown .lesson-markdown-quote {
+  @apply text-sm leading-7;
+  color: inherit;
+}
+
+.assistant-message-markdown .lesson-markdown-list,
+.assistant-message-markdown .lesson-markdown-list-decimal {
+  @apply gap-1 pl-5;
+}
+
+.assistant-message-markdown .lesson-markdown-inline-code {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.assistant-message-markdown .lesson-markdown-code-wrap {
+  @apply rounded-2xl;
+}
+
+.assistant-message-markdown .lesson-markdown-code {
+  @apply p-3 text-xs leading-6;
+}
+
 .assistant-message-user .assistant-message-meta {
   color: rgba(255, 255, 255, 0.82);
 }
@@ -6691,6 +6817,7 @@
 :root[data-theme="dark"] .lesson-content-heading,
 :root[data-theme="dark"] .lesson-markdown-h1,
 :root[data-theme="dark"] .lesson-markdown-h2,
+:root[data-theme="dark"] .lesson-markdown-h3,
 :root[data-theme="dark"] .lesson-answer-label,
 :root[data-theme="dark"] .lesson-submission-feedback,
 :root[data-theme="dark"] .lesson-run-result-title,
@@ -6713,10 +6840,6 @@
 :root[data-theme="dark"] .lesson-content-description,
 :root[data-theme="dark"] .lesson-content-copy,
 :root[data-theme="dark"] .lesson-asset-unavailable,
-:root[data-theme="dark"] .lesson-markdown-paragraph,
-:root[data-theme="dark"] .lesson-markdown-quote,
-:root[data-theme="dark"] .lesson-markdown-list,
-:root[data-theme="dark"] .lesson-markdown-list-decimal,
 :root[data-theme="dark"] .lesson-submission-meta,
 :root[data-theme="dark"] .lesson-run-result-meta,
 :root[data-theme="dark"] .lesson-result-case-message,
@@ -6727,6 +6850,13 @@
 :root[data-theme="dark"] .assistant-panel-form-hint,
 :root[data-theme="dark"] .assistant-message-meta {
   color: var(--app-muted);
+}
+
+:root[data-theme="dark"] .lesson-markdown-paragraph,
+:root[data-theme="dark"] .lesson-markdown-list,
+:root[data-theme="dark"] .lesson-markdown-list-decimal,
+:root[data-theme="dark"] .lesson-markdown-quote {
+  color: #ffffff;
 }
 
 :root[data-theme="dark"] .lesson-asset-image {

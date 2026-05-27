@@ -5,7 +5,13 @@ const LEVEL_LABELS = {
   intermediate: "Продвинутый уровень",
 };
 
-function SearchResults({ searchQuery, levelFilters, results }) {
+function SearchResults({
+  searchQuery,
+  levelFilters,
+  results,
+  viewerCanOpenAuthorProfile = false,
+  onAuthorProfileAuthRequired,
+}) {
   const hasResults = results.length > 0;
   const hasSearchQuery = searchQuery.length > 0;
   const activeFilters = [];
@@ -50,7 +56,12 @@ function SearchResults({ searchQuery, levelFilters, results }) {
       {hasResults ? (
         <div className="home-courses-grid">
           {results.map((course) => (
-            <CoursePreviewCard key={course.id} course={course} />
+            <CoursePreviewCard
+              key={course.id}
+              course={course}
+              viewerCanOpenAuthorProfile={viewerCanOpenAuthorProfile}
+              onAuthorProfileAuthRequired={onAuthorProfileAuthRequired}
+            />
           ))}
         </div>
       ) : (

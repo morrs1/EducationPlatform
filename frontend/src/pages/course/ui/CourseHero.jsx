@@ -2,9 +2,19 @@ import {
   formatCourseTagLabel,
   sanitizeCourseDisplayLabel,
 } from "../../../entities/course";
+import { AuthorLink } from "../../../shared/ui";
+import { isUuid, normalizeText } from "../../../shared/lib/gatewayValues";
 
-function CourseHero({ course, error, tagLabels }) {
+function CourseHero({
+  course,
+  error,
+  tagLabels,
+  viewerCanOpenAuthorProfile = false,
+  onAuthorProfileAuthRequired,
+}) {
   const hasTagPills = tagLabels.length > 0;
+  const authorId = normalizeText(course.authorId);
+  const showAuthor = isUuid(authorId);
 
   return (
     <section className="course-hero">
@@ -41,20 +51,21 @@ function CourseHero({ course, error, tagLabels }) {
       </div>
 
       <div className="course-hero-meta">
-        <span>
-          {course.authorName
-            ? `Автор: ${course.authorName}`
-            : "Автор пока недоступен"}
-        </span>
-        <span>
-          {course.rating == null
-            ? "Рейтинг пока недоступен"
-            : `Рейтинг ${course.rating}`}
-        </span>
-        <span>
-          {course.studentsCount == null
-            ? "Статистика студентов пока недоступна"
-            : `${course.studentsCount} студентов`}
+        <span className="course-hero-meta-author">
+          {showAuthor ? (
+            <>
+              Автор:{" "}
+              <AuthorLink
+                authorId={authorId}
+                authorName={course.authorName}
+                className="course-hero-meta-author-link"
+                viewerCanOpenAuthorProfile={viewerCanOpenAuthorProfile}
+                onAuthorProfileAuthRequired={onAuthorProfileAuthRequired}
+              />
+            </>
+          ) : (
+            "Автор пока недоступен"
+          )}
         </span>
       </div>
 

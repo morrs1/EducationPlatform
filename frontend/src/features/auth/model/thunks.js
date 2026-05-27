@@ -10,7 +10,9 @@ import {
   requestGatewayRegister,
   requestViewerEmailUpdate,
   requestViewerPasswordUpdate,
+  uploadViewerProfilePhoto,
 } from "../../../shared/api";
+import { validateRequiredProfileNameParts } from "../../../shared/lib";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -72,23 +74,26 @@ export function submitLogin({ email, password }) {
   };
 }
 
-export function submitRegister({ fullName, email, password, status, avatarUrl }) {
+export function submitRegister({ fullName, email, password, status, avatarFile }) {
   return async (dispatch) => {
     const normalizedFullName = fullName?.trim() ?? "";
     const normalizedEmail = email?.trim().toLowerCase() ?? "";
     const normalizedPassword = password?.trim() ?? "";
     const normalizedStatus = status?.trim() ?? "";
+    const profilePhotoFile = avatarFile instanceof File ? avatarFile : null;
 
-    if (normalizedFullName.split(/\s+/).filter(Boolean).length < 2) {
+    const parts = normalizedFullName.split(/\s+/).filter(Boolean);
+
+    if (parts.length < 3) {
       dispatch(
         loginFailure(
-          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
+          "Введите фамилию, имя и отчество в формате: Фамилия Имя Отчество.",
         ),
       );
       return {
         ok: false,
         error:
-          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
+          "Введите фамилию, имя и отчество в формате: Фамилия Имя Отчество.",
       };
     }
 
@@ -108,23 +113,22 @@ export function submitRegister({ fullName, email, password, status, avatarUrl })
       };
     }
 
-    if (normalizedFullName.split(/\s+/).filter(Boolean).length < 2) {
-      dispatch(
-        loginFailure(
-          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
-        ),
-      );
-      return {
-        ok: false,
-        error:
-          "Введите минимум фамилию и имя в формате: Фамилия Имя [Отчество].",
-      };
-    }
-
-    const parts = normalizedFullName.split(/\s+/).filter(Boolean);
     const surname = parts[0] ?? "";
     const name = parts[1] ?? "";
     const patronymic = parts.length > 2 ? parts.slice(2).join(" ") : "";
+    const nameValidationError = validateRequiredProfileNameParts({
+      firstName: name,
+      lastName: surname,
+      patronymic,
+    });
+
+    if (nameValidationError) {
+      dispatch(loginFailure(nameValidationError));
+      return {
+        ok: false,
+        error: nameValidationError,
+      };
+    }
 
     dispatch(startLogin());
 
@@ -136,11 +140,7 @@ export function submitRegister({ fullName, email, password, status, avatarUrl })
         userStatus: normalizedStatus || "STUDENT",
         email: normalizedEmail,
         password: normalizedPassword,
-        profilePhotoLink:
-          typeof avatarUrl === "string" &&
-          (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://"))
-            ? avatarUrl
-            : "",
+        profilePhotoLink: "",
       });
 
       const data = await requestGatewayLogin({
@@ -164,9 +164,23 @@ export function submitRegister({ fullName, email, password, status, avatarUrl })
 
       dispatch(loginSuccess(payload));
 
+      let profilePhotoUploadError = null;
+
+      if (profilePhotoFile) {
+        try {
+          await uploadViewerProfilePhoto(payload.viewerId, profilePhotoFile);
+        } catch (error) {
+          profilePhotoUploadError =
+            error instanceof Error && error.message
+              ? error.message
+              : "Аккаунт создан, но фото профиля не загрузилось.";
+        }
+      }
+
       return {
         ok: true,
         viewerId: payload.viewerId,
+        profilePhotoUploadError,
       };
     } catch (error) {
       const message =
