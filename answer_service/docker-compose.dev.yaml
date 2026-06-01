@@ -45,7 +45,7 @@ services:
     <<: *default
     container_name: answer_service.postgres
     hostname: answer_service.postgres
-    image: postgres:18.3-alpine3.22
+    image: postgres:18.4-alpine3.22
     environment:
       <<: *x-db-environment
     deploy:
@@ -68,7 +68,7 @@ services:
 
   redis:
     <<: *default
-    image: redis:8.6.2-alpine
+    image: redis:8.8.0-alpine
     container_name: answer_service.redis
     hostname: answer_service.redis
     environment:
@@ -93,7 +93,7 @@ services:
 
   chromadb:
     <<: *default
-    image: chromadb/chroma:1.5.8
+    image: chromadb/chroma:1.5.9
     container_name: answer_service.chromadb
     hostname: answer_service.chromadb
     environment:
