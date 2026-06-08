@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "hatchling==1.29.0",
+    "hatchling==1.30.1",
     "hatch-vcs==0.5.0",
 ]
 build-backend = "hatchling.build"
@@ -47,16 +47,16 @@ dependencies = [
     "asyncpg==0.31.0",
     "bazario==0.4.2",
     "dishka==1.10.1",
-    "dishka-faststream==0.6.0",
-    "fastapi==0.136.1",
-    "faststream[rabbit]==0.6.7",
-    "langchain==1.2.17",
+    "dishka-faststream==0.7.0",
+    "fastapi==0.136.3",
+    "faststream[rabbit]==0.7.1",
+    "langchain==1.3.4",
     "langchain-chroma==1.1.0",
-    "langchain-openai==1.2.1",
-    "python-multipart==0.0.27",
-    "sqlalchemy[asyncio]==2.0.49",
-    "structlog==25.5.0",
-    "uvicorn==0.46.0",
+    "langchain-openai==1.2.2",
+    "python-multipart==0.0.32",
+    "sqlalchemy[asyncio]==2.0.50",
+    "structlog==26.1.0",
+    "uvicorn==0.49.0",
     "uvloop==0.22.1; sys_platform != 'win32'",
     "taskiq>=0.11.0",
     "taskiq-aio-pika>=0.4.0",
